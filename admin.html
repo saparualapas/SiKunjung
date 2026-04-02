@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – SiKunjung Lapas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box;}
+    :root{--sidebar-w:240px;}
+    body{margin:0;background:#f1f5f9;min-height:100vh;}
+    #sidebar{position:fixed;top:0;left:0;height:100vh;width:var(--sidebar-w);background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);display:flex;flex-direction:column;z-index:100;transition:transform .3s ease;}
+    #sidebar .logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    #sidebar .logo h1{color:#fff;font-size:16px;font-weight:800;margin:0;}
+    #sidebar .logo p{color:#94a3b8;font-size:11px;margin:2px 0 0;}
+    .logo-badge{display:inline-block;background:#1d4ed8;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:4px;}
+    nav{flex:1;overflow-y:auto;padding:8px 0;}
+    .sec-lbl{color:#475569;font-size:10px;font-weight:700;letter-spacing:.08em;padding:12px 16px 4px;text-transform:uppercase;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:#94a3b8;font-size:13px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s;user-select:none;}
+    .nav-item:hover{background:rgba(255,255,255,.05);color:#e2e8f0;}
+    .nav-item.active{background:rgba(29,78,216,.25);color:#60a5fa;border-left-color:#3b82f6;}
+    .nav-item .ic{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
+    .nb{margin-left:auto;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
+    #sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);}
+    #sb-email{color:#64748b;font-size:11px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #btn-lo{width:100%;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.2);padding:8px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+    #btn-lo:hover{background:rgba(239,68,68,.35);color:#fff;}
+    #main{margin-left:var(--sidebar-w);min-height:100vh;transition:margin .3s;}
+    #topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;}
+    #pg-title{font-size:17px;font-weight:700;color:#0f172a;}
+    .tday{background:#f1f5f9;color:#64748b;font-size:12px;padding:5px 12px;border-radius:20px;font-weight:500;}
+    #content{padding:24px;}
+    .btn-menu{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#64748b;padding:0;}
+    @media(max-width:768px){
+      #sidebar{transform:translateX(-100%);}
+      #sidebar.open{transform:translateX(0);}
+      #main{margin-left:0;}
+      #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;}
+      #overlay.show{display:block;}
+      .btn-menu{display:block;}
+    }
+    .sc{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #e2e8f0;}
+    .sc .val{font-size:32px;font-weight:800;line-height:1;}
+    .sc .lbl{font-size:12px;color:#64748b;margin-top:4px;font-weight:500;}
+    .sc .iw{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;}
+    .card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #e2e8f0;overflow:hidden;}
+    .card-head{padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .card-head h3{font-size:15px;font-weight:700;color:#0f172a;margin:0;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:#f8fafc;padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;}
+    td{padding:11px 16px;font-size:13px;color:#1e293b;border-bottom:1px solid #f1f5f9;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#f8fafc;}
+    .empty{text-align:center;padding:40px;color:#94a3b8;font-size:13px;}
+    .sm{background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .sh{background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .ss{background:#e0e7ff;color:#3730a3;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .so{background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+    .sos{background:#fce7f3;color:#9d174d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+    .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;}
+    .bp{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;}
+    .bp:hover{opacity:.9;}
+    .bg{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;}
+    .bg:hover{background:#e2e8f0;}
+    .bs{background:#16a34a;color:#fff;}
+    .bd{background:#dc2626;color:#fff;}
+    .btn.sm{padding:5px 10px;font-size:11px;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .inp{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;transition:all .15s;background:#fff;font-family:inherit;}
+    .inp:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+    label.lbl-f{font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px;}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal-box{background:#fff;border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .mh{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;}
+    .mh h2{font-size:17px;font-weight:700;color:#0f172a;margin:0;}
+    .mc{background:none;border:none;font-size:24px;color:#94a3b8;cursor:pointer;line-height:1;}
+    .mc:hover{color:#dc2626;}
+    .mb{padding:16px 24px;}
+    .mf{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:10px;font-weight:600;font-size:13px;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap;animation:su .3s ease;}
+    @keyframes su{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    #qr-reader{width:100%;}
+    .scan-wrap{border:3px solid #2563eb;border-radius:12px;overflow:hidden;background:#000;}
+    .page{display:none;}
+    .page.active{display:block;animation:fi .3s ease;}
+    @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .spin{border:2px solid #e5e7eb;border-top:2px solid #3b82f6;border-radius:50%;width:16px;height:16px;animation:sp .7s linear infinite;display:inline-block;vertical-align:middle;}
+    @keyframes sp{to{transform:rotate(360deg)}}
+    .tbl-x{overflow-x:auto;}
+    .gt{display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+    .rt{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pd 2s infinite;}
+    @keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
+    #auth-guard{position:fixed;inset:0;background:#f1f5f9;z-index:9999;display:flex;align-items:center;justify-content:center;}
+    .lcard{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,.1);}
+    .afb{display:flex;align-items:center;gap:8px;padding:9px 16px;color:#94a3b8;font-size:12px;margin:4px 8px;border-radius:8px;cursor:pointer;}
+    .afb.active-f{background:#1d4ed8;color:#fff;}
+    .afb:not(.active-f):hover{background:rgba(255,255,255,.07);}
+  </style>
+</head>
+<body>
+
+<!-- AUTH GUARD -->
+<div id="auth-guard">
+  <div class="lcard" style="animation:fi .4s ease;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:linear-gradient(135deg,#1e40af,#2563eb);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px;">🏛️</div>
+      <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin:0;">Admin Panel</h1>
+      <p style="color:#64748b;font-size:13px;margin-top:4px;">SiKunjung – Lapas Kelas III Saparua</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div><label class="lbl-f">Email</label><input id="l-email" type="email" placeholder="admin@lapas.go.id" class="inp"/></div>
+      <div>
+        <label class="lbl-f">Password</label>
+        <div style="position:relative;">
+          <input id="l-pass" type="password" placeholder="••••••••" class="inp" style="padding-right:40px;"/>
+          <button onclick="togglePass()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;" title="Tampilkan/sembunyikan password">👁️</button>
+        </div>
+      </div>
+      <div id="l-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;font-size:12px;color:#dc2626;font-weight:600;"></div>
+      <button id="btn-login" class="btn bp" style="justify-content:center;padding:13px;font-size:14px;" onclick="doLogin()">Masuk ke Dashboard</button>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:16px;"><a href="index.html" style="color:#3b82f6;text-decoration:none;">← Kembali ke Halaman Pengunjung</a></p>
+  </div>
+</div>
+
+<div id="overlay" onclick="closeSB()"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="logo">
+    <h1>SiKunjung</h1>
+    <p>Lapas Kelas III Saparua</p>
+    <span class="logo-badge">ADMIN</span>
+  </div>
+  <nav>
+    <div class="sec-lbl">Utama</div>
+    <div class="nav-item active" data-p="dashboard" onclick="navTo('dashboard',this)"><span class="ic">📊</span>Dashboard</div>
+    <div class="nav-item" data-p="kunjungan" onclick="navTo('kunjungan',this)"><span class="ic">📋</span>Kunjungan<span class="nb" id="nb-m" style="display:none;"></span></div>
+    <div class="nav-item" data-p="scan" onclick="navTo('scan',this)"><span class="ic">📷</span>Scan QR</div>
+    <div class="nav-item" data-p="barang" onclick="navTo('barang',this)"><span class="ic">📦</span>Barang Bawaan</div>
+    <div class="sec-lbl">Master Data</div>
+    <div class="nav-item" data-p="wbp" onclick="navTo('wbp',this)"><span class="ic">👤</span>Data WBP</div>
+    <div class="nav-item" data-p="keluarga" onclick="navTo('keluarga',this)"><span class="ic">👨‍👩‍👧</span>Keluarga WBP</div>
+    <div class="nav-item" data-p="kamar" onclick="navTo('kamar',this)"><span class="ic">🏠</span>Blok &amp; Kamar</div>
+    <div class="sec-lbl">Operasional</div>
+    <div class="nav-item" data-p="onsite" onclick="navTo('onsite',this)"><span class="ic">➕</span>Daftar Onsite</div>
+    <div class="nav-item" data-p="cari" onclick="navTo('cari',this)"><span class="ic">🔍</span>Pencarian</div>
+  </nav>
+  <div id="sb-footer">
+    <div id="sb-email"></div>
+    <button id="btn-lo" onclick="doLogout()">🚪 Keluar</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <button class="btn-menu" onclick="openSB()">☰</button>
+    <div id="pg-title">Dashboard</div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+      <div class="tday" id="tday-lbl"></div>
+      <div class="rt" title="Realtime aktif"></div>
+    </div>
+  </div>
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div id="pg-dashboard" class="page active">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px;margin-bottom:22px;">
+        <div class="sc"><div class="iw" style="background:#dbeafe;">📋</div><div class="val" id="s-tot" style="color:#1e40af;">—</div><div class="lbl">Total Hari Ini</div></div>
+        <div class="sc"><div class="iw" style="background:#fef3c7;">⏳</div><div class="val" id="s-men" style="color:#d97706;">—</div><div class="lbl">Menunggu</div></div>
+        <div class="sc"><div class="iw" style="background:#d1fae5;">✅</div><div class="val" id="s-had" style="color:#16a34a;">—</div><div class="lbl">Hadir</div></div>
+        <div class="sc"><div class="iw" style="background:#e0e7ff;">🏁</div><div class="val" id="s-sel" style="color:#7c3aed;">—</div><div class="lbl">Selesai</div></div>
+        <div class="sc"><div class="iw" style="background:#fce7f3;">📦</div><div class="val" id="s-brg" style="color:#9d174d;">—</div><div class="lbl">Bawa Barang</div></div>
+        <div class="sc"><div class="iw" style="background:#f0fdf4;">👤</div><div class="val" id="s-wbp" style="color:#166534;">—</div><div class="lbl">Total WBP</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Kunjungan Terbaru Hari Ini</h3>
+          <button class="btn bg sm" style="margin-left:auto;" onclick="navTo('kunjungan',document.querySelector('[data-p=kunjungan]'))">Lihat Semua →</button>
+        </div>
+        <div class="tbl-x">
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Barang Bawaan</th><th>Status</th><th>Metode</th></tr></thead>
+          <tbody id="dash-tb"><tr><td colspan="7" class="empty"><span class="spin"></span></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- KUNJUNGAN -->
+    <div id="pg-kunjungan" class="page">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn bg sm active-filter" data-f="all" onclick="setFilter('all',this)">Semua</button>
+        <button class="btn bg sm" data-f="menunggu" onclick="setFilter('menunggu',this)">⏳ Menunggu</button>
+        <button class="btn bg sm" data-f="hadir" onclick="setFilter('hadir',this)">✅ Hadir</button>
+        <button class="btn bg sm" data-f="selesai" onclick="setFilter('selesai',this)">🏁 Selesai</button>
+        <input type="text" id="k-srch" placeholder="🔍 Cari nama/NIK..." class="inp" style="max-width:200px;margin-left:auto;font-size:12px;" oninput="renderKunj()"/>
+        <button class="btn bg sm" onclick="loadKunj()">↻</button>
+      </div>
+      <div class="card"><div class="tbl-x">
+        <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Barang Bawaan</th><th>Status</th><th>Metode</th><th>Aksi</th></tr></thead>
+        <tbody id="kunj-tb"><tr><td colspan="8" class="empty"><span class="spin"></span></td></tr></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- SCAN -->
+    <div id="pg-scan" class="page">
+      <div style="max-width:480px;margin:0 auto;">
+        <div class="card" style="padding:20px;">
+          <h3 style="font-weight:700;color:#0f172a;margin:0 0 14px;">📷 Scan QR Pengunjung</h3>
+          <div id="scan-ok" style="display:none;margin-bottom:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
+            <p style="font-size:12px;font-weight:700;color:#166534;margin:0 0 6px;">✅ QR Berhasil Dibaca</p>
+            <div id="scan-det" style="font-size:12px;color:#166534;line-height:1.8;"></div>
+          </div>
+          <div id="scan-err" style="display:none;margin-bottom:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px;font-size:12px;color:#dc2626;font-weight:600;"></div>
+          <div class="scan-wrap" style="margin-bottom:14px;min-height:220px;display:flex;align-items:center;justify-content:center;">
+            <div id="qr-reader"></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button id="btn-scan-start" class="btn bp" style="flex:1;justify-content:center;" onclick="startScan()">▶ Mulai Scan</button>
+            <button id="btn-scan-stop" style="display:none;" class="btn bd" style="flex:1;justify-content:center;" onclick="stopScan()">■ Stop</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARANG -->
+    <div id="pg-barang" class="page">
+      <div class="card">
+        <div class="card-head"><h3>📦 Barang Bawaan Kunjungan Hari Ini</h3>
+          <button class="btn bg sm" style="margin-left:auto;" onclick="loadBarang()">↻ Refresh</button>
+        </div>
+        <div class="tbl-x">
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Nama Barang</th><th>Jumlah</th><th>Status</th></tr></thead>
+          <tbody id="brg-tb"><tr><td colspan="7" class="empty"><span class="spin"></span></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WBP -->
+    <div id="pg-wbp" class="page">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="text" id="wbp-srch" placeholder="🔍 Cari WBP..." class="inp" style="max-width:240px;font-size:12px;" oninput="renderWbp()"/>
+        <button class="btn bp sm" style="margin-left:auto;" onclick="openMWbp()">+ Tambah WBP</button>
+      </div>
+      <div class="card"><div class="tbl-x">
+        <table><thead><tr><th>Nama WBP</th><th>NIK</th><th>Kamar</th><th>Jml Keluarga</th><th>Aksi</th></tr></thead>
+        <tbody id="wbp-tb"><tr><td colspan="5" class="empty"><span class="spin"></span></td></tr></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- KELUARGA -->
+    <div id="pg-keluarga" class="page">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="text" id="kel-srch" placeholder="🔍 Cari keluarga..." class="inp" style="max-width:240px;font-size:12px;" oninput="renderKel()"/>
+        <button class="btn bp sm" style="margin-left:auto;" onclick="openMKel()">+ Tambah Keluarga</button>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;font-size:12px;color:#1d4ed8;margin-bottom:12px;">
+        ℹ️ <strong>Satu WBP bisa punya banyak keluarga terdaftar</strong> (istri, anak, orang tua, dll) masing-masing dengan NIK KTP berbeda. NIK keluarga inilah yang dipakai saat pengunjung mendaftar kunjungan.
+      </div>
+      <div class="card"><div class="tbl-x">
+        <table><thead><tr><th>Nama Keluarga</th><th>NIK KTP</th><th>Hubungan</th><th>WBP Terkait</th><th>Kamar</th><th>Aksi</th></tr></thead>
+        <tbody id="kel-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- KAMAR -->
+    <div id="pg-kamar" class="page">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <h3 style="margin:0;font-weight:700;color:#0f172a;">Daftar Blok &amp; Kamar</h3>
+        <button class="btn bp sm" style="margin-left:auto;" onclick="openMKamar()">+ Tambah Kamar</button>
+      </div>
+      <div id="kamar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+        <div style="text-align:center;padding:40px;grid-column:1/-1;color:#94a3b8;"><span class="spin"></span></div>
+      </div>
+    </div>
+
+    <!-- ONSITE -->
+    <div id="pg-onsite" class="page">
+      <div style="max-width:520px;">
+        <div class="card" style="padding:20px;">
+          <h3 style="font-weight:700;color:#0f172a;margin:0 0 4px;">➕ Pendaftaran Onsite</h3>
+          <p style="color:#64748b;font-size:13px;margin:0 0 18px;">Untuk pengunjung tanpa HP atau tidak mendaftar online</p>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><label class="lbl-f">NIK Pengunjung *</label><input id="os-nik" type="text" maxlength="16" inputmode="numeric" placeholder="16 digit NIK" class="inp"/></div>
+            <div><label class="lbl-f">Nama Pengunjung *</label><input id="os-nama" type="text" placeholder="Nama lengkap" class="inp"/></div>
+            <div>
+              <label class="lbl-f">WBP yang Dikunjungi *</label>
+              <input id="os-wbp-inp" type="text" placeholder="Ketik nama atau NIK WBP..." class="inp" oninput="searchWbpOs(this.value)"/>
+              <div id="os-dd" style="display:none;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-top:4px;"></div>
+              <div id="os-wbp-sel" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px;font-size:12px;margin-top:6px;">
+                <span style="font-weight:700;color:#1d4ed8;">✓ WBP: </span><span id="os-wbp-info" style="color:#1e40af;"></span>
+              </div>
+            </div>
+            <div>
+              <label class="lbl-f">Barang Bawaan (opsional)</label>
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <input id="os-brg" type="text" placeholder="Nama barang" class="inp"/>
+                <input id="os-qty" type="number" min="1" value="1" class="inp" style="width:72px;"/>
+                <button class="btn bg sm" onclick="addOsBrg()">+</button>
+              </div>
+              <div id="os-brg-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+            <div id="os-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
+            <button id="btn-os" class="btn bp" style="justify-content:center;padding:12px;" onclick="submitOnsite()">Daftarkan &amp; Tandai Hadir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARI -->
+    <div id="pg-cari" class="page">
+      <div class="card" style="padding:20px;">
+        <h3 style="font-weight:700;color:#0f172a;margin:0 0 14px;">🔍 Pencarian Kunjungan</h3>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <input id="cari-inp" type="text" placeholder="NIK atau nama pengunjung..." class="inp" onkeypress="if(event.key==='Enter')doSearch()"/>
+          <button class="btn bp" onclick="doSearch()">Cari</button>
+        </div>
+        <div id="cari-res"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Detail Kunjungan -->
+<div id="m-detail" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-detail')">
+  <div class="modal-box">
+    <div class="mh"><h2>Detail Kunjungan</h2><button class="mc" onclick="cm('m-detail')">×</button></div>
+    <div class="mb" id="m-detail-body"></div>
+    <div class="mf" id="m-detail-foot"></div>
+  </div>
+</div>
+
+<!-- MODAL: WBP -->
+<div id="m-wbp" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-wbp')">
+  <div class="modal-box">
+    <div class="mh"><h2 id="m-wbp-title">Tambah WBP</h2><button class="mc" onclick="cm('m-wbp')">×</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="lbl-f">Nama WBP *</label><input id="wbp-nm" type="text" placeholder="Nama lengkap" class="inp"/></div>
+        <div><label class="lbl-f">NIK WBP * <span style="font-size:10px;color:#94a3b8;">(16 digit)</span></label><input id="wbp-nik" type="text" maxlength="16" inputmode="numeric" placeholder="Nomor Induk Kependudukan" class="inp"/></div>
+        <div><label class="lbl-f">Kamar / Blok *</label><input id="wbp-km" type="text" placeholder="Contoh: Blok A-1" class="inp" list="km-dl"/><datalist id="km-dl"></datalist></div>
+        <input type="hidden" id="wbp-eid"/>
+        <div id="wbp-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="cm('m-wbp')">Batal</button><button id="btn-sw" class="btn bp" onclick="saveWbp()">Simpan</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Keluarga -->
+<div id="m-kel" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-kel')">
+  <div class="modal-box">
+    <div class="mh"><h2 id="m-kel-title">Tambah Keluarga WBP</h2><button class="mc" onclick="cm('m-kel')">×</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label class="lbl-f">WBP Terkait *</label><select id="kel-wid" class="inp"><option value="">-- Pilih WBP --</option></select></div>
+        <div><label class="lbl-f">Nama Keluarga *</label><input id="kel-nm" type="text" placeholder="Nama lengkap sesuai KTP" class="inp"/></div>
+        <div><label class="lbl-f">NIK KTP Keluarga * <span style="font-size:10px;color:#94a3b8;">(16 digit — dipakai saat daftar kunjungan)</span></label><input id="kel-nik" type="text" maxlength="16" inputmode="numeric" placeholder="16 digit NIK" class="inp"/></div>
+        <div><label class="lbl-f">Hubungan *</label>
+          <select id="kel-hub" class="inp">
+            <option value="">-- Pilih Hubungan --</option>
+            <option>Istri</option><option>Suami</option><option>Anak</option>
+            <option>Ayah</option><option>Ibu</option><option>Kakak</option>
+            <option>Adik</option><option>Kakek</option><option>Nenek</option>
+            <option>Paman</option><option>Bibi</option><option>Lainnya</option>
+          </select>
+        </div>
+        <input type="hidden" id="kel-eid"/>
+        <div id="kel-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="cm('m-kel')">Batal</button><button id="btn-sk" class="btn bp" onclick="saveKel()">Simpan</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Kamar -->
+<div id="m-kamar" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-kamar')">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="mh"><h2>Tambah Blok / Kamar</h2><button class="mc" onclick="cm('m-kamar')">×</button></div>
+    <div class="mb">
+      <p style="font-size:12px;color:#64748b;margin:0 0 14px;">Kamar akan tersedia sebagai pilihan saat tambah/edit data WBP.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div><label class="lbl-f">Nama Blok / Kamar *</label><input id="km-nm" type="text" placeholder="Contoh: Blok C-2" class="inp"/></div>
+        <div><label class="lbl-f">Keterangan (opsional)</label><input id="km-ket" type="text" placeholder="Keterangan tambahan" class="inp"/></div>
+        <div id="km-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="cm('m-kamar')">Batal</button><button class="btn bp" onclick="saveKamar()">Simpan</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Konfirmasi Hapus -->
+<div id="m-confirm" class="modal-bg" style="display:none;">
+  <div class="modal-box" style="max-width:360px;">
+    <div style="padding:28px;text-align:center;">
+      <div style="font-size:44px;margin-bottom:12px;">⚠️</div>
+      <h2 id="cfm-title" style="font-size:17px;font-weight:700;color:#0f172a;margin:0 0 8px;"></h2>
+      <p id="cfm-msg" style="font-size:13px;color:#64748b;margin:0 0 20px;"></p>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn bg" onclick="cm('m-confirm')">Batal</button>
+        <button id="btn-cfm" class="btn bd">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — ganti dengan milik Anda
+// ============================================================
+const SUPABASE_URL      = 'https://cbnqdvkxukortmntmfzh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibnFkdmt4dWtvcnRtbnRtZnpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjM3MzksImV4cCI6MjA5MDY5OTczOX0.WSAQeI0wJlNbi9ECL1ECyduLdZnm-cVPMpH4peLLT_0';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE
+// ============================================================
+let allKunj=[], allWbp=[], allKel=[];
+let curFilter='all', curPage='dashboard';
+let qrScanner=null, scanCD=false;
+let osWbp=null, osBrg=[];
+let wbpTimer, extraKamar=[];
+
+// ============================================================
+// BOOT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  extraKamar=JSON.parse(localStorage.getItem('extra_kamar')||'[]');
+  document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+  db.auth.onAuthStateChange((_,session)=>{
+    if(session){hideAG();onLogin(session.user);}
+    else showAG();
+  });
+});
+
+// ============================================================
+// AUTH
+// ============================================================
+function showAG(){document.getElementById('auth-guard').style.display='flex';}
+function hideAG(){document.getElementById('auth-guard').style.display='none';}
+function togglePass(){const i=document.getElementById('l-pass');i.type=i.type==='password'?'text':'password';}
+
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  const btn=document.getElementById('btn-login');
+  document.getElementById('l-err').style.display='none';
+  if(!email||!pass){showFErr('l-err','Email dan password wajib diisi.');showToast('Isi email dan password','warn');return;}
+  btn.innerHTML='<span class="spin"></span> Masuk...';btn.disabled=true;
+  const {error}=await db.auth.signInWithPassword({email,password:pass});
+  btn.innerHTML='Masuk ke Dashboard';btn.disabled=false;
+  if(error){
+    const msg=error.message.includes('Invalid')||error.message.includes('credentials')?'Email atau password salah.':'Login gagal: '+error.message;
+    showFErr('l-err',msg);showToast(msg,'error');
+  }
+}
+
+async function doLogout(){
+  if(qrScanner)await qrScanner.stop().catch(()=>{});
+  const {error}=await db.auth.signOut();
+  if(error){showToast('Gagal logout: '+error.message,'error');return;}
+  showToast('Berhasil keluar','success');
+}
+
+function onLogin(user){
+  hideAG();
+  document.getElementById('sb-email').textContent=user.email;
+  setupRealtime();
+  loadDash();
+  loadWbp();
+  loadKel();
+}
+
+// ============================================================
+// NAV & SIDEBAR
+// ============================================================
+function navTo(p,el){
+  curPage=p;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('pg-'+p).classList.add('active');
+  const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',kamar:'Blok & Kamar',onsite:'Pendaftaran Onsite',cari:'Pencarian'};
+  document.getElementById('pg-title').textContent=titles[p]||p;
+  closeSB();
+  if(p==='kunjungan')loadKunj();
+  if(p==='barang')loadBarang();
+  if(p==='wbp')renderWbp();
+  if(p==='keluarga')renderKel();
+  if(p==='kamar')loadKamar();
+  if(p!=='scan'&&qrScanner)stopScan();
+}
+function openSB(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+
+// ============================================================
+// REALTIME
+// ============================================================
+function setupRealtime(){
+  db.channel('rt').on('postgres_changes',{event:'*',schema:'public',table:'kunjungan'},()=>{
+    loadDash();
+    if(curPage==='kunjungan')loadKunj();
+    if(curPage==='barang')loadBarang();
+  }).subscribe();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDash(){
+  const today=new Date().toISOString().split('T')[0];
+  const[{data:k},{data:w}]=await Promise.all([
+    db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
+    db.from('wbp').select('id')
+  ]);
+  const kd=k||[],wd=w||[];
+  document.getElementById('s-tot').textContent=kd.length;
+  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
+  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
+  document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
+  document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
+  document.getElementById('s-wbp').textContent=wd.length;
+  const nb=document.getElementById('nb-m');
+  const tunggu=kd.filter(x=>x.status==='menunggu').length;
+  if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';
+  const tbody=document.getElementById('dash-tb');
+  if(!kd.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Belum ada kunjungan hari ini</td></tr>';return;}
+  tbody.innerHTML=kd.slice(0,15).map(v=>kunjRow(v,false)).join('');
+}
+
+function kunjRow(v,showAksi=true){
+  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+  const bHtml=b.length?b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' '):'<span style="color:#94a3b8;font-size:11px;">—</span>';
+  const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
+  const mt=v.metode_daftar==='online'?'so':'sos';
+  const aksi=showAksi?`<td style="white-space:nowrap;">
+    ${v.status==='menunggu'?`<button class="btn bs sm" onclick="upStatus('${v.id}','hadir')">✅</button>`:''}
+    ${v.status==='hadir'?`<button class="btn sm" style="background:#7c3aed;color:#fff;" onclick="upStatus('${v.id}','selesai')">🏁</button>`:''}
+    <button class="btn bg sm" onclick="openDetail('${v.id}')">Detail</button>
+  </td>`:'';
+  return `<tr>
+    <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
+    <td>${esc(v.nama_pengunjung)}<br><span style="font-size:11px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
+    <td>${esc(v.wbp?.nama_wbp||'—')}</td>
+    <td>${esc(v.wbp?.kamar||'—')}</td>
+    <td style="max-width:220px;">${bHtml}</td>
+    <td><span class="${st}">${v.status}</span></td>
+    <td><span class="${mt}">${v.metode_daftar}</span></td>
+    ${aksi}
+  </tr>`;
+}
+
+// ============================================================
+// KUNJUNGAN
+// ============================================================
+async function loadKunj(){
+  document.getElementById('kunj-tb').innerHTML='<tr><td colspan="8" class="empty"><span class="spin"></span></td></tr>';
+  const today=new Date().toISOString().split('T')[0];
+  const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
+  if(error){showToast('Gagal: '+error.message,'error');return;}
+  allKunj=data||[];
+  renderKunj();
+}
+
+function setFilter(f,el){
+  curFilter=f;
+  document.querySelectorAll('[data-f]').forEach(b=>{
+    const on=b.dataset.f===f;
+    b.style.background=on?'#1d4ed8':'';
+    b.style.color=on?'#fff':'';
+    b.style.borderColor=on?'#1d4ed8':'';
+  });
+  renderKunj();
+}
+
+function renderKunj(){
+  const q=(document.getElementById('k-srch')?.value||'').toLowerCase();
+  let items=curFilter==='all'?allKunj:allKunj.filter(d=>d.status===curFilter);
+  if(q)items=items.filter(d=>d.nama_pengunjung.toLowerCase().includes(q)||d.nik_pengunjung.includes(q));
+  const tbody=document.getElementById('kunj-tb');
+  if(!items.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Tidak ada data</td></tr>';return;}
+  tbody.innerHTML=items.map(v=>kunjRow(v,true)).join('');
+}
+
+// ============================================================
+// BARANG
+// ============================================================
+async function loadBarang(){
+  document.getElementById('brg-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
+  const today=new Date().toISOString().split('T')[0];
+  const{data}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
+  const rows=[];
+  (data||[]).forEach(v=>{
+    const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+    const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
+    if(!b.length){
+      rows.push(`<tr><td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td><td>${esc(v.nama_pengunjung)}</td><td>${esc(v.wbp?.nama_wbp||'—')}</td><td>${esc(v.wbp?.kamar||'—')}</td><td colspan="2" style="color:#94a3b8;font-style:italic;font-size:12px;">Tidak ada barang</td><td><span class="${st}">${v.status}</span></td></tr>`);
+    } else {
+      b.forEach((br,i)=>{
+        const rs=b.length;
+        rows.push(`<tr>
+          ${i===0?`<td rowspan="${rs}" style="vertical-align:middle;"><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
+          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.nama_pengunjung)}</td>
+          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.wbp?.nama_wbp||'—')}</td>
+          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.wbp?.kamar||'—')}</td>`:''}
+          <td><span class="gt">📦 ${esc(br.nama)}</span></td>
+          <td style="font-weight:700;font-size:14px;">${br.jumlah}</td>
+          ${i===0?`<td rowspan="${rs}" style="vertical-align:middle;"><span class="${st}">${v.status}</span></td>`:''}
+        </tr>`);
+      });
+    }
+  });
+  const tbody=document.getElementById('brg-tb');
+  tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="7" class="empty">Belum ada kunjungan hari ini</td></tr>';
+}
+
+// ============================================================
+// WBP
+// ============================================================
+async function loadWbp(){
+  const{data}=await db.from('wbp').select('*,keluarga_wbp(id)').order('nama_wbp');
+  allWbp=data||[];
+  refreshKmDl();
+  renderWbp();
+  populateWbpSel();
+}
+
+function renderWbp(){
+  const q=(document.getElementById('wbp-srch')?.value||'').toLowerCase();
+  const items=q?allWbp.filter(w=>w.nama_wbp.toLowerCase().includes(q)||w.nik_wbp.includes(q)):allWbp;
+  const tbody=document.getElementById('wbp-tb');
+  if(!items.length){tbody.innerHTML='<tr><td colspan="5" class="empty">Belum ada data WBP</td></tr>';return;}
+  tbody.innerHTML=items.map(w=>`<tr>
+    <td><strong>${esc(w.nama_wbp)}</strong></td>
+    <td style="font-family:monospace;font-size:12px;">${w.nik_wbp}</td>
+    <td>${esc(w.kamar)}</td>
+    <td style="text-align:center;font-weight:700;">${w.keluarga_wbp?.length||0}</td>
+    <td style="white-space:nowrap;">
+      <button class="btn bg sm" onclick="openMWbp('${w.id}')">✏️ Edit</button>
+      <button class="btn bg sm" onclick="openMKel(null,'${w.id}')">+ Keluarga</button>
+      <button class="btn bg sm" style="color:#dc2626;" onclick="confirmDel('wbp','${w.id}','${esc(w.nama_wbp)}')">🗑️ Hapus</button>
+    </td>
+  </tr>`).join('');
+}
+
+function refreshKmDl(){
+  const set=new Set([...allWbp.map(w=>w.kamar),...extraKamar].filter(Boolean));
+  const dl=document.getElementById('km-dl');
+  if(dl)dl.innerHTML=[...set].sort().map(k=>`<option value="${esc(k)}">`).join('');
+}
+
+function openMWbp(id=null){
+  document.getElementById('wbp-err').style.display='none';
+  document.getElementById('wbp-eid').value=id||'';
+  document.getElementById('m-wbp-title').textContent=id?'Edit WBP':'Tambah WBP';
+  if(id){const w=allWbp.find(x=>x.id===id);if(w){document.getElementById('wbp-nm').value=w.nama_wbp;document.getElementById('wbp-nik').value=w.nik_wbp;document.getElementById('wbp-km').value=w.kamar;}}
+  else{document.getElementById('wbp-nm').value='';document.getElementById('wbp-nik').value='';document.getElementById('wbp-km').value='';}
+  om('m-wbp');
+}
+
+async function saveWbp(){
+  const nama=document.getElementById('wbp-nm').value.trim();
+  const nik=document.getElementById('wbp-nik').value.trim();
+  const km=document.getElementById('wbp-km').value.trim();
+  const id=document.getElementById('wbp-eid').value;
+  document.getElementById('wbp-err').style.display='none';
+  if(!nama){showFErr('wbp-err','Nama WBP wajib diisi.');return;}
+  if(nik.length!==16){showFErr('wbp-err','NIK harus tepat 16 digit.');return;}
+  if(!km){showFErr('wbp-err','Kamar wajib diisi.');return;}
+  const btn=document.getElementById('btn-sw');
+  btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
+  const{error}=id?await db.from('wbp').update({nama_wbp:nama,nik_wbp:nik,kamar:km}).eq('id',id):await db.from('wbp').insert({nama_wbp:nama,nik_wbp:nik,kamar:km});
+  btn.innerHTML='Simpan';btn.disabled=false;
+  if(error){showFErr('wbp-err',error.message.includes('unique')?'NIK sudah terdaftar.':'Gagal: '+error.message);return;}
+  showToast(id?'Data WBP diperbarui':'WBP berhasil ditambahkan','success');
+  cm('m-wbp');loadWbp();
+}
+
+// ============================================================
+// KELUARGA
+// ============================================================
+async function loadKel(){
+  const{data}=await db.from('keluarga_wbp').select('*,wbp(nama_wbp,kamar)').order('nama_keluarga');
+  allKel=data||[];
+  renderKel();
+}
+
+function renderKel(){
+  const q=(document.getElementById('kel-srch')?.value||'').toLowerCase();
+  const items=q?allKel.filter(k=>k.nama_keluarga.toLowerCase().includes(q)||k.nik_keluarga.includes(q)):allKel;
+  const tbody=document.getElementById('kel-tb');
+  if(!items.length){tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada data keluarga</td></tr>';return;}
+  tbody.innerHTML=items.map(k=>`<tr>
+    <td><strong>${esc(k.nama_keluarga)}</strong></td>
+    <td style="font-family:monospace;font-size:12px;">${k.nik_keluarga}</td>
+    <td>${esc(k.hubungan)}</td>
+    <td>${esc(k.wbp?.nama_wbp||'—')}</td>
+    <td>${esc(k.wbp?.kamar||'—')}</td>
+    <td style="white-space:nowrap;">
+      <button class="btn bg sm" onclick="openMKel('${k.id}')">✏️ Edit</button>
+      <button class="btn bg sm" style="color:#dc2626;" onclick="confirmDel('keluarga','${k.id}','${esc(k.nama_keluarga)}')">🗑️ Hapus</button>
+    </td>
+  </tr>`).join('');
+}
+
+function populateWbpSel(){
+  const sel=document.getElementById('kel-wid');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">-- Pilih WBP --</option>'+allWbp.map(w=>`<option value="${w.id}">${esc(w.nama_wbp)} – ${esc(w.kamar)}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+function openMKel(id=null,wbpId=null){
+  document.getElementById('kel-err').style.display='none';
+  document.getElementById('kel-eid').value=id||'';
+  document.getElementById('m-kel-title').textContent=id?'Edit Keluarga WBP':'Tambah Keluarga WBP';
+  populateWbpSel();
+  if(id){const k=allKel.find(x=>x.id===id);if(k){document.getElementById('kel-wid').value=k.wbp_id;document.getElementById('kel-nm').value=k.nama_keluarga;document.getElementById('kel-nik').value=k.nik_keluarga;document.getElementById('kel-hub').value=k.hubungan;}}
+  else{document.getElementById('kel-wid').value=wbpId||'';document.getElementById('kel-nm').value='';document.getElementById('kel-nik').value='';document.getElementById('kel-hub').value='';}
+  om('m-kel');
+}
+
+async function saveKel(){
+  const wid=document.getElementById('kel-wid').value;
+  const nm=document.getElementById('kel-nm').value.trim();
+  const nik=document.getElementById('kel-nik').value.trim();
+  const hub=document.getElementById('kel-hub').value;
+  const id=document.getElementById('kel-eid').value;
+  document.getElementById('kel-err').style.display='none';
+  if(!wid){showFErr('kel-err','Pilih WBP terkait.');return;}
+  if(!nm){showFErr('kel-err','Nama keluarga wajib diisi.');return;}
+  if(nik.length!==16){showFErr('kel-err','NIK harus tepat 16 digit.');return;}
+  if(!hub){showFErr('kel-err','Pilih hubungan.');return;}
+  const btn=document.getElementById('btn-sk');
+  btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
+  const{error}=id?await db.from('keluarga_wbp').update({wbp_id:wid,nama_keluarga:nm,nik_keluarga:nik,hubungan:hub}).eq('id',id):await db.from('keluarga_wbp').insert({wbp_id:wid,nama_keluarga:nm,nik_keluarga:nik,hubungan:hub});
+  btn.innerHTML='Simpan';btn.disabled=false;
+  if(error){showFErr('kel-err',error.message.includes('unique')?'NIK ini sudah terdaftar.':'Gagal: '+error.message);return;}
+  showToast(id?'Data keluarga diperbarui':'Keluarga berhasil ditambahkan','success');
+  cm('m-kel');loadKel();loadWbp();
+}
+
+// ============================================================
+// KAMAR
+// ============================================================
+async function loadKamar(){
+  const{data}=await db.from('wbp').select('kamar');
+  const map={};
+  (data||[]).forEach(w=>{if(w.kamar)map[w.kamar]=(map[w.kamar]||0)+1;});
+  const all=[...new Set([...Object.keys(map),...extraKamar])].sort();
+  const el=document.getElementById('kamar-grid');
+  if(!all.length){el.innerHTML='<p style="color:#94a3b8;grid-column:1/-1;text-align:center;padding:40px;">Belum ada data. Tambahkan WBP atau kamar terlebih dahulu.</p>';return;}
+  el.innerHTML=all.map(k=>`<div class="sc" style="cursor:default;">
+    <div style="font-size:28px;margin-bottom:8px;">🏠</div>
+    <div style="font-weight:700;color:#0f172a;font-size:15px;">${esc(k)}</div>
+    <div style="color:#64748b;font-size:12px;margin-top:4px;">${map[k]||0} WBP terdaftar</div>
+  </div>`).join('');
+}
+
+function openMKamar(){
+  document.getElementById('km-nm').value='';document.getElementById('km-ket').value='';document.getElementById('km-err').style.display='none';
+  om('m-kamar');
+}
+
+function saveKamar(){
+  const nm=document.getElementById('km-nm').value.trim();
+  if(!nm){showFErr('km-err','Nama kamar wajib diisi.');return;}
+  if(!extraKamar.includes(nm))extraKamar.push(nm);
+  localStorage.setItem('extra_kamar',JSON.stringify(extraKamar));
+  showToast('Kamar "'+nm+'" ditambahkan','success');
+  cm('m-kamar');loadKamar();refreshKmDl();
+}
+
+// ============================================================
+// DETAIL KUNJUNGAN
+// ============================================================
+function openDetail(id){
+  const v=allKunj.find(x=>x.id===id);
+  if(!v)return;
+  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+  const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
+  document.getElementById('m-detail-body').innerHTML=`
+    <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:16px;">
+      <div><p style="font-weight:700;font-size:16px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p><p style="color:#64748b;font-size:12px;margin:4px 0 0;">NIK: ${v.nik_pengunjung}</p></div>
+      <span class="${st}" style="font-size:12px;">${v.status.toUpperCase()}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;margin-bottom:14px;">
+      <div style="background:#f8fafc;border-radius:8px;padding:10px;"><p style="color:#64748b;font-size:11px;margin:0 0 2px;">No. Antrean</p><p style="font-weight:800;color:#1d4ed8;font-size:24px;margin:0;">#${String(v.no_antrean).padStart(3,'0')}</p></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px;"><p style="color:#64748b;font-size:11px;margin:0 0 2px;">Metode</p><span class="${v.metode_daftar==='online'?'so':'sos'}" style="font-size:12px;">${v.metode_daftar}</span></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px;"><p style="color:#64748b;font-size:11px;margin:0 0 2px;">WBP</p><p style="font-weight:600;margin:0;">${esc(v.wbp?.nama_wbp||'—')}</p></div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px;"><p style="color:#64748b;font-size:11px;margin:0 0 2px;">Kamar</p><p style="font-weight:600;margin:0;">${esc(v.wbp?.kamar||'—')}</p></div>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;">
+      <p style="font-size:12px;font-weight:700;color:#92400e;margin:0 0 10px;">📦 Barang Bawaan (${b.length} jenis)</p>
+      ${b.length?b.map(x=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #fef3c7;"><span><span class="gt">📦</span> ${esc(x.nama)}</span><strong>×${x.jumlah}</strong></div>`).join('')+`<div style="font-size:11px;color:#92400e;margin-top:8px;font-style:italic;">Total: ${b.reduce((a,x)=>a+Number(x.jumlah),0)} pcs dari ${b.length} jenis barang</div>`:'<p style="font-size:12px;color:#94a3b8;margin:0;font-style:italic;">Tidak ada barang bawaan</p>'}
+    </div>`;
+  const foot=document.getElementById('m-detail-foot');
+  foot.innerHTML='';
+  if(v.status==='menunggu'){const b2=document.createElement('button');b2.className='btn bs';b2.textContent='✅ Tandai Hadir';b2.onclick=()=>upStatus(v.id,'hadir');foot.appendChild(b2);}
+  if(v.status==='hadir'){const b2=document.createElement('button');b2.className='btn';b2.style.cssText='background:#7c3aed;color:#fff;';b2.textContent='🏁 Selesai';b2.onclick=()=>upStatus(v.id,'selesai');foot.appendChild(b2);}
+  const bc=document.createElement('button');bc.className='btn bg';bc.textContent='Tutup';bc.onclick=()=>cm('m-detail');foot.appendChild(bc);
+  om('m-detail');
+}
+
+async function upStatus(id,status){
+  const{error}=await db.from('kunjungan').update({status}).eq('id',id);
+  if(error){showToast('Gagal: '+error.message,'error');return;}
+  showToast({hadir:'Pengunjung ditandai hadir ✅',selesai:'Kunjungan selesai 🏁'}[status]||'Updated','success');
+  cm('m-detail');loadKunj();loadDash();
+}
+
+// ============================================================
+// QR SCANNER
+// ============================================================
+async function startScan(){
+  if(qrScanner)await qrScanner.stop().catch(()=>{});
+  qrScanner=new Html5Qrcode('qr-reader');
+  document.getElementById('btn-scan-start').style.display='none';
+  document.getElementById('btn-scan-stop').style.display='';
+  document.getElementById('scan-err').style.display='none';
+  document.getElementById('scan-ok').style.display='none';
+  try{
+    await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},onQR,()=>{});
+  }catch(e){
+    document.getElementById('scan-err').textContent='⚠ Kamera tidak bisa dibuka: '+e.message;
+    document.getElementById('scan-err').style.display='';
+    document.getElementById('btn-scan-start').style.display='';
+    document.getElementById('btn-scan-stop').style.display='none';
+    showToast('Kamera tidak bisa dibuka','error');
+  }
+}
+
+async function stopScan(){
+  if(qrScanner){await qrScanner.stop().catch(()=>{});qrScanner=null;}
+  document.getElementById('btn-scan-start').style.display='';
+  document.getElementById('btn-scan-stop').style.display='none';
+}
+
+async function onQR(text){
+  if(scanCD)return;
+  scanCD=true;setTimeout(()=>scanCD=false,3000);
+  await stopScan();
+  document.getElementById('scan-err').style.display='none';
+  document.getElementById('scan-ok').style.display='none';
+  const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('id',text.trim()).maybeSingle();
+  if(error||!data){
+    document.getElementById('scan-err').textContent='⚠ QR tidak valid atau data tidak ditemukan.';
+    document.getElementById('scan-err').style.display='';
+    showToast('QR tidak valid','error');return;
+  }
+  if(data.status==='hadir'||data.status==='selesai'){
+    document.getElementById('scan-err').textContent=`⚠ QR sudah digunakan — status saat ini: ${data.status}`;
+    document.getElementById('scan-err').style.display='';
+    showToast('QR sudah digunakan ('+data.status+')','warn');return;
+  }
+  const{error:ue}=await db.from('kunjungan').update({status:'hadir'}).eq('id',data.id);
+  if(ue){document.getElementById('scan-err').textContent='⚠ Gagal update: '+ue.message;document.getElementById('scan-err').style.display='';showToast('Gagal update status','error');return;}
+  const br=Array.isArray(data.daftar_barang)?data.daftar_barang:[];
+  document.getElementById('scan-det').innerHTML=`
+    <p><strong>Pengunjung:</strong> ${esc(data.nama_pengunjung)}</p>
+    <p><strong>WBP:</strong> ${esc(data.wbp?.nama_wbp||'—')} – ${esc(data.wbp?.kamar||'—')}</p>
+    <p><strong>Antrean:</strong> #${String(data.no_antrean).padStart(3,'0')}</p>
+    ${br.length?'<p><strong>Barang:</strong> '+br.map(b=>`${esc(b.nama)} ×${b.jumlah}`).join(', ')+'</p>':''}`;
+  document.getElementById('scan-ok').style.display='';
+  showToast('✅ '+data.nama_pengunjung+' berhasil hadir!','success');
+  loadDash();
+}
+
+// ============================================================
+// ONSITE
+// ============================================================
+let wbpOsTimer;
+function searchWbpOs(q){
+  clearTimeout(wbpOsTimer);
+  const dd=document.getElementById('os-dd');
+  if(q.length<2){dd.style.display='none';return;}
+  wbpOsTimer=setTimeout(async()=>{
+    const{data}=await db.from('wbp').select('*').or(`nama_wbp.ilike.%${q}%,nik_wbp.ilike.%${q}%`).limit(6);
+    if(!data||!data.length){dd.style.display='none';return;}
+    dd.innerHTML=data.map(w=>`<div style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''" onclick="selWbpOs('${w.id}','${esc(w.nama_wbp)}','${esc(w.kamar)}')">
+      <p style="font-weight:600;color:#0f172a;margin:0;">${esc(w.nama_wbp)}</p>
+      <p style="font-size:11px;color:#64748b;margin:0;">${esc(w.kamar)}</p>
+    </div>`).join('');
+    dd.style.display='';
+  },300);
+}
+
+function selWbpOs(id,nm,km){
+  osWbp={id,nama_wbp:nm,kamar:km};
+  document.getElementById('os-wbp-inp').value=nm;
+  document.getElementById('os-wbp-info').textContent=`${nm} – ${km}`;
+  document.getElementById('os-wbp-sel').style.display='';
+  document.getElementById('os-dd').style.display='none';
+}
+
+function addOsBrg(){
+  const n=document.getElementById('os-brg').value.trim();
+  const q=parseInt(document.getElementById('os-qty').value)||1;
+  if(!n)return;
+  osBrg.push({nama:n,jumlah:q});
+  document.getElementById('os-brg').value='';
+  document.getElementById('os-qty').value=1;
+  renderOsBrg();
+}
+
+function renderOsBrg(){
+  document.getElementById('os-brg-list').innerHTML=osBrg.map((b,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:8px;padding:8px 10px;">
+      <span style="font-size:12px;">📦 ${esc(b.nama)} <strong>×${b.jumlah}</strong></span>
+      <button style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:18px;font-weight:700;padding:0 4px;line-height:1;" onclick="osBrg.splice(${i},1);renderOsBrg()">×</button>
+    </div>`).join('');
+}
+
+async function submitOnsite(){
+  const nik=document.getElementById('os-nik').value.trim();
+  const nm=document.getElementById('os-nama').value.trim();
+  document.getElementById('os-err').style.display='none';
+  if(nik.length!==16){showFErr('os-err','NIK harus 16 digit.');return;}
+  if(!nm){showFErr('os-err','Nama wajib diisi.');return;}
+  if(!osWbp){showFErr('os-err','Pilih WBP yang dikunjungi.');return;}
+  const btn=document.getElementById('btn-os');
+  btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
+  const today=new Date().toISOString().split('T')[0];
+  const{error}=await db.from('kunjungan').insert({wbp_id:osWbp.id,nama_pengunjung:nm,nik_pengunjung:nik,tgl_kunjungan:today,status:'hadir',daftar_barang:osBrg,metode_daftar:'onsite'});
+  btn.innerHTML='Daftarkan & Tandai Hadir';btn.disabled=false;
+  if(error){showFErr('os-err','Gagal: '+error.message);showToast('Pendaftaran gagal','error');return;}
+  showToast('✅ '+nm+' berhasil terdaftar & hadir!','success');
+  document.getElementById('os-nik').value='';
+  document.getElementById('os-nama').value='';
+  document.getElementById('os-wbp-inp').value='';
+  document.getElementById('os-wbp-sel').style.display='none';
+  osWbp=null;osBrg=[];renderOsBrg();
+  loadDash();
+  navTo('kunjungan',document.querySelector('[data-p=kunjungan]'));
+}
+
+// ============================================================
+// PENCARIAN
+// ============================================================
+async function doSearch(){
+  const q=document.getElementById('cari-inp').value.trim();
+  if(!q){showToast('Masukkan kata kunci','warn');return;}
+  const res=document.getElementById('cari-res');
+  res.innerHTML='<div style="text-align:center;padding:24px;"><span class="spin"></span></div>';
+  const today=new Date().toISOString().split('T')[0];
+  const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).or(`nama_pengunjung.ilike.%${q}%,nik_pengunjung.ilike.%${q}%`);
+  if(error){res.innerHTML='';showToast('Error: '+error.message,'error');return;}
+  if(!data||!data.length){res.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Tidak ditemukan hasil untuk "'+esc(q)+'"</p>';showToast('Tidak ada hasil','warn');return;}
+  data.forEach(d=>{if(!allKunj.find(x=>x.id===d.id))allKunj.push(d);});
+  res.innerHTML='<div style="display:flex;flex-direction:column;gap:8px;">'+data.map(v=>{
+    const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+    const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8fafc;border-radius:10px;cursor:pointer;border:1px solid #e2e8f0;" onclick="openDetail('${v.id}')">
+      <div style="width:40px;height:40px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1d4ed8;font-size:14px;flex-shrink:0;">${String(v.no_antrean).padStart(2,'0')}</div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-weight:600;color:#0f172a;font-size:13px;margin:0 0 2px;">${esc(v.nama_pengunjung)}</p>
+        <p style="font-size:11px;color:#64748b;margin:0;">NIK: ${v.nik_pengunjung} → ${esc(v.wbp?.nama_wbp||'—')} (${esc(v.wbp?.kamar||'—')})</p>
+        ${b.length?`<p style="font-size:11px;color:#92400e;margin:2px 0 0;">📦 ${b.map(x=>esc(x.nama)).join(', ')}</p>`:''}
+      </div>
+      <span class="${st}">${v.status}</span>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+// ============================================================
+// KONFIRMASI HAPUS
+// ============================================================
+function confirmDel(type,id,name){
+  document.getElementById('cfm-title').textContent={wbp:'Hapus Data WBP',keluarga:'Hapus Data Keluarga'}[type]||'Hapus Data';
+  document.getElementById('cfm-msg').textContent=`Hapus "${name}"? Data tidak dapat dipulihkan.`;
+  document.getElementById('btn-cfm').onclick=async()=>{
+    const tbl=type==='wbp'?'wbp':'keluarga_wbp';
+    const{error}=await db.from(tbl).delete().eq('id',id);
+    if(error)showToast('Gagal hapus: '+error.message,'error');
+    else{showToast('Data berhasil dihapus','success');if(type==='wbp')loadWbp();else{loadKel();loadWbp();}}
+    cm('m-confirm');
+  };
+  om('m-confirm');
+}
+
+// ============================================================
+// MODAL + HELPERS
+// ============================================================
+function om(id){document.getElementById(id).style.display='flex';}
+function cm(id){document.getElementById(id).style.display='none';}
+function showFErr(id,msg){const el=document.getElementById(id);if(el){el.textContent='⚠ '+msg;el.style.display='';}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showToast(msg,type='info'){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');
+  t.className='toast';
+  t.style.background={success:'#16a34a',error:'#dc2626',warn:'#d97706',info:'#1e293b'}[type]||'#1e293b';
+  t.style.color='#fff';
+  t.innerHTML=`<span>${{success:'✅',error:'❌',warn:'⚠️',info:'ℹ️'}[type]||''}</span><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),type==='error'?5500:3500);
+}
+</script>
+</body>
+</html>
