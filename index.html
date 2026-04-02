@@ -318,7 +318,7 @@ function addBarang() {
   const n = document.getElementById('inp-barang').value.trim();
   const q = parseInt(document.getElementById('inp-qty').value)||1;
   if (!n) return;
-  S.barang.push({nama:n, jumlah:q});
+  S.barang.push({nama:n, jumlah: parseInt(q)||1});
   document.getElementById('inp-barang').value = '';
   document.getElementById('inp-qty').value = 1;
   renderBarang();
@@ -349,7 +349,8 @@ async function doSubmit() {
     const { data, error } = await db.from('kunjungan').insert({
       wbp_id: S.wbp.id, nama_pengunjung: S.nama, nik_pengunjung: S.nik,
       tgl_kunjungan: today, status:'menunggu',
-      daftar_barang: S.barang, metode_daftar:'online'
+      daftar_barang: S.barang.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1})),
+      metode_daftar:'online'
     }).select().single();
     if (error) throw error;
 
