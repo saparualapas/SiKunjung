@@ -94,6 +94,7 @@
     @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     .spin{border:2px solid #e5e7eb;border-top:2px solid #3b82f6;border-radius:50%;width:16px;height:16px;animation:sp .7s linear infinite;display:inline-block;vertical-align:middle;}
     @keyframes sp{to{transform:rotate(360deg)}}
+    @keyframes sk{0%,100%{opacity:1}50%{opacity:.4}}
     .gt{display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600;}
     .rt{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pd 2s infinite;}
     @keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
@@ -217,7 +218,7 @@
           <button class="btn bg2 bsm" style="margin-left:auto;" onclick="navTo('kunjungan',document.querySelector('[data-p=kunjungan]'))">Lihat Semua →</button>
         </div>
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th></tr></thead>
           <tbody id="dash-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="dash-mc"></div>
@@ -237,7 +238,7 @@
       </div>
       <div class="card">
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP / Kamar</th><th>Jam</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="kunj-tb"><tr><td colspan="7" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="kunj-mc" style="padding:8px;"></div>
@@ -304,11 +305,14 @@
         <div class="card-head"><h3>📦 Barang Bawaan Hari Ini</h3>
           <button class="btn bg2 bsm" style="margin-left:auto;" onclick="loadBarang()">↻ Refresh</button>
         </div>
-        <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Nama Barang</th><th>Jumlah</th><th>Status</th></tr></thead>
-          <tbody id="brg-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
+        <!-- Skeleton lazy loading -->
+        <div id="brg-skeleton" style="display:none;padding:16px;">
+          <div style="height:80px;background:#f1f5f9;border-radius:10px;margin-bottom:10px;animation:sk 1.2s infinite;"></div>
+          <div style="height:80px;background:#f1f5f9;border-radius:10px;margin-bottom:10px;animation:sk 1.2s infinite;animation-delay:.2s;"></div>
+          <div style="height:80px;background:#f1f5f9;border-radius:10px;animation:sk 1.2s infinite;animation-delay:.4s;"></div>
         </div>
-        <div class="mob-card" id="brg-mc" style="padding:8px;"></div>
+        <div id="brg-list" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
+        <div class="pag" id="brg-pag"></div>
       </div>
     </div>
 
@@ -362,10 +366,8 @@
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-bottom:16px;">
             <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 8px;">📷 Scan KTP (Opsional)</p>
             <div id="ktp-scan-area" style="display:none;margin-bottom:10px;">
-              <div class="scan-wrap" style="margin-bottom:8px;min-height:160px;display:flex;align-items:center;justify-content:center;">
-                <div id="ktp-reader"></div>
-              </div>
-              <button class="btn bdan bsm" onclick="stopKtpScan()">■ Stop Scan KTP</button>
+              <div id="ktp-reader" style="width:100%;min-height:220px;background:#000;border-radius:10px;overflow:hidden;"></div>
+              <button class="btn bdan bsm" style="margin-top:8px;" onclick="stopKtpScan()">■ Stop Scan KTP</button>
             </div>
             <div id="ktp-scan-result" style="display:none;background:#d1fae5;border:1px solid #bbf7d0;border-radius:8px;padding:8px;margin-bottom:8px;font-size:12px;color:#065f46;"></div>
             <button id="btn-scan-ktp" class="btn bp bsm" onclick="startKtpScan()">📷 Mulai Scan KTP</button>
@@ -857,14 +859,21 @@ function setupRealtime(){
 // ============================================================
 async function loadDash(){
   const today = getWITDate(); // ✅ WIT
+  // Skeleton loading sementara fetch
+  document.getElementById('dash-tb').innerHTML=`<tr><td colspan="6" style="padding:0;">
+    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+      ${[1,2,3].map(()=>`<div style="height:40px;background:#f1f5f9;border-radius:8px;animation:sk 1.2s infinite;"></div>`).join('')}
+    </div></td></tr>`;
+  ['s-tot','s-men','s-had','s-sel','s-brg','s-wbp'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML='<span class="spin"></span>';
+  });
   const[{data:k},{data:w}]=await Promise.all([
     db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
     db.from('wbp').select('id,status').eq('status','aktif')
   ]);
   const kd=k||[],wd=w||[];
   document.getElementById('s-tot').textContent=kd.length;
-  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
-  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
+  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
   document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
   // ✅ FIX: parseBarang agar JSONB string juga terbaca dengan benar
   document.getElementById('s-brg').textContent=kd.filter(x=>parseBarang(x.daftar_barang).length>0).length;
@@ -899,8 +908,8 @@ function kunjRow(v,showAksi=true){
     <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
     <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
     <td>${esc(v.wbp?.nama_wbp||'—')}<br><span style="font-size:10px;color:#94a3b8;">${esc(v.wbp?.kamar||'—')}</span></td>
-    <td style="font-weight:600;">${jamVal}</td>
-    <td style="max-width:180px;">${bHtml}</td>
+    <td style="font-weight:600;white-space:nowrap;">${jamVal}</td>
+    <td style="max-width:200px;">${bHtml}</td>
     <td><span class="${st}">${v.status}</span></td>
     ${aksi}
   </tr>`;
@@ -931,7 +940,11 @@ function kunjMobCard(v,showAksi=true){
 // KUNJUNGAN
 // ============================================================
 async function loadKunj(){
-  document.getElementById('kunj-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
+  // Skeleton lazy loading
+  document.getElementById('kunj-tb').innerHTML=`<tr><td colspan="7" style="padding:0;">
+    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+      ${[1,2,3,4].map(()=>`<div style="height:40px;background:#f1f5f9;border-radius:8px;animation:sk 1.2s infinite;"></div>`).join('')}
+    </div></td></tr>`;
   document.getElementById('kunj-mc').innerHTML='';
   const today = getWITDate(); // ✅ WIT
   const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).in('status',['menunggu','hadir']).order('no_antrean');
@@ -980,7 +993,10 @@ async function loadRiwayat(){
   const dari=rwDari.value;
   const sampai=rwSampai.value;
   if(!dari||!sampai){showToast('Pilih rentang tanggal','warn');return;}
-  document.getElementById('rw-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
+  document.getElementById('rw-tb').innerHTML=`<tr><td colspan="8" style="padding:0;">
+    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+      ${[1,2,3].map(()=>`<div style="height:40px;background:#f1f5f9;border-radius:8px;animation:sk 1.2s infinite;"></div>`).join('')}
+    </div></td></tr>`;
   const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('status','selesai').gte('tgl_kunjungan',dari).lte('tgl_kunjungan',sampai).order('tgl_kunjungan',{ascending:false}).order('no_antrean');
   if(error){showToast('Gagal: '+error.message,'error');return;}
   allRiwayat=data||[];
@@ -1033,36 +1049,66 @@ function renderRiwayat(){
 // ============================================================
 // BARANG
 // ============================================================
+let allBarang=[], brgPage=1;
 async function loadBarang(){
-  document.getElementById('brg-tb').innerHTML='<tr><td colspan="6" class="empty"><span class="spin"></span></td></tr>';
-  const today = getWITDate(); // ✅ WIT
+  const skEl=document.getElementById('brg-skeleton');
+  const listEl=document.getElementById('brg-list');
+  skEl.style.display='block'; listEl.innerHTML='';
+  document.getElementById('brg-pag').innerHTML='';
+  const today = getWITDate();
   const{data}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
-  const rows=[], mobs=[];
-  (data||[]).forEach(v=>{
-    const b=parseBarang(v.daftar_barang); // ✅ FIX: parse aman
+  skEl.style.display='none';
+  allBarang = data||[];
+  brgPage=1;
+  renderBarang();
+}
+
+function renderBarang(){
+  const listEl=document.getElementById('brg-list');
+  const pagEl=document.getElementById('brg-pag');
+  if(!allBarang.length){
+    listEl.innerHTML='<p style="text-align:center;color:#94a3b8;padding:32px;font-size:13px;">Belum ada kunjungan hari ini</p>';
+    pagEl.innerHTML=''; return;
+  }
+  const{slice}=paginate(allBarang, brgPage);
+  listEl.innerHTML = slice.map(v=>{
+    const b=parseBarang(v.daftar_barang);
     const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
-    if(!b.length){
-      rows.push(`<tr><td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td><td>${esc(v.nama_pengunjung)}</td><td>${esc(v.wbp?.nama_wbp||'—')}</td><td colspan="2" style="color:#94a3b8;font-style:italic;font-size:11px;">Tidak ada barang</td><td><span class="${st}">${v.status}</span></td></tr>`);
-      mobs.push(`<div class="mc2"><div class="mc2-row"><strong>#${String(v.no_antrean).padStart(3,'0')} ${esc(v.nama_pengunjung)}</strong><span class="${st}">${v.status}</span></div><div style="font-size:11px;color:#64748b;">WBP: ${esc(v.wbp?.nama_wbp||'—')} | Tidak ada barang</div></div>`);
-    } else {
-      b.forEach((br,i)=>{
-        const rs=b.length;
-        rows.push(`<tr>
-          ${i===0?`<td rowspan="${rs}" style="vertical-align:middle;"><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
-          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.nama_pengunjung)}</td>
-          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.wbp?.nama_wbp||'—')}</td>`:''}
-          <td><span class="gt">📦 ${esc(br.nama)}</span></td>
-          <td style="font-weight:700;">${br.jumlah}</td>
-          ${i===0?`<td rowspan="${rs}" style="vertical-align:middle;"><span class="${st}">${v.status}</span></td>`:''}
-        </tr>`);
-      });
-      mobs.push(`<div class="mc2"><div class="mc2-row"><strong>#${String(v.no_antrean).padStart(3,'0')} ${esc(v.nama_pengunjung)}</strong><span class="${st}">${v.status}</span></div><div style="font-size:11px;color:#64748b;margin-bottom:4px;">WBP: ${esc(v.wbp?.nama_wbp||'—')}</div>${b.map(x=>`<span class="gt" style="margin-right:4px;">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join('')}</div>`);
-    }
-  });
-  const tbody=document.getElementById('brg-tb');
-  const mc=document.getElementById('brg-mc');
-  tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
-  mc.innerHTML=mobs.length?mobs.join(''):'';
+    const stLabel={'menunggu':'⏳ Menunggu','hadir':'✅ Hadir','selesai':'🏁 Selesai'}[v.status]||v.status;
+    return `<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;">
+      <!-- Header card pengunjung -->
+      <div style="background:#f8fafc;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;background:#dbeafe;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1d4ed8;font-size:13px;flex-shrink:0;">${String(v.no_antrean).padStart(2,'0')}</div>
+          <div>
+            <p style="font-weight:700;font-size:13px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p>
+            <p style="font-size:11px;color:#64748b;margin:0;">NIK: ${v.nik_pengunjung} · WBP: <strong>${esc(v.wbp?.nama_wbp||'—')}</strong> (${esc(v.wbp?.kamar||'—')})</p>
+          </div>
+        </div>
+        <span class="${st}" style="font-size:11px;">${stLabel}</span>
+      </div>
+      <!-- Isi barang -->
+      <div style="padding:10px 14px;">
+        ${b.length===0
+          ? '<p style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">Tidak ada barang bawaan</p>'
+          : `<div style="display:flex;flex-direction:column;gap:6px;">
+              ${b.map((br,i)=>`
+                <div style="display:flex;align-items:center;justify-content:space-between;background:#fffbeb;border:1px solid #fef3c7;border-radius:8px;padding:7px 12px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:15px;">📦</span>
+                    <span style="font-size:13px;font-weight:600;color:#0f172a;">${esc(br.nama)}</span>
+                  </div>
+                  <div style="background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:12px;">×${br.jumlah}</div>
+                </div>`).join('')}
+              <div style="font-size:11px;color:#92400e;margin-top:2px;font-weight:600;">
+                Total: ${b.reduce((a,x)=>a+Number(x.jumlah),0)} pcs dari ${b.length} jenis barang
+              </div>
+            </div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+  renderPag('brg-pag', brgPage, Math.ceil(allBarang.length/PAGE_SIZE), (p)=>{brgPage=p; renderBarang();});
 }
 
 // ============================================================
@@ -1424,26 +1470,37 @@ async function startKtpScan(){
     return;
   }
 
-  // Reset div before reinitializing to avoid "already started" error
-  const readerDiv=document.getElementById('ktp-reader');
-  if(readerDiv) readerDiv.innerHTML='';
+  // Hentikan scanner lama jika ada
   if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
-  ktpScanner=new Html5Qrcode('ktp-reader');
-  document.getElementById('ktp-scan-area').style.display='block';
-  document.getElementById('btn-scan-ktp').style.display='none';
-  resultEl.style.display='none';
+
+  // ✅ FIX GELAP: Tampilkan area scan dulu, reset innerHTML, baru init SETELAH div visible
+  const scanArea = document.getElementById('ktp-scan-area');
+  const readerDiv = document.getElementById('ktp-reader');
+  readerDiv.innerHTML = '';
+  scanArea.style.display = 'block';
+  document.getElementById('btn-scan-ktp').style.display = 'none';
+  resultEl.style.display = 'none';
+
+  // ✅ Tunggu 1 frame agar browser render div dulu sebelum Html5Qrcode mengambil dimensi
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
   try{
+    ktpScanner = new Html5Qrcode('ktp-reader');
     await ktpScanner.start(
       {facingMode:'environment'},
-      {fps:10,qrbox:{width:260,height:160}},
+      {
+        fps: 10,
+        qrbox: (w, h) => ({width: Math.min(w, 280), height: Math.min(h, 160)}),
+        aspectRatio: 1.777 // 16:9
+      },
       onKtpScan,
       ()=>{}
     );
     showToast('Kamera aktif – arahkan ke barcode belakang KTP','info');
   }catch(e){
-    document.getElementById('ktp-scan-area').style.display='none';
-    document.getElementById('btn-scan-ktp').style.display='';
-    resultEl.innerHTML='⚠ Kamera gagal dibuka: '+e.message+'. Pastikan halaman diakses lewat HTTPS.';
+    scanArea.style.display = 'none';
+    document.getElementById('btn-scan-ktp').style.display = '';
+    resultEl.innerHTML = '⚠ Kamera gagal dibuka: ' + e.message + '. Pastikan halaman diakses lewat HTTPS.';
     resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
   }
 }
