@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password – SiKunjung</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box;margin:0;padding:0;}
+    body{min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1e40af 100%);display:flex;align-items:center;justify-content:center;padding:16px;}
+    .card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.3);animation:up .5s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes up{from{opacity:0;transform:translateY(32px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .logo{width:56px;height:56px;background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;}
+    h1{font-size:20px;font-weight:800;color:#0f172a;text-align:center;margin-bottom:4px;}
+    .sub{color:#64748b;font-size:13px;text-align:center;margin-bottom:24px;}
+    label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px;}
+    .field{margin-bottom:14px;}
+    .inp-wrap{position:relative;}
+    input[type=password],input[type=text]{width:100%;padding:11px 42px 11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:.15s;}
+    input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+    .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:0;line-height:1;}
+    .strength{height:4px;border-radius:2px;margin-top:6px;background:#e2e8f0;overflow:hidden;}
+    .strength-bar{height:100%;width:0;border-radius:2px;transition:width .3s,background .3s;}
+    .strength-lbl{font-size:10px;font-weight:600;margin-top:3px;min-height:14px;}
+    .btn{width:100%;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;margin-top:4px;}
+    .btn-primary{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;}
+    .btn-primary:hover{opacity:.9;}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+    .msg{border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;margin-bottom:14px;display:none;}
+    .msg.err{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;}
+    .msg.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;}
+    .back{display:block;text-align:center;font-size:12px;color:#94a3b8;margin-top:18px;text-decoration:none;}
+    .back:hover{color:#3b82f6;}
+    .spin{border:2px solid rgba(255,255,255,.3);border-top:2px solid #fff;border-radius:50%;width:16px;height:16px;animation:sp .7s linear infinite;flex-shrink:0;}
+    @keyframes sp{to{transform:rotate(360deg)}}
+    /* Loading overlay */
+    #loading{position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .4s;}
+    #loading.hide{opacity:0;pointer-events:none;}
+    .load-dot{width:10px;height:10px;border-radius:50%;background:#3b82f6;animation:bounce 1.2s infinite;}
+    .load-dot:nth-child(2){animation-delay:.2s;background:#60a5fa;}
+    .load-dot:nth-child(3){animation-delay:.4s;background:#93c5fd;}
+    @keyframes bounce{0%,80%,100%{transform:scale(0.8);opacity:.5}40%{transform:scale(1.2);opacity:1}}
+    /* Success state */
+    .success-wrap{text-align:center;display:none;}
+    .success-wrap .icon{font-size:56px;margin-bottom:12px;animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div style="display:flex;gap:8px;">
+    <div class="load-dot"></div>
+    <div class="load-dot"></div>
+    <div class="load-dot"></div>
+  </div>
+</div>
+
+<div class="card" id="main-card" style="opacity:0;">
+
+  <!-- Form state -->
+  <div id="form-wrap">
+    <div class="logo">🔑</div>
+    <h1>Atur Password Baru</h1>
+    <p class="sub">Masukkan password baru untuk akun admin Anda</p>
+
+    <div id="msg-box" class="msg"></div>
+
+    <div class="field">
+      <label>Password Baru</label>
+      <div class="inp-wrap">
+        <input type="password" id="pw-baru" placeholder="Minimal 8 karakter" oninput="checkStrength(this.value)"/>
+        <button class="eye" onclick="toggleEye('pw-baru',this)" type="button">👁️</button>
+      </div>
+      <div class="strength"><div class="strength-bar" id="str-bar"></div></div>
+      <div class="strength-lbl" id="str-lbl"></div>
+    </div>
+
+    <div class="field">
+      <label>Konfirmasi Password Baru</label>
+      <div class="inp-wrap">
+        <input type="password" id="pw-konfirm" placeholder="Ulangi password baru"/>
+        <button class="eye" onclick="toggleEye('pw-konfirm',this)" type="button">👁️</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-save" onclick="doReset()">Simpan Password Baru</button>
+    <a href="admin.html" class="back">← Kembali ke Login</a>
+  </div>
+
+  <!-- Success state -->
+  <div class="success-wrap" id="success-wrap">
+    <div class="icon">✅</div>
+    <h1 style="margin-bottom:8px;">Password Berhasil Diubah!</h1>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Anda akan diarahkan ke halaman login dalam <span id="countdown">3</span> detik...</p>
+    <a href="admin.html" class="btn btn-primary" style="text-decoration:none;">Masuk Sekarang →</a>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL      = 'https://cbnqdvkxukortmntmfzh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibnFkdmt4dWtvcnRtbnRtZnpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjM3MzksImV4cCI6MjA5MDY5OTczOX0.WSAQeI0wJlNbi9ECL1ECyduLdZnm-cVPMpH4peLLT_0';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { detectSessionInUrl: true, persistSession: true }
+});
+
+let isReady = false;
+
+// Tunggu Supabase proses URL hash (token dari email)
+db.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+    isReady = true;
+  }
+});
+
+window.addEventListener('load', async () => {
+  // Beri waktu Supabase proses hash
+  await new Promise(r => setTimeout(r, 800));
+
+  const { data: { session } } = await db.auth.getSession();
+  const loading = document.getElementById('loading');
+  const card = document.getElementById('main-card');
+
+  loading.classList.add('hide');
+  card.style.opacity = '1';
+  card.style.transition = 'opacity .3s';
+
+  if (!session) {
+    // Tidak ada sesi valid — URL mungkin sudah expired
+    showMsg('Link reset sudah kedaluwarsa atau tidak valid. Minta link baru dari halaman login.', 'err');
+    document.getElementById('btn-save').disabled = true;
+  } else {
+    isReady = true;
+  }
+});
+
+function toggleEye(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+
+function checkStrength(val) {
+  const bar = document.getElementById('str-bar');
+  const lbl = document.getElementById('str-lbl');
+  if (!val) { bar.style.width = '0'; lbl.textContent = ''; return; }
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    { w: '20%', c: '#ef4444', t: 'Sangat Lemah' },
+    { w: '40%', c: '#f97316', t: 'Lemah' },
+    { w: '60%', c: '#eab308', t: 'Cukup' },
+    { w: '80%', c: '#22c55e', t: 'Kuat' },
+    { w: '100%', c: '#16a34a', t: 'Sangat Kuat ✓' },
+  ];
+  const l = levels[Math.min(score, 4)];
+  bar.style.width = l.w;
+  bar.style.background = l.c;
+  lbl.textContent = l.t;
+  lbl.style.color = l.c;
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg-box');
+  el.textContent = text;
+  el.className = 'msg ' + type;
+  el.style.display = 'block';
+}
+
+async function doReset() {
+  const baru = document.getElementById('pw-baru').value;
+  const konfirm = document.getElementById('pw-konfirm').value;
+  const btn = document.getElementById('btn-save');
+
+  document.getElementById('msg-box').style.display = 'none';
+
+  if (!baru || baru.length < 8) { showMsg('Password minimal 8 karakter.', 'err'); return; }
+  if (baru !== konfirm) { showMsg('Password dan konfirmasi tidak sama.', 'err'); return; }
+  if (!isReady) { showMsg('Sesi tidak valid. Coba refresh halaman atau minta link reset baru.', 'err'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Menyimpan...';
+
+  const { error } = await db.auth.updateUser({ password: baru });
+
+  if (error) {
+    showMsg('Gagal: ' + error.message, 'err');
+    btn.disabled = false;
+    btn.innerHTML = 'Simpan Password Baru';
+    return;
+  }
+
+  // Sign out supaya sesi bersih
+  await db.auth.signOut();
+
+  // Show success
+  document.getElementById('form-wrap').style.display = 'none';
+  document.getElementById('success-wrap').style.display = 'block';
+
+  let t = 3;
+  const cd = document.getElementById('countdown');
+  const timer = setInterval(() => {
+    t--;
+    cd.textContent = t;
+    if (t <= 0) { clearInterval(timer); window.location.href = 'admin.html'; }
+  }, 1000);
+}
+
+// Enter key support
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter') doReset();
+});
+</script>
+</body>
+</html>

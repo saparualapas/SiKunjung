@@ -8,6 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     *{font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box;}
@@ -18,19 +19,19 @@
     #sidebar .logo h1{color:#fff;font-size:16px;font-weight:800;margin:0;}
     #sidebar .logo p{color:#94a3b8;font-size:11px;margin:2px 0 0;}
     .logo-badge{display:inline-block;background:#1d4ed8;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:4px;}
-    nav{flex:1;overflow-y:auto;padding:8px 0 60px 0;-webkit-overflow-scrolling:touch;}
+    nav{flex:1;overflow-y:auto;padding:8px 0;}
     .sec-lbl{color:#475569;font-size:10px;font-weight:700;letter-spacing:.08em;padding:12px 16px 4px;text-transform:uppercase;}
     .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:#94a3b8;font-size:13px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s;user-select:none;}
     .nav-item:hover{background:rgba(255,255,255,.05);color:#e2e8f0;}
     .nav-item.active{background:rgba(29,78,216,.25);color:#60a5fa;border-left-color:#3b82f6;}
     .nav-item .ic{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
     .nb{margin-left:auto;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
-    #sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+    #sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);}
     #sb-email{color:#64748b;font-size:11px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     #btn-lo{width:100%;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.2);padding:8px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
     #btn-lo:hover{background:rgba(239,68,68,.35);color:#fff;}
     #main{margin-left:var(--sidebar-w);min-height:100vh;transition:margin .3s;}
-    #topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;}
+    #topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;overflow:visible;}
     #pg-title{font-size:17px;font-weight:700;color:#0f172a;}
     .tday{background:#f1f5f9;color:#64748b;font-size:12px;padding:5px 12px;border-radius:20px;font-weight:500;}
     #content{padding:16px;}
@@ -118,9 +119,56 @@
     .tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
     .tab-btn{padding:6px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s;}
     .tab-btn.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+    /* Loading screen */
+    #page-loader{position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .5s;}
+    #page-loader.hide{opacity:0;pointer-events:none;}
+    .loader-logo{width:64px;height:64px;background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;animation:pop .6s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+    .loader-dots{display:flex;gap:8px;}
+    .ld{width:10px;height:10px;border-radius:50%;background:#3b82f6;animation:bounce 1.2s infinite;}
+    .ld:nth-child(2){animation-delay:.2s;background:#60a5fa;}
+    .ld:nth-child(3){animation-delay:.4s;background:#93c5fd;}
+    @keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1.2);opacity:1}}
+    .loader-text{color:#94a3b8;font-size:13px;font-weight:500;}
+    /* Idle warning modal */
+    #idle-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:9998;display:none;align-items:center;justify-content:center;padding:16px;}
+    #idle-modal.show{display:flex!important;}
+    .idle-box{background:#fff;border-radius:16px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+    .idle-box h3{font-size:17px;font-weight:700;color:#0f172a;margin:0 0 8px;}
+    .idle-box p{font-size:13px;color:#64748b;margin:0 0 16px;}
+    .idle-countdown{font-size:40px;font-weight:800;color:#dc2626;margin:8px 0 16px;line-height:1;}
+    /* Progress bar top */
+    .progress-bar{height:3px;background:#dbeafe;position:relative;overflow:hidden;}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#2563eb);width:100%;transform-origin:left;transition:transform 1s linear;}
   </style>
 </head>
 <body>
+
+<!-- Page Loader -->
+<div id="page-loader">
+  <div class="loader-logo">🏛️</div>
+  <div class="loader-dots">
+    <div class="ld"></div>
+    <div class="ld"></div>
+    <div class="ld"></div>
+  </div>
+  <div class="loader-text">Memuat SiKunjung...</div>
+</div>
+
+<!-- Idle Warning Modal -->
+<div id="idle-modal" style="display:none;align-items:center;justify-content:center;">
+  <div class="idle-box">
+    <div style="font-size:44px;margin-bottom:8px;">⏰</div>
+    <h3>Sesi Akan Habis</h3>
+    <p>Tidak ada aktivitas terdeteksi.<br>Anda akan otomatis keluar dalam:</p>
+    <div class="idle-countdown" id="idle-cd">120</div>
+    <p style="font-size:11px;color:#94a3b8;margin:0 0 16px;">detik</p>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn bg2" style="flex:1;justify-content:center;" onclick="doLogout()">Keluar Sekarang</button>
+      <button class="btn bp" style="flex:1;justify-content:center;" onclick="resetIdle()">Lanjutkan Sesi</button>
+    </div>
+  </div>
+</div>
 
 <!-- Hidden div for html5-qrcode scanFile -->
 <div id="ktp-reader-hidden" style="display:none;"></div>
@@ -133,7 +181,7 @@
       <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin:0;">Admin Panel</h1>
       <p style="color:#64748b;font-size:13px;margin-top:4px;">SiKunjung – Lapas Kelas III Saparua</p>
     </div>
-    <div id="frm-login" style="display:flex;flex-direction:column;gap:14px;">
+    <div id="login-form" style="display:flex;flex-direction:column;gap:14px;">
       <div><label class="lbl-f">Email</label><input id="l-email" type="email" placeholder="admin@lapas.go.id" class="inp"/></div>
       <div>
         <label class="lbl-f">Password</label>
@@ -147,7 +195,7 @@
       <button onclick="showForgotPass()" type="button" style="background:none;border:none;color:#3b82f6;font-size:12px;cursor:pointer;text-align:center;padding:4px;">Lupa password?</button>
     </div>
     <!-- FORGOT PASSWORD -->
-    <div id="frm-forgot" style="display:none;flex-direction:column;gap:14px;">
+    <div id="forgot-form" style="display:none;flex-direction:column;gap:14px;">
       <div style="text-align:center;margin-bottom:8px;">
         <p style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 4px;">Reset Password</p>
         <p style="font-size:12px;color:#64748b;">Link reset akan dikirim ke email Anda</p>
@@ -158,7 +206,7 @@
       <button onclick="showLoginForm()" type="button" style="background:none;border:none;color:#64748b;font-size:12px;cursor:pointer;text-align:center;">← Kembali ke Login</button>
     </div>
     <!-- RESET PASSWORD FORM (dari email link) -->
-    <div id="frm-reset" style="display:none;flex-direction:column;gap:14px;width:100%;">
+    <div id="frm-reset" style="display:none;flex-direction:column;gap:14px;">
       <div style="text-align:center;margin-bottom:4px;">
         <p style="font-size:15px;font-weight:700;color:#0f172a;margin:0 0 4px;">🔑 Atur Password Baru</p>
         <p style="font-size:12px;color:#64748b;">Masukkan password baru untuk akun Anda</p>
@@ -218,6 +266,7 @@
 <!-- MAIN -->
 <div id="main">
   <div id="topbar">
+    <div class="progress-bar" style="position:absolute;top:0;left:0;right:0;z-index:1;"><div class="progress-fill" id="idle-progress"></div></div>
     <button class="btn-menu" onclick="openSB()">☰</button>
     <div id="pg-title">Dashboard</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
@@ -244,11 +293,10 @@
           <button class="btn bg2 bsm" style="margin-left:auto;" onclick="navTo('kunjungan',document.querySelector('[data-p=kunjungan]'))">Lihat Semua →</button>
         </div>
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th></tr></thead>
           <tbody id="dash-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="dash-mc"></div>
-        <div class="pag" id="dash-pag"></div>
       </div>
     </div>
 
@@ -379,35 +427,28 @@
           <h3 style="font-weight:700;color:#0f172a;margin:0 0 4px;">➕ Pendaftaran Onsite</h3>
           <p style="color:#64748b;font-size:13px;margin:0 0 18px;">Scan KTP pengunjung atau isi manual</p>
 
-          <!-- Scan KTP -->
+          <!-- Scan KTP OCR -->
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:16px;">
-            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 6px;">📷 Scan / Foto KTP (Otomatis isi NIK &amp; Nama)</p>
-            <p style="font-size:11px;color:#1e40af;margin:0 0 12px;">Foto barcode di <strong>belakang KTP</strong> (garis-garis hitam / PDF417)</p>
-            
-            <!-- Tombol: Foto langsung dari kamera HP -->
+            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 4px;">📷 Foto KTP → Isi Otomatis</p>
+            <p style="font-size:11px;color:#1e40af;margin:0 0 12px;">Foto <strong>bagian depan KTP</strong> yang terlihat jelas, sistem akan baca NIK & nama secara otomatis.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-              <label id="lbl-foto-kamera" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
-                📷 Foto Kamera
-                <input type="file" id="ktp-kamera" accept="image/*" capture="environment" onchange="processKtpFile(this,'kamera')" style="display:none;"/>
+              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
+                📷 Ambil Foto
+                <input type="file" id="ktp-kamera" accept="image/*" capture="environment" onchange="processKtpOcr(this)" style="display:none;"/>
               </label>
-              <label id="lbl-foto-galeri" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
+              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
                 🖼️ Dari Galeri
-                <input type="file" id="ktp-galeri" accept="image/*" onchange="processKtpFile(this,'galeri')" style="display:none;"/>
+                <input type="file" id="ktp-galeri" accept="image/*" onchange="processKtpOcr(this)" style="display:none;"/>
               </label>
             </div>
-
-            <!-- Preview gambar yang dipilih -->
             <div id="ktp-preview-wrap" style="display:none;margin-bottom:8px;">
-              <img id="ktp-preview-img" style="max-width:100%;max-height:200px;border-radius:8px;border:2px solid #bfdbfe;" alt="Preview KTP"/>
+              <img id="ktp-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;border:2px solid #bfdbfe;display:block;" alt="Preview KTP"/>
             </div>
-
-            <!-- Loading indicator -->
-            <div id="ktp-loading" style="display:none;text-align:center;padding:10px;font-size:12px;color:#1d4ed8;font-weight:600;">
-              <span class="spin"></span> Membaca barcode KTP...
+            <div id="ktp-loading" style="display:none;padding:10px 0;font-size:12px;color:#1d4ed8;font-weight:600;">
+              <span class="spin"></span> <span id="ktp-ocr-status">Memuat OCR...</span>
             </div>
-
-            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:9px 12px;margin-top:8px;font-size:12px;font-weight:600;"></div>
-            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Tips: Pastikan pencahayaan cukup, kamera tegak lurus ke barcode, dan gambar tidak blur.</p>
+            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;"></div>
+            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Pastikan foto terang, tidak buram, dan NIK terlihat jelas. Foto landscape lebih baik.</p>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:14px;">
@@ -477,7 +518,9 @@
               <p style="font-size:10px;color:#64748b;margin:0;">WBP + Keluarga<br>Tiap tanggal 1</p>
             </div>
           </div>
-
+          <div style="background:#fff;border-radius:8px;padding:10px;font-size:11px;color:#0369a1;">
+            <strong>🔒 Backup Backend Supabase:</strong> Supabase menyimpan backup otomatis harian selama 7 hari (Pro plan). Untuk keamanan ekstra, aktifkan Point-in-Time Recovery di <a href="https://supabase.com/dashboard" target="_blank" style="color:#2563eb;">Supabase Dashboard → Settings → Database → Backups</a>.
+          </div>
         </div>
         <div id="backup-reminder" style="display:none;"></div>
         <div class="card" style="padding:20px;margin-bottom:14px;">
@@ -692,18 +735,76 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // ============================================================
 // STATE
 // ============================================================
-let allKunj=[], allWbp=[], allKel=[], allRiwayat=[], allDash=[];
+let allKunj=[], allWbp=[], allKel=[], allRiwayat=[];
 let curFilter='all', curPage='dashboard';
 let qrScanner=null, ktpScanner=null, scanCD=false;
 let osWbp=null, osBrg=[];
 let wbpTab='aktif';
 const PAGE_SIZE=15;
-const DASH_PAGE_SIZE=10;
-let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1, dashPage=1;
+let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1;
 
 // ============================================================
 // BOOT — FIX SESSION PERSISTENCE
 // ============================================================
+// ============================================================
+// IDLE LOGOUT (30 menit, warning 2 menit sebelumnya)
+// ============================================================
+const IDLE_TIMEOUT = 30 * 60 * 1000;  // 30 menit
+const IDLE_WARNING = 2 * 60 * 1000;   // warning 2 menit sebelum logout
+let idleTimer = null, warningTimer = null, cdInterval = null;
+let isLoggedIn = false;
+let idleProgressStart = null;
+
+function resetIdle(){
+  const im2=document.getElementById('idle-modal'); im2.style.display='none'; im2.classList.remove('show');
+  if(cdInterval){ clearInterval(cdInterval); cdInterval=null; }
+  if(idleTimer) clearTimeout(idleTimer);
+  if(warningTimer) clearTimeout(warningTimer);
+  if(!isLoggedIn) return;
+  // Reset progress bar
+  const bar=document.getElementById('idle-progress');
+  if(bar){ bar.style.transform='scaleX(1)'; }
+  idleProgressStart=Date.now();
+  // Animate progress bar shrinking over IDLE_TIMEOUT
+  requestAnimationFrame(()=>{
+    if(bar){
+      bar.style.transition=`transform ${IDLE_TIMEOUT/1000}s linear`;
+      bar.style.transform='scaleX(0)';
+    }
+  });
+  warningTimer=setTimeout(showIdleWarning, IDLE_TIMEOUT - IDLE_WARNING);
+  idleTimer=setTimeout(()=>{ document.getElementById('idle-modal').style.display='none'; doLogout(); }, IDLE_TIMEOUT);
+}
+
+function showIdleWarning(){
+  const im=document.getElementById('idle-modal'); im.style.display='flex'; im.classList.add('show');
+  let sisa=Math.floor(IDLE_WARNING/1000);
+  document.getElementById('idle-cd').textContent=sisa;
+  cdInterval=setInterval(()=>{
+    sisa--;
+    const el=document.getElementById('idle-cd');
+    if(el) el.textContent=sisa;
+    if(sisa<=0){ clearInterval(cdInterval); cdInterval=null; }
+  },1000);
+}
+
+function startIdleTracking(){
+  isLoggedIn=true;
+  ['mousemove','keydown','click','touchstart','scroll'].forEach(ev=>{
+    document.addEventListener(ev, resetIdle, {passive:true});
+  });
+  resetIdle();
+}
+
+function stopIdleTracking(){
+  isLoggedIn=false;
+  if(idleTimer) clearTimeout(idleTimer);
+  if(warningTimer) clearTimeout(warningTimer);
+  if(cdInterval){ clearInterval(cdInterval); cdInterval=null; }
+  const bar=document.getElementById('idle-progress');
+  if(bar){ bar.style.transition='none'; bar.style.transform='scaleX(1)'; }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
@@ -725,56 +826,47 @@ document.addEventListener('DOMContentLoaded',()=>{
   // ✅ FIX: Save current page to sessionStorage for persistence on refresh
   const savedPage = sessionStorage.getItem('sikunjung-page') || 'dashboard';
   let loginHandled = false;
-  let inResetMode = false; // ✅ track apakah kita sedang di mode reset password
 
   db.auth.onAuthStateChange((event, session)=>{
     if(event==='PASSWORD_RECOVERY'){
-      // User klik link reset — tampilkan form, JANGAN masuk dashboard
-      inResetMode=true;
+      // Redirect ke halaman reset.html khusus
       loginHandled=true;
-      showResetPasswordForm();
+      const base=window.location.href.replace(/admin\.html.*$/,'');
+      window.location.replace(base+'reset.html'+window.location.hash);
       return;
     }
-    if(event==='SIGNED_OUT'){
-      loginHandled=false;
-      inResetMode=false;
-      showAG();
-      return;
-    }
-    // Jika sedang di mode reset, event SIGNED_IN tidak boleh masuk dashboard
-    if(inResetMode) return;
     if((event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED') && session && session.user){
       if(!loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
+    } else if(event==='SIGNED_OUT'){
+      loginHandled=false; showAG();
     }
   });
 
   db.auth.getSession().then(({data:{session}})=>{
-    if(session && session.user && !loginHandled && !inResetMode){
-      loginHandled=true; hideAG(); onLogin(session.user, savedPage);
-    }
+    if(session && session.user && !loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
+    else if(!session){ setTimeout(()=>hideLoader(), 400); }
   });
 });
 
 // ============================================================
 // AUTH
 // ============================================================
-function showAG(){document.getElementById('auth-guard').style.display='flex';}
+function showAG(){
+  hideLoader();
+  document.getElementById('auth-guard').style.display='flex';
+}
 function hideAG(){document.getElementById('auth-guard').style.display='none';}
+function hideLoader(){
+  const l=document.getElementById('page-loader');
+  if(l){l.classList.add('hide');setTimeout(()=>{l.style.display='none';},500);}
+}
 function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 
 function showResetPasswordForm(){
+  // Hide auth guard, show inline reset form
   document.getElementById('auth-guard').style.display='flex';
-  // Sembunyikan semua form lain
-  ['frm-login','frm-forgot'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display='none';
-  });
-  // Tampilkan form reset password
-  const resetEl=document.getElementById('frm-reset');
-  if(resetEl) resetEl.style.display='flex';
-  // Jangan masuk ke dashboard
-  document.getElementById('main').style.display='none';
-  document.getElementById('sidebar').style.display='none';
+  ['frm-login','frm-forgot'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('frm-reset').style.display='flex';
 }
 
 async function doResetPassword(){
@@ -793,31 +885,21 @@ async function doResetPassword(){
   } else {
     msg.textContent='✅ Password berhasil diubah! Silakan login.';
     msg.style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
-    setTimeout(async()=>{
-      // Sign out dulu supaya session reset bersih
-      await db.auth.signOut();
-      inResetMode=false;
-      loginHandled=false;
-      // Show main & sidebar again
-      const mainEl=document.getElementById('main');
-      const sbEl=document.getElementById('sidebar');
-      if(mainEl) mainEl.style.display='';
-      if(sbEl) sbEl.style.display='';
+    setTimeout(()=>{
       document.getElementById('frm-reset').style.display='none';
       document.getElementById('frm-login').style.display='flex';
-      document.getElementById('auth-guard').style.display='flex';
       showToast('Password diubah! Silakan login kembali.','success');
     },2000);
   }
 }
 
 function showForgotPass(){
-  document.getElementById('frm-login').style.display='none';
-  document.getElementById('frm-forgot').style.display='flex';
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('forgot-form').style.display='flex';
 }
 function showLoginForm(){
-  document.getElementById('frm-forgot').style.display='none';
-  document.getElementById('frm-login').style.display='flex';
+  document.getElementById('forgot-form').style.display='none';
+  document.getElementById('login-form').style.display='flex';
 }
 
 async function doForgotPass(){
@@ -827,7 +909,8 @@ async function doForgotPass(){
   if(!email){msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';msg.textContent='⚠ Masukkan email Anda.';return;}
   const btn=document.getElementById('btn-fp');
   btn.innerHTML='<span class="spin"></span> Mengirim...';btn.disabled=true;
-  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.href+'?reset=1'});
+  const baseUrl=window.location.href.replace(/admin\.html.*$/,'');
+  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:baseUrl+'reset.html'});
   btn.innerHTML='Kirim Link Reset';btn.disabled=false;
   if(error){
     msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
@@ -894,14 +977,18 @@ async function doLogin(){
 }
 
 async function doLogout(){
+  stopIdleTracking();
   if(qrScanner)await qrScanner.stop().catch(()=>{});
-  if(ktpScanner)await ktpScanner.stop().catch(()=>{});
+  if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
+  if(tesseractWorker){try{await tesseractWorker.terminate();}catch(e){}tesseractWorker=null;tesseractReady=false;}
   await db.auth.signOut();
   showToast('Berhasil keluar','success');
 }
 
 function onLogin(user, page='dashboard'){
   hideAG();
+  hideLoader();
+  startIdleTracking();
   document.getElementById('sb-email').textContent=user.email;
   const setEmail=document.getElementById('set-email');
   if(setEmail)setEmail.textContent=user.email;
@@ -910,8 +997,9 @@ function onLogin(user, page='dashboard'){
   loadGsUrl();
   loadWbp();
   loadKel();
-  loadDash(); // ✅ FIX: always load dashboard stats on login
+  // ✅ FIX: restore saved page on login/refresh
   navTo(page, document.querySelector('[data-p="'+page+'"]'));
+  // Auto cleanup stale visits from previous days
   autoCleanupStaleVisits();
 }
 
@@ -965,9 +1053,8 @@ function navTo(p,el){
   const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
   document.getElementById('pg-title').textContent=titles[p]||p;
   closeSB();
-  if(p==='dashboard')loadDash();
   if(p==='kunjungan'){kunjPage=1;loadKunj();}
-  if(p==='barang'){brgPage=1;loadBarang();}
+  if(p==='barang')loadBarang();
   if(p==='wbp'){wbpPage=1;renderWbp();}
   if(p==='keluarga'){kelPage=1;renderKel();}
   if(p!=='scan'&&qrScanner)stopScan();
@@ -1024,25 +1111,16 @@ async function loadDash(){
   const nb=document.getElementById('nb-m');
   const tunggu=kd.filter(x=>x.status==='menunggu').length;
   if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';
-  allDash=kd;
-  dashPage=1;
-  renderDashTable();
-}
-
-function renderDashTable(){
   const tbody=document.getElementById('dash-tb');
   const mc=document.getElementById('dash-mc');
-  if(!allDash.length){
+  if(!kd.length){
     tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
-    if(mc) mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
-    const pg=document.getElementById('dash-pag'); if(pg) pg.innerHTML='';
+    mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
     return;
   }
-  const start=(dashPage-1)*DASH_PAGE_SIZE;
-  const slice=allDash.slice(start,start+DASH_PAGE_SIZE);
+  const slice=kd.slice(0,15);
   tbody.innerHTML=slice.map(v=>kunjRow(v,false)).join('');
-  if(mc) mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
-  renderPag('dash-pag',dashPage,Math.ceil(allDash.length/DASH_PAGE_SIZE),(p)=>{dashPage=p;renderDashTable();});
+  mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
 }
 
 function kunjRow(v,showAksi=true){
@@ -1542,22 +1620,77 @@ async function onQR(text){
 }
 
 // ============================================================
-// KTP SCANNER — file-based approach (lebih reliable di HP)
+// KTP OCR — Tesseract.js baca teks dari foto KTP
 // ============================================================
-async function stopKtpScan(){
-  if(ktpScanner){
-    try{await ktpScanner.stop();}catch(e){}
-    try{await ktpScanner.clear();}catch(e){}
-    ktpScanner=null;
+let tesseractWorker = null;
+let tesseractReady = false;
+
+async function initTesseract(){
+  if(tesseractReady) return true;
+  try{
+    tesseractWorker = await Tesseract.createWorker('ind+eng', 1, {
+      logger: m => {
+        const el=document.getElementById('ktp-ocr-status');
+        if(el && m.status==='recognizing text'){
+          el.textContent='Membaca teks... '+Math.round((m.progress||0)*100)+'%';
+        }
+      }
+    });
+    tesseractReady = true;
+    return true;
+  }catch(e){
+    console.error('Tesseract init failed:', e);
+    return false;
   }
 }
 
-function showKtpResult(html,type){
+function showKtpResult(html, type){
   const el=document.getElementById('ktp-scan-result');
   if(!el) return;
   el.innerHTML=html;
-  const css={ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'};
-  el.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;'+(css[type]||css.err);
+  const css={
+    ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',
+    err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',
+    warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
+  };
+  el.style.cssText='display:block;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;line-height:1.6;'+(css[type]||css.err);
+}
+
+function extractNikFromText(text){
+  // Cari NIK dalam teks OCR
+  // Format: "NIK : 1234567890123456" atau "NIK: 1234567890123456" atau 16 digit standalone
+  const patterns = [
+    /NIK\s*[:\-]?\s*(\d{16})/i,
+    /Nomor\s+Induk\s+Kependudukan\s*[:\-]?\s*(\d{16})/i,
+    /(\d{16})/,
+  ];
+  for(const pat of patterns){
+    const m=text.match(pat);
+    if(m && m[1]) return m[1];
+  }
+  return null;
+}
+
+function extractNamaFromText(text){
+  // Cari nama setelah label Nama
+  const patterns = [
+    /Nama\s*[:\-]?\s*([A-Z][A-Z .'-]{2,40})/i,
+    /Nama\s+Lengkap\s*[:\-]?\s*([A-Z][A-Z .'-]{2,40})/i,
+  ];
+  for(const pat of patterns){
+    const m=text.match(pat);
+    if(m && m[1]){
+      // Bersihkan — hapus kata-kata non-nama
+      const stopWords=['TEMPAT','LAHIR','JENIS','KELAMIN','GOLONGAN','DARAH','ALAMAT','RT','RW','KELURAHAN','KECAMATAN','AGAMA','STATUS','PEKERJAAN','BERLAKU','NIK','NAMA'];
+      let nama = m[1].trim();
+      for(const sw of stopWords){
+        const idx=nama.toUpperCase().indexOf(sw);
+        if(idx>2) nama=nama.substring(0,idx).trim();
+      }
+      if(nama.length >= 3) return nama;
+    }
+  }
+  return null;
 }
 
 function validateNIK(nik){
@@ -1572,74 +1705,62 @@ function validateNIK(nik){
   return true;
 }
 
-function parseKtpRaw(text){
-  // Berbagai format barcode KTP Indonesia
-  let nik='', nama='';
-  const t=(text||'').trim();
-  if(/^\d{16}$/.test(t)){
-    nik=t;
-  } else if(t.includes('|')){
-    const parts=t.split('|');
-    nik=(parts[0]||'').replace(/\D/g,'');
-    nama=parts[1]||'';
-  } else if(t.includes('\n')){
-    // Multi-line format
-    const lines=t.split('\n');
-    for(const l of lines){
-      const m=l.match(/\b(\d{16})\b/);
-      if(m){nik=m[1];break;}
-    }
-    // Cari nama (huruf kapital semua)
-    for(const l of lines){
-      const nm=l.match(/^([A-Z][A-Z ]{3,})$/);
-      if(nm){nama=nm[1].trim();break;}
-    }
-  } else {
-    const m=t.match(/\b(\d{16})\b/); if(m) nik=m[1];
-    const nm=t.match(/[A-Z][A-Z ]{3,}/); if(nm) nama=nm[0].trim();
-  }
-  return {nik, nama};
-}
-
-async function processKtpFile(input, mode){
-  const file = input.files[0];
+async function processKtpOcr(input){
+  const file=input.files[0];
   if(!file) return;
+  input.value=''; // reset supaya bisa pilih file yang sama lagi
 
-  // Reset input value so same file can be selected again
-  input.value = '';
-
-  // Show preview
-  const previewWrap=document.getElementById('ktp-preview-wrap');
-  const previewImg=document.getElementById('ktp-preview-img');
-  if(previewWrap && previewImg){
-    const url=URL.createObjectURL(file);
-    previewImg.src=url;
-    previewWrap.style.display='block';
-  }
+  // Preview
+  const pw=document.getElementById('ktp-preview-wrap');
+  const pi=document.getElementById('ktp-preview-img');
+  if(pw&&pi){ pi.src=URL.createObjectURL(file); pw.style.display='block'; }
 
   // Show loading
   const loading=document.getElementById('ktp-loading');
-  if(loading) loading.style.display='block';
+  const statusEl=document.getElementById('ktp-ocr-status');
+  if(loading) loading.style.display='flex';
+  if(statusEl) statusEl.textContent='Memuat mesin OCR...';
   document.getElementById('ktp-scan-result').style.display='none';
 
   try{
-    // Pakai Html5Qrcode.scanFile() — tidak butuh div, tidak butuh kamera
-    const scanner = new Html5Qrcode('ktp-reader-hidden');
-    const text = await scanner.scanFile(file, false);
-    try{await scanner.clear();}catch(e){}
+    // Init Tesseract jika belum
+    const ready=await initTesseract();
+    if(!ready){ throw new Error('Gagal memuat mesin OCR'); }
+
+    if(statusEl) statusEl.textContent='Membaca teks KTP...';
+
+    // Jalankan OCR
+    const { data: { text } } = await tesseractWorker.recognize(file);
+    console.log('OCR raw:', text); // debug
 
     if(loading) loading.style.display='none';
-    const {nik, nama} = parseKtpRaw(text);
+
+    // Ekstrak NIK
+    const nik = extractNikFromText(text);
+    const nama = extractNamaFromText(text);
 
     if(!nik || !validateNIK(nik)){
-      showKtpResult('⚠ Barcode terbaca tapi NIK tidak valid. Coba foto barcode PDF417 di belakang KTP dari jarak 10-15cm dengan pencahayaan cukup.','err');
-      showToast('Gagal baca NIK dari KTP','warn');
+      let hint='';
+      if(nik) hint=` (terbaca: ${nik} — tidak valid)`;
+      showKtpResult(
+        '⚠ NIK tidak berhasil dibaca dari foto ini'+hint+'.<br>'+
+        'Tips:<br>'+
+        '• Pastikan KTP bagian <strong>depan</strong>, bukan belakang<br>'+
+        '• Foto <strong>landscape</strong> (horizontal), seluruh KTP kelihatan<br>'+
+        '• Cahaya cukup, tidak ada bayangan, tidak blur<br>'+
+        '• Bersihkan lensa kamera sebelum foto',
+        'err'
+      );
       return;
     }
 
     // Isi form
     document.getElementById('os-nik').value=nik;
-    if(nama) document.getElementById('os-nama').value=nama;
+    if(nama){
+      // Title case
+      const namaTitleCase=nama.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+      document.getElementById('os-nama').value=namaTitleCase;
+    }
 
     // Auto-lookup keluarga & WBP
     const{data:kelData}=await db.from('keluarga_wbp')
@@ -1649,30 +1770,37 @@ async function processKtpFile(input, mode){
 
     if(kelData && kelData.wbp){
       if(kelData.wbp.status==='bebas'){
-        showKtpResult(`⚠ NIK terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS. Kunjungan tidak bisa dilakukan.`,'err');
+        showKtpResult(`⚠ NIK ${nik} terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS.`,'err');
         return;
       }
       if(!nama && kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
       selWbpOs(kelData.wbp.id, kelData.wbp.nama_wbp, kelData.wbp.kamar);
-      showKtpResult(`✅ NIK: ${nik}${kelData.nama_keluarga?' | '+esc(kelData.nama_keluarga):''} → WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)}) — Data terisi otomatis`,'ok');
-      showToast('✅ Semua data terisi otomatis dari KTP!','success');
+      showKtpResult(
+        `✅ NIK terbaca: <strong>${nik}</strong>`+
+        (nama?` | ${esc(nama)}`:'')+
+        `<br>WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)}) — Semua data terisi otomatis!`,
+        'ok'
+      );
+      showToast('✅ Data KTP terbaca & terisi otomatis!','success');
     } else {
-      showKtpResult(`✅ NIK terbaca: <strong>${nik}</strong>${nama?' | '+esc(nama):''}. NIK belum terdaftar sebagai keluarga — pilih WBP secara manual.`,'warn');
+      showKtpResult(
+        `✅ NIK terbaca: <strong>${nik}</strong>`+
+        (nama?`<br>Nama: <strong>${esc(nama)}</strong>`:'')+
+        `<br>NIK belum terdaftar sebagai keluarga — pilih WBP secara manual.`,
+        'warn'
+      );
       showToast('NIK terbaca. Pilih WBP yang dikunjungi.','info');
     }
 
-  } catch(err){
+  }catch(err){
     if(loading) loading.style.display='none';
-    // Html5Qrcode melempar error jika tidak ada barcode terdeteksi
-    const errMsg = err && err.message ? err.message : String(err);
-    if(errMsg.includes('No barcode') || errMsg.includes('No QR code') || errMsg.includes('No multi')){
-      showKtpResult('⚠ Barcode tidak terdeteksi dalam gambar ini. Pastikan:<br>• Foto bagian <strong>belakang KTP</strong> (ada barcode garis-garis)<br>• Pencahayaan cukup terang<br>• Tidak blur / tidak goyang<br>• Barcode mengisi sebagian besar frame foto','err');
-    } else {
-      showKtpResult('⚠ Gagal membaca file: '+errMsg,'err');
-    }
-    showToast('Barcode tidak terbaca — coba foto ulang','warn');
+    showKtpResult('⚠ Gagal memproses foto: '+(err.message||'error tidak diketahui'),'err');
+    showToast('OCR gagal — coba foto ulang','warn');
+    console.error('OCR error:', err);
   }
 }
+// Stub - no longer uses live camera scanner
+async function stopKtpScan(){ if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;} }
 
 // ============================================================
 // ONSITE
