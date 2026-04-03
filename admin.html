@@ -272,6 +272,14 @@
     <!-- SCAN -->
     <div id="pg-scan" class="page">
       <div style="max-width:480px;margin:0 auto;">
+        <!-- Banner petunjuk izin kamera -->
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:18px;flex-shrink:0;">📷</span>
+          <div>
+            <p style="font-weight:700;margin:0 0 2px;">Izin Kamera Diperlukan</p>
+            <p style="margin:0;color:#3b82f6;">Klik <strong>"Mulai Scan"</strong> → browser akan meminta izin kamera → pilih <strong>"Izinkan"</strong>. Halaman harus diakses lewat <strong>HTTPS</strong>.</p>
+          </div>
+        </div>
         <div class="card" style="padding:20px;">
           <h3 style="font-weight:700;color:#0f172a;margin:0 0 14px;">📷 Scan QR Pengunjung</h3>
           <div id="scan-ok" style="display:none;margin-bottom:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
@@ -1256,6 +1264,8 @@ function openDetail(id){
   const v=allKunj.find(x=>x.id===id)||allRiwayat.find(x=>x.id===id);
   if(!v)return;
   const b=parseBarang(v.daftar_barang); // ✅ FIX
+  const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
+  document.getElementById('m-detail-body').innerHTML=`
     <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:16px;">
       <div><p style="font-weight:700;font-size:16px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p><p style="color:#64748b;font-size:12px;margin:4px 0 0;">NIK: ${v.nik_pengunjung}</p></div>
       <span class="${st}">${v.status.toUpperCase()}</span>
@@ -1302,17 +1312,48 @@ async function upStatus(id,status){
 // QR SCANNER
 // ============================================================
 async function startScan(){
-  if(qrScanner)await qrScanner.stop().catch(()=>{});
+  // ✅ FIX: Minta izin kamera eksplisit dulu sebelum mulai Html5Qrcode
+  const errEl = document.getElementById('scan-err');
+  errEl.style.display='none';
+  document.getElementById('scan-ok').style.display='none';
+
+  try {
+    // Cek apakah browser mendukung getUserMedia
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errEl.innerHTML='⚠ Browser tidak mendukung akses kamera. Gunakan Chrome/Safari versi terbaru dengan HTTPS.';
+      errEl.style.display='';
+      return;
+    }
+    // Minta izin kamera secara eksplisit — ini memunculkan dialog izin browser
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    // Langsung hentikan stream sementara, Html5Qrcode akan buka sendiri
+    stream.getTracks().forEach(t => t.stop());
+  } catch(permErr) {
+    let msg = '⚠ Izin kamera ditolak. ';
+    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
+      msg += 'Klik ikon 🔒 di address bar browser → Izinkan kamera, lalu coba lagi.';
+    } else if (permErr.name === 'NotFoundError') {
+      msg += 'Tidak ada kamera yang ditemukan di perangkat ini.';
+    } else {
+      msg += permErr.message;
+    }
+    errEl.innerHTML = msg;
+    errEl.style.display = '';
+    return;
+  }
+
+  if(qrScanner) await qrScanner.stop().catch(()=>{});
+  // ✅ Reset div agar tidak error "already started"
+  const readerDiv = document.getElementById('qr-reader');
+  if(readerDiv) readerDiv.innerHTML = '';
   qrScanner=new Html5Qrcode('qr-reader');
   document.getElementById('btn-scan-start').style.display='none';
   document.getElementById('btn-scan-stop').style.display='';
-  document.getElementById('scan-err').style.display='none';
-  document.getElementById('scan-ok').style.display='none';
   try{
     await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},onQR,()=>{});
   }catch(e){
-    document.getElementById('scan-err').textContent='⚠ Kamera tidak bisa dibuka: '+e.message;
-    document.getElementById('scan-err').style.display='';
+    errEl.innerHTML='⚠ Kamera tidak bisa dibuka: '+e.message+'. Pastikan halaman dibuka lewat HTTPS.';
+    errEl.style.display='';
     document.getElementById('btn-scan-start').style.display='';
     document.getElementById('btn-scan-stop').style.display='none';
   }
@@ -1358,14 +1399,39 @@ async function onQR(text){
 // KTP SCANNER
 // ============================================================
 async function startKtpScan(){
-  // ✅ FIX: Reset div before reinitializing to avoid "already started" error
+  const resultEl = document.getElementById('ktp-scan-result');
+
+  // ✅ FIX: Minta izin kamera eksplisit dulu
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      resultEl.innerHTML='⚠ Browser tidak mendukung akses kamera. Gunakan Chrome/Safari versi terbaru dengan HTTPS.';
+      resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+      return;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    stream.getTracks().forEach(t => t.stop());
+  } catch(permErr) {
+    let msg = '⚠ Izin kamera ditolak. ';
+    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
+      msg += 'Klik ikon 🔒 di address bar → Izinkan Kamera, lalu klik tombol ini lagi.';
+    } else if (permErr.name === 'NotFoundError') {
+      msg += 'Tidak ada kamera ditemukan di perangkat ini.';
+    } else {
+      msg += permErr.message;
+    }
+    resultEl.innerHTML = msg;
+    resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+    return;
+  }
+
+  // Reset div before reinitializing to avoid "already started" error
   const readerDiv=document.getElementById('ktp-reader');
   if(readerDiv) readerDiv.innerHTML='';
   if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
   ktpScanner=new Html5Qrcode('ktp-reader');
   document.getElementById('ktp-scan-area').style.display='block';
   document.getElementById('btn-scan-ktp').style.display='none';
-  document.getElementById('ktp-scan-result').style.display='none';
+  resultEl.style.display='none';
   try{
     await ktpScanner.start(
       {facingMode:'environment'},
@@ -1377,8 +1443,8 @@ async function startKtpScan(){
   }catch(e){
     document.getElementById('ktp-scan-area').style.display='none';
     document.getElementById('btn-scan-ktp').style.display='';
-    showToast('Kamera tidak bisa dibuka. Pastikan izin kamera diaktifkan di browser.','error');
-    console.error('KTP scan error:',e);
+    resultEl.innerHTML='⚠ Kamera gagal dibuka: '+e.message+'. Pastikan halaman diakses lewat HTTPS.';
+    resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
   }
 }
 
