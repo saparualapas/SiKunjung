@@ -217,7 +217,7 @@
           <button class="btn bg2 bsm" style="margin-left:auto;" onclick="navTo('kunjungan',document.querySelector('[data-p=kunjungan]'))">Lihat Semua →</button>
         </div>
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="dash-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="dash-mc"></div>
@@ -261,7 +261,7 @@
           <span id="rw-count" style="font-size:12px;color:#64748b;margin-left:auto;"></span>
         </div>
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>Tgl</th><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Barang</th><th>Metode</th></tr></thead>
+          <table><thead><tr><th>Tanggal</th><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Jam</th><th>Barang</th><th>Metode</th></tr></thead>
           <tbody id="rw-tb"><tr><td colspan="7" class="empty">Pilih rentang tanggal lalu klik Tampilkan</td></tr></tbody></table>
         </div>
         <div class="mob-card" id="rw-mc" style="padding:8px;"></div>
@@ -316,7 +316,7 @@
       </div>
       <div class="card">
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>Nama WBP</th><th>NIK</th><th>Kamar</th><th>Keluarga</th><th>Status</th><th>Aksi</th></tr></thead>
+          <table><thead><tr><th>Nama WBP / NIK</th><th>Kamar</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="wbp-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="wbp-mc" style="padding:8px;"></div>
@@ -377,12 +377,17 @@
             </div>
             <div>
               <label class="lbl-f">Barang Bawaan (opsional)</label>
-              <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <input id="os-brg" type="text" placeholder="Nama barang" class="inp"/>
-                <input id="os-qty" type="number" min="1" value="1" class="inp" style="width:72px;"/>
-                <button class="btn bg2 bsm" onclick="addOsBrg()">+</button>
+              <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                <input id="os-brg" type="text" placeholder="Nama barang bawaan" class="inp" style="flex:1;min-width:140px;" onkeypress="if(event.key==='Enter'){event.preventDefault();addOsBrg();}"/>
+                <input id="os-qty" type="number" min="1" value="1" class="inp" style="width:76px;"/>
+                <button type="button" class="btn bg2" onclick="addOsBrg()" style="flex-shrink:0;padding:8px 14px;">+ Tambah</button>
               </div>
               <div id="os-brg-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+            <div>
+              <label class="lbl-f">Jam Kunjungan (opsional)</label>
+              <input id="os-jam" type="time" class="inp" style="max-width:140px;"/>
+              <p style="font-size:11px;color:#64748b;margin:3px 0 0;">Biarkan kosong untuk pakai jam sekarang</p>
             </div>
             <div id="os-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
             <button id="btn-os" class="btn bp" style="justify-content:center;padding:12px;" onclick="submitOnsite()">Daftarkan &amp; Tandai Hadir</button>
@@ -638,21 +643,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(cariTgl) cariTgl.value=today;
 
   // ✅ FIX: onAuthStateChange fires on every page load if session exists
+  // ✅ FIX: Save current page to sessionStorage for persistence on refresh
+  const savedPage = sessionStorage.getItem('sikunjung-page') || 'dashboard';
+  let loginHandled = false;
+
   db.auth.onAuthStateChange((event, session)=>{
-    if(session && session.user){
-      hideAG();
-      onLogin(session.user);
+    if((event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED') && session && session.user){
+      if(!loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
     } else if(event==='SIGNED_OUT'){
-      showAG();
+      loginHandled=false; showAG();
     }
   });
 
-  // Also check current session immediately
   db.auth.getSession().then(({data:{session}})=>{
-    if(session && session.user){
-      hideAG();
-      onLogin(session.user);
-    }
+    if(session && session.user && !loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
   });
 });
 
@@ -712,15 +716,24 @@ async function doLogout(){
   showToast('Berhasil keluar','success');
 }
 
-function onLogin(user){
+function onLogin(user, page='dashboard'){
   hideAG();
   document.getElementById('sb-email').textContent=user.email;
   const setEmail=document.getElementById('set-email');
   if(setEmail)setEmail.textContent=user.email;
   setupRealtime();
-  loadDash();
   loadWbp();
   loadKel();
+  // ✅ FIX: restore saved page on login/refresh
+  navTo(page, document.querySelector('[data-p="'+page+'"]'));
+  // Auto cleanup stale visits from previous days
+  autoCleanupStaleVisits();
+}
+
+// ✅ Auto-delete 'menunggu' visits from previous days (no-show cleanup)
+async function autoCleanupStaleVisits(){
+  const td = new Date().toISOString().split('T')[0];
+  await db.from('kunjungan').delete().eq('status','menunggu').lt('tgl_kunjungan',td);
 }
 
 // Change Password
@@ -758,8 +771,10 @@ async function changePassword(){
 // ============================================================
 function navTo(p,el){
   curPage=p;
+  sessionStorage.setItem('sikunjung-page', p); // ✅ persist page
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(el)el.classList.add('active');
+  const navEl = el || document.querySelector('[data-p="'+p+'"]');
+  if(navEl) navEl.classList.add('active');
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('pg-'+p).classList.add('active');
   const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
@@ -790,7 +805,7 @@ function setupRealtime(){
 // DASHBOARD
 // ============================================================
 async function loadDash(){
-  const today=new Date().toISOString().split('T')[0];
+  const today=new Date().toISOString().split('T')[0]; // ✅ only today
   const[{data:k},{data:w}]=await Promise.all([
     db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
     db.from('wbp').select('id,status').eq('status','aktif')
@@ -824,14 +839,16 @@ function kunjRow(v,showAksi=true){
   const aksi=showAksi?`<td style="white-space:nowrap;">
     ${v.status==='menunggu'?`<button class="btn bsuc bsm" onclick="upStatus('${v.id}','hadir')">✅</button>`:''}
     ${v.status==='hadir'?`<button class="btn bsm" style="background:#7c3aed;color:#fff;" onclick="upStatus('${v.id}','selesai')">🏁</button>`:''}
-    <button class="btn bg2 bsm" onclick="openDetail('${v.id}')">Detail</button>
+    <button class="btn bg2 bsm" onclick="openDetail('${v.id}')">📋</button>
+    <button class="btn bsm" style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;" onclick="hapusBooking('${v.id}','${esc(v.nama_pengunjung)}')">🗑️</button>
   </td>`:'';
+  const jamVal = v.jam_kunjungan||'—';
   return `<tr>
     <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
     <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
     <td>${esc(v.wbp?.nama_wbp||'—')}<br><span style="font-size:10px;color:#94a3b8;">${esc(v.wbp?.kamar||'—')}</span></td>
-    <td class="hide-mobile">${esc(v.wbp?.kamar||'—')}</td>
-    <td style="max-width:200px;">${bHtml}</td>
+    <td style="font-weight:600;">${jamVal}</td>
+    <td style="max-width:180px;">${bHtml}</td>
     <td><span class="${st}">${v.status}</span></td>
     ${aksi}
   </tr>`;
@@ -845,12 +862,15 @@ function kunjMobCard(v,showAksi=true){
       <strong style="font-size:13px;">#${String(v.no_antrean).padStart(3,'0')} ${esc(v.nama_pengunjung)}</strong>
       <span class="${st}">${v.status}</span>
     </div>
-    <div style="font-size:11px;color:#64748b;margin-bottom:6px;">NIK: ${v.nik_pengunjung} | WBP: ${esc(v.wbp?.nama_wbp||'—')} (${esc(v.wbp?.kamar||'—')})</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:3px;">NIK: ${v.nik_pengunjung}</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:3px;">WBP: ${esc(v.wbp?.nama_wbp||'—')} | Kamar: ${esc(v.wbp?.kamar||'—')}</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:5px;">Jam: <strong>${v.jam_kunjungan||'—'}</strong></div>
     ${b.length?`<div style="margin-bottom:6px;">${b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' ')}</div>`:''}
-    ${showAksi?`<div style="display:flex;gap:6px;margin-top:6px;">
+    ${showAksi?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">
       ${v.status==='menunggu'?`<button class="btn bsuc bsm" onclick="upStatus('${v.id}','hadir')">✅ Hadir</button>`:''}
       ${v.status==='hadir'?`<button class="btn bsm" style="background:#7c3aed;color:#fff;" onclick="upStatus('${v.id}','selesai')">🏁 Selesai</button>`:''}
-      <button class="btn bg2 bsm" onclick="openDetail('${v.id}')">Detail</button>
+      <button class="btn bg2 bsm" onclick="openDetail('${v.id}')">📋 Detail</button>
+      <button class="btn bsm" style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;" onclick="hapusBooking('${v.id}','${esc(v.nama_pengunjung)}')">🗑️ Hapus</button>
     </div>`:''}
   </div>`;
 }
@@ -861,8 +881,8 @@ function kunjMobCard(v,showAksi=true){
 async function loadKunj(){
   document.getElementById('kunj-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
   document.getElementById('kunj-mc').innerHTML='';
-  const today=new Date().toISOString().split('T')[0];
-  const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).neq('status','selesai').order('no_antrean');
+  const today=new Date().toISOString().split('T')[0]; // ✅ only today
+  const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).in('status',['menunggu','hadir']).order('no_antrean');
   if(error){showToast('Gagal: '+error.message,'error');return;}
   allKunj=data||[];
   renderKunj();
@@ -899,8 +919,14 @@ function renderKunj(){
 // RIWAYAT
 // ============================================================
 async function loadRiwayat(){
-  const dari=document.getElementById('rw-dari').value;
-  const sampai=document.getElementById('rw-sampai').value;
+  // ✅ FIX: default to today if dates not set
+  const today=new Date().toISOString().split('T')[0];
+  const rwDari=document.getElementById('rw-dari');
+  const rwSampai=document.getElementById('rw-sampai');
+  if(!rwDari.value) rwDari.value=today;
+  if(!rwSampai.value) rwSampai.value=today;
+  const dari=rwDari.value;
+  const sampai=rwSampai.value;
   if(!dari||!sampai){showToast('Pilih rentang tanggal','warn');return;}
   document.getElementById('rw-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
   const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('status','selesai').gte('tgl_kunjungan',dari).lte('tgl_kunjungan',sampai).order('tgl_kunjungan',{ascending:false}).order('no_antrean');
@@ -992,7 +1018,7 @@ async function loadBarang(){
 // ============================================================
 async function loadWbp(){
   // Ensure 'status' column exists – gracefully handle if not
-  const{data}=await db.from('wbp').select('*,keluarga_wbp(id)').order('nama_wbp');
+  const{data}=await db.from('wbp').select('*').order('nama_wbp');
   allWbp=(data||[]).map(w=>({...w,status:w.status||'aktif'}));
   renderWbp();
   populateWbpSel();
@@ -1021,10 +1047,8 @@ function renderWbp(){
   tbody.innerHTML=slice.map(w=>{
     const isBebas=(w.status||'aktif')==='bebas';
     return `<tr>
-      <td><strong>${esc(w.nama_wbp)}</strong></td>
-      <td style="font-family:monospace;font-size:11px;">${w.nik_wbp}</td>
+      <td><strong>${esc(w.nama_wbp)}</strong><br><span style="font-size:10px;color:#94a3b8;font-family:monospace;">${w.nik_wbp}</span></td>
       <td>${esc(w.kamar)}</td>
-      <td style="text-align:center;">${w.keluarga_wbp?.length||0}</td>
       <td>${isBebas?'<span class="sbbs">Bebas</span>':'<span class="sh">Aktif</span>'}</td>
       <td style="white-space:nowrap;">
         ${isBebas?
@@ -1212,6 +1236,19 @@ function openDetail(id){
   om('m-detail');
 }
 
+// ✅ Hapus booking yang tidak datang
+function hapusBooking(id, nama){
+  document.getElementById('cfm-title').textContent='Hapus Kunjungan';
+  document.getElementById('cfm-msg').textContent=`Hapus booking "${nama}"? Data dihapus permanen.`;
+  document.getElementById('btn-cfm').onclick=async()=>{
+    const{error}=await db.from('kunjungan').delete().eq('id',id);
+    if(error) showToast('Gagal: '+error.message,'error');
+    else{ showToast('Booking dihapus','success'); loadKunj(); loadDash(); }
+    cm('m-confirm');
+  };
+  om('m-confirm');
+}
+
 async function upStatus(id,status){
   const{error}=await db.from('kunjungan').update({status}).eq('id',id);
   if(error){showToast('Gagal: '+error.message,'error');return;}
@@ -1279,17 +1316,27 @@ async function onQR(text){
 // KTP SCANNER
 // ============================================================
 async function startKtpScan(){
-  if(ktpScanner)await ktpScanner.stop().catch(()=>{});
+  // ✅ FIX: Reset div before reinitializing to avoid "already started" error
+  const readerDiv=document.getElementById('ktp-reader');
+  if(readerDiv) readerDiv.innerHTML='';
+  if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
   ktpScanner=new Html5Qrcode('ktp-reader');
   document.getElementById('ktp-scan-area').style.display='block';
   document.getElementById('btn-scan-ktp').style.display='none';
   document.getElementById('ktp-scan-result').style.display='none';
   try{
-    await ktpScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:240,height:140}},onKtpScan,()=>{});
+    await ktpScanner.start(
+      {facingMode:'environment'},
+      {fps:10,qrbox:{width:260,height:160}},
+      onKtpScan,
+      ()=>{}
+    );
+    showToast('Kamera aktif – arahkan ke barcode belakang KTP','info');
   }catch(e){
     document.getElementById('ktp-scan-area').style.display='none';
     document.getElementById('btn-scan-ktp').style.display='';
-    showToast('Kamera tidak bisa dibuka: '+e.message,'error');
+    showToast('Kamera tidak bisa dibuka. Pastikan izin kamera diaktifkan di browser.','error');
+    console.error('KTP scan error:',e);
   }
 }
 
@@ -1300,31 +1347,53 @@ async function stopKtpScan(){
 }
 
 async function onKtpScan(text){
-  // e-KTP barcode/QR: format NIK|NAMA|... or just NIK
   await stopKtpScan();
   let nik='', nama='';
   const t=text.trim();
+  // Parse berbagai format KTP Indonesia
   if(/^\d{16}$/.test(t)){
     nik=t;
   } else if(t.includes('|')){
-    // PDF417/QR e-KTP: NIK|NAMA|TTL|...
     const parts=t.split('|');
-    nik=parts[0]?.replace(/\D/g,'')||'';
+    nik=(parts[0]||'').replace(/\D/g,'');
     nama=parts[1]||'';
   } else {
-    // Try to extract 16-digit sequence
-    const m=t.match(/\d{16}/);
-    if(m)nik=m[0];
+    const m=t.match(/\b\d{16}\b/);
+    if(m) nik=m[0];
+    const nm=t.match(/[A-Z][A-Z ]{3,}/);
+    if(nm) nama=nm[0].trim();
   }
+
   if(nik.length===16){
     document.getElementById('os-nik').value=nik;
-    if(nama){document.getElementById('os-nama').value=nama;}
-    document.getElementById('ktp-scan-result').innerHTML=`✅ NIK terbaca: <strong>${nik}</strong>${nama?' | Nama: '+esc(nama):''}`;
-    document.getElementById('ktp-scan-result').style.display='block';
-    showToast('NIK berhasil terbaca dari KTP','success');
+    if(nama) document.getElementById('os-nama').value=nama;
+
+    // ✅ Auto-lookup WBP dari tabel keluarga_wbp
+    const{data:kelData}=await db.from('keluarga_wbp')
+      .select('*,wbp(id,nama_wbp,kamar,status)')
+      .eq('nik_keluarga',nik)
+      .maybeSingle();
+
+    if(kelData && kelData.wbp){
+      if(kelData.wbp.status==='bebas'){
+        document.getElementById('ktp-scan-result').innerHTML=`⚠ NIK terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS. Kunjungan tidak bisa dilakukan.`;
+        document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+        return;
+      }
+      if(!nama && kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
+      selWbpOs(kelData.wbp.id,kelData.wbp.nama_wbp,kelData.wbp.kamar);
+      document.getElementById('ktp-scan-result').innerHTML=`✅ NIK: ${nik} | ${kelData.nama_keluarga} → WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)})`;
+      document.getElementById('ktp-scan-result').style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+      showToast('Data terisi otomatis dari KTP ✅','success');
+    } else {
+      document.getElementById('ktp-scan-result').innerHTML=`✅ NIK terbaca: <strong>${nik}</strong>${nama?' | '+esc(nama):''}. Pilih WBP secara manual.`;
+      document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+      showToast('NIK terbaca. Pilih WBP yang dikunjungi.','warn');
+    }
   } else {
-    document.getElementById('ktp-scan-result').innerHTML='⚠ Tidak dapat membaca NIK. Coba arahkan kamera lebih dekat ke barcode KTP.';
-    document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;';
+    document.getElementById('ktp-scan-result').innerHTML='⚠ Tidak dapat membaca NIK. Dekatkan kamera ke barcode hitam di belakang KTP.';
+    document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+    showToast('Gagal baca NIK — coba lagi','warn');
   }
 }
 
@@ -1356,20 +1425,26 @@ function selWbpOs(id,nm,km){
 }
 
 function addOsBrg(){
-  const n=document.getElementById('os-brg').value.trim();
-  const q=parseInt(document.getElementById('os-qty').value)||1;
-  if(!n)return;
-  osBrg.push({nama:n,jumlah:q});
-  document.getElementById('os-brg').value='';
-  document.getElementById('os-qty').value=1;
+  const nEl=document.getElementById('os-brg');
+  const qEl=document.getElementById('os-qty');
+  const n=(nEl?.value||'').trim();
+  const q=parseInt(qEl?.value)||1;
+  if(!n){ showToast('Isi nama barang terlebih dahulu','warn'); return; }
+  osBrg.push({nama:n, jumlah:q});
+  if(nEl) nEl.value='';
+  if(qEl) qEl.value=1;
+  if(nEl) nEl.focus();
   renderOsBrg();
 }
 
 function renderOsBrg(){
-  document.getElementById('os-brg-list').innerHTML=osBrg.map((b,i)=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:8px;padding:8px 10px;">
-      <span style="font-size:12px;">📦 ${esc(b.nama)} <strong>×${b.jumlah}</strong></span>
-      <button style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:18px;font-weight:700;padding:0 4px;" onclick="osBrg.splice(${i},1);renderOsBrg()">×</button>
+  const list=document.getElementById('os-brg-list');
+  if(!list) return;
+  if(!osBrg.length){ list.innerHTML=''; return; }
+  list.innerHTML=osBrg.map((b,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;">
+      <span style="font-size:12px;">📦 <strong>${esc(b.nama)}</strong> <span style="color:#1d4ed8;font-weight:700;">×${b.jumlah}</span></span>
+      <button type="button" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:18px;font-weight:700;padding:0 6px;line-height:1;" onclick="osBrg.splice(${i},1);renderOsBrg()">×</button>
     </div>`).join('');
 }
 
@@ -1383,10 +1458,14 @@ async function submitOnsite(){
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
+  // ✅ FIX: barang as proper JSONB array with integer jumlah
+  const barangFinal = osBrg.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1}));
+  const jamVal = document.getElementById('os-jam')?.value || new Date().toTimeString().slice(0,5);
   const{error}=await db.from('kunjungan').insert({
     wbp_id:osWbp.id, nama_pengunjung:nm, nik_pengunjung:nik,
     tgl_kunjungan:today, status:'hadir',
-    daftar_barang:osBrg,  // ✅ FIX: send as array directly
+    daftar_barang: barangFinal,
+    jam_kunjungan: jamVal,
     metode_daftar:'onsite'
   });
   btn.innerHTML='Daftarkan & Tandai Hadir';btn.disabled=false;

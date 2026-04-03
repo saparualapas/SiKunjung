@@ -105,6 +105,11 @@
           <!-- Error step1 -->
           <div id="err-step1" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-700"></div>
 
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jam Kunjungan <span class="text-gray-400 font-normal">(opsional)</span></label>
+            <input id="inp-jam" type="time" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition"/>
+            <p class="text-xs text-gray-400 mt-1">Biarkan kosong jika tidak tahu jam pasti</p>
+          </div>
           <button id="btn-next1" class="w-full btn-primary text-white py-3.5 rounded-xl font-semibold text-sm">Lanjutkan →</button>
         </div>
       </div>
@@ -164,6 +169,7 @@
             <div><p class="text-gray-500">Kamar</p><p id="r-kamar" class="font-semibold text-gray-800"></p></div>
             <div><p class="text-gray-500">Tanggal</p><p id="r-tgl" class="font-semibold text-gray-800"></p></div>
             <div><p class="text-gray-500">Hubungan</p><p id="r-hub" class="font-semibold text-gray-800"></p></div>
+            <div><p class="text-gray-500">Jam Kunjungan</p><p id="r-jam" class="font-semibold text-gray-800"></p></div>
           </div>
         </div>
 
@@ -275,6 +281,15 @@ async function lookupNIK(nik) {
       return;
     }
 
+    // ✅ Cek apakah WBP sudah bebas
+    if (data.wbp && data.wbp.status === 'bebas') {
+      nikEl.classList.add('nik-invalid');
+      document.getElementById('nik-err-msg').textContent =
+        `WBP ${data.wbp.nama_wbp} sudah tidak berada di lapas (bebas). Kunjungan tidak dapat dilakukan.`;
+      show('card-nik-err');
+      return;
+    }
+
     // Simpan state
     S.kel = data; S.wbp = data.wbp;
 
@@ -346,10 +361,12 @@ async function doSubmit() {
   btn.disabled = true;
   const today = new Date().toISOString().split('T')[0];
   try {
+    const jamVal = document.getElementById('inp-jam')?.value || '';
     const { data, error } = await db.from('kunjungan').insert({
       wbp_id: S.wbp.id, nama_pengunjung: S.nama, nik_pengunjung: S.nik,
       tgl_kunjungan: today, status:'menunggu',
       daftar_barang: S.barang.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1})),
+      jam_kunjungan: jamVal||null,
       metode_daftar:'online'
     }).select().single();
     if (error) throw error;
@@ -376,6 +393,7 @@ function showStep3(data) {
   document.getElementById('r-kamar').textContent   = S.wbp.kamar;
   document.getElementById('r-tgl').textContent     = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('r-hub').textContent     = S.kel.hubungan;
+  document.getElementById('r-jam').textContent     = data.jam_kunjungan || '(tidak ditentukan)';
   if (S.barang.length > 0) {
     show('r-barang-wrap');
     document.getElementById('r-barang-list').innerHTML = S.barang.map(b=>`<div>• ${esc(b.nama)} (${b.jumlah})</div>`).join('');
