@@ -94,7 +94,6 @@
     @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     .spin{border:2px solid #e5e7eb;border-top:2px solid #3b82f6;border-radius:50%;width:16px;height:16px;animation:sp .7s linear infinite;display:inline-block;vertical-align:middle;}
     @keyframes sp{to{transform:rotate(360deg)}}
-    @keyframes sk{0%,100%{opacity:1}50%{opacity:.4}}
     .gt{display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600;}
     .rt{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pd 2s infinite;}
     @keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
@@ -122,6 +121,9 @@
   </style>
 </head>
 <body>
+
+<!-- Hidden div for html5-qrcode scanFile -->
+<div id="ktp-reader-hidden" style="display:none;"></div>
 
 <!-- AUTH GUARD -->
 <div id="auth-guard">
@@ -154,6 +156,29 @@
       <div id="fp-msg" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;"></div>
       <button id="btn-fp" class="btn bp" style="justify-content:center;padding:12px;font-size:14px;" onclick="doForgotPass()">Kirim Link Reset</button>
       <button onclick="showLoginForm()" type="button" style="background:none;border:none;color:#64748b;font-size:12px;cursor:pointer;text-align:center;">← Kembali ke Login</button>
+    </div>
+    <!-- RESET PASSWORD FORM (dari email link) -->
+    <div id="frm-reset" style="display:none;flex-direction:column;gap:14px;">
+      <div style="text-align:center;margin-bottom:4px;">
+        <p style="font-size:15px;font-weight:700;color:#0f172a;margin:0 0 4px;">🔑 Atur Password Baru</p>
+        <p style="font-size:12px;color:#64748b;">Masukkan password baru untuk akun Anda</p>
+      </div>
+      <div>
+        <label class="lbl-f">Password Baru</label>
+        <div style="position:relative;">
+          <input id="rp-baru" type="password" placeholder="Min. 8 karakter" class="inp" style="padding-right:38px;"/>
+          <button type="button" onclick="togglePass('rp-baru')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;">👁️</button>
+        </div>
+      </div>
+      <div>
+        <label class="lbl-f">Konfirmasi Password Baru</label>
+        <div style="position:relative;">
+          <input id="rp-konfirm" type="password" placeholder="Ulangi password baru" class="inp" style="padding-right:38px;"/>
+          <button type="button" onclick="togglePass('rp-konfirm')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;">👁️</button>
+        </div>
+      </div>
+      <div id="rp-msg" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;"></div>
+      <button id="btn-rp" class="btn bp" style="justify-content:center;padding:12px;font-size:14px;" onclick="doResetPassword()">✅ Simpan Password Baru</button>
     </div>
     <p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:16px;"><a href="index.html" style="color:#3b82f6;text-decoration:none;">← Halaman Pengunjung</a></p>
   </div>
@@ -195,7 +220,8 @@
   <div id="topbar">
     <button class="btn-menu" onclick="openSB()">☰</button>
     <div id="pg-title">Dashboard</div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <a href="index.html" class="btn bg2 bsm" style="text-decoration:none;">← Pengunjung</a>
       <div class="tday" id="tday-lbl"></div>
       <div class="rt" title="Realtime aktif"></div>
     </div>
@@ -218,7 +244,7 @@
           <button class="btn bg2 bsm" style="margin-left:auto;" onclick="navTo('kunjungan',document.querySelector('[data-p=kunjungan]'))">Lihat Semua →</button>
         </div>
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th></tr></thead>
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Jam</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="dash-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="dash-mc"></div>
@@ -238,7 +264,7 @@
       </div>
       <div class="card">
         <div class="tbl-wrap mob-tbl">
-          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP / Kamar</th><th>Jam</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Kamar</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="kunj-tb"><tr><td colspan="7" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="kunj-mc" style="padding:8px;"></div>
@@ -273,14 +299,6 @@
     <!-- SCAN -->
     <div id="pg-scan" class="page">
       <div style="max-width:480px;margin:0 auto;">
-        <!-- Banner petunjuk izin kamera -->
-        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:18px;flex-shrink:0;">📷</span>
-          <div>
-            <p style="font-weight:700;margin:0 0 2px;">Izin Kamera Diperlukan</p>
-            <p style="margin:0;color:#3b82f6;">Klik <strong>"Mulai Scan"</strong> → browser akan meminta izin kamera → pilih <strong>"Izinkan"</strong>. Halaman harus diakses lewat <strong>HTTPS</strong>.</p>
-          </div>
-        </div>
         <div class="card" style="padding:20px;">
           <h3 style="font-weight:700;color:#0f172a;margin:0 0 14px;">📷 Scan QR Pengunjung</h3>
           <div id="scan-ok" style="display:none;margin-bottom:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
@@ -305,13 +323,11 @@
         <div class="card-head"><h3>📦 Barang Bawaan Hari Ini</h3>
           <button class="btn bg2 bsm" style="margin-left:auto;" onclick="loadBarang()">↻ Refresh</button>
         </div>
-        <!-- Skeleton lazy loading -->
-        <div id="brg-skeleton" style="display:none;padding:16px;">
-          <div style="height:80px;background:#f1f5f9;border-radius:10px;margin-bottom:10px;animation:sk 1.2s infinite;"></div>
-          <div style="height:80px;background:#f1f5f9;border-radius:10px;margin-bottom:10px;animation:sk 1.2s infinite;animation-delay:.2s;"></div>
-          <div style="height:80px;background:#f1f5f9;border-radius:10px;animation:sk 1.2s infinite;animation-delay:.4s;"></div>
+        <div class="tbl-wrap mob-tbl">
+          <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Nama Barang</th><th>Jumlah</th><th>Status</th></tr></thead>
+          <tbody id="brg-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
-        <div id="brg-list" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
+        <div class="mob-card" id="brg-mc" style="padding:8px;"></div>
         <div class="pag" id="brg-pag"></div>
       </div>
     </div>
@@ -363,15 +379,32 @@
           <p style="color:#64748b;font-size:13px;margin:0 0 18px;">Scan KTP pengunjung atau isi manual</p>
 
           <!-- Scan KTP -->
-          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-bottom:16px;">
-            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 8px;">📷 Scan KTP (Opsional)</p>
-            <div id="ktp-scan-area" style="display:none;margin-bottom:10px;">
-              <div id="ktp-reader" style="width:100%;min-height:220px;background:#000;border-radius:10px;overflow:hidden;"></div>
-              <button class="btn bdan bsm" style="margin-top:8px;" onclick="stopKtpScan()">■ Stop Scan KTP</button>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:16px;">
+            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 10px;">📷 Scan KTP (Otomatis isi NIK)</p>
+            <!-- Mode 1: Live Camera Scan -->
+            <div id="ktp-live-mode" style="margin-bottom:10px;">
+              <div id="ktp-scan-area" style="display:none;margin-bottom:8px;">
+                <div style="border:3px solid #2563eb;border-radius:10px;overflow:hidden;background:#000;min-height:180px;display:flex;align-items:center;justify-content:center;">
+                  <div id="ktp-reader"></div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <button type="button" class="btn bsuc bsm" onclick="captureKtpFrame()" id="btn-ktp-capture">📸 Ambil Gambar</button>
+                  <button type="button" class="btn bdan bsm" onclick="stopKtpScan()">■ Stop</button>
+                </div>
+              </div>
+              <button id="btn-scan-ktp" type="button" class="btn bp bsm" onclick="startKtpScan()">📹 Scan Langsung</button>
             </div>
-            <div id="ktp-scan-result" style="display:none;background:#d1fae5;border:1px solid #bbf7d0;border-radius:8px;padding:8px;margin-bottom:8px;font-size:12px;color:#065f46;"></div>
-            <button id="btn-scan-ktp" class="btn bp bsm" onclick="startKtpScan()">📷 Mulai Scan KTP</button>
-            <p style="font-size:11px;color:#64748b;margin:6px 0 0;">Arahkan kamera ke barcode/QR di belakang KTP. NIK akan terisi otomatis.</p>
+            <!-- Mode 2: Upload photo -->
+            <div style="border-top:1px solid #bfdbfe;padding-top:10px;">
+              <p style="font-size:11px;font-weight:600;color:#1d4ed8;margin:0 0 6px;">— atau foto KTP dari galeri —</p>
+              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1px solid #bfdbfe;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:#1d4ed8;">
+                🖼️ Pilih Foto KTP
+                <input type="file" id="ktp-file" accept="image/*" capture="environment" onchange="processKtpFile(this)" style="display:none;"/>
+              </label>
+              <canvas id="ktp-canvas" style="display:none;max-width:100%;border-radius:8px;margin-top:8px;"></canvas>
+            </div>
+            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12px;font-weight:600;"></div>
+            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Arahkan ke barcode PDF417 (garis-garis) di belakang KTP, atau foto barcode dari jarak dekat.</p>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:14px;">
@@ -422,8 +455,32 @@
     <!-- BACKUP -->
     <div id="pg-backup" class="page">
       <div style="max-width:600px;">
-        <div class="card" style="padding:20px;margin-bottom:16px;">
-          <h3 style="font-weight:700;color:#0f172a;margin:0 0 14px;">💾 Unduh Backup Data</h3>
+        <div class="card" style="padding:20px;margin-bottom:14px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);">
+          <h3 style="font-weight:700;color:#0f172a;margin:0 0 8px;">⏰ Jadwal Backup yang Disarankan</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:10px;">
+            <div style="background:#fff;border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:20px;">📅</div>
+              <p style="font-size:12px;font-weight:700;margin:4px 0 2px;">Harian</p>
+              <p style="font-size:10px;color:#64748b;margin:0;">Kunjungan hari ini<br>Tiap sore pukul 16:00</p>
+            </div>
+            <div style="background:#fff;border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:20px;">📆</div>
+              <p style="font-size:12px;font-weight:700;margin:4px 0 2px;">Mingguan</p>
+              <p style="font-size:10px;color:#64748b;margin:0;">Semua kunjungan<br>Tiap Jumat sore</p>
+            </div>
+            <div style="background:#fff;border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:20px;">🗂️</div>
+              <p style="font-size:12px;font-weight:700;margin:4px 0 2px;">Bulanan</p>
+              <p style="font-size:10px;color:#64748b;margin:0;">WBP + Keluarga<br>Tiap tanggal 1</p>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:8px;padding:10px;font-size:11px;color:#0369a1;">
+            <strong>🔒 Backup Backend Supabase:</strong> Supabase menyimpan backup otomatis harian selama 7 hari (Pro plan). Untuk keamanan ekstra, aktifkan Point-in-Time Recovery di <a href="https://supabase.com/dashboard" target="_blank" style="color:#2563eb;">Supabase Dashboard → Settings → Database → Backups</a>.
+          </div>
+        </div>
+        <div id="backup-reminder" style="display:none;"></div>
+        <div class="card" style="padding:20px;margin-bottom:14px;">
+          <h3 style="font-weight:700;color:#0f172a;margin:0 0 14px;">💾 Unduh Backup Data (Excel)</h3>
           <p style="font-size:13px;color:#64748b;margin:0 0 16px;">Unduh data ke file Excel (.xlsx) untuk arsip atau analisis.</p>
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:10px;padding:12px 16px;">
@@ -462,7 +519,7 @@
         </div>
 
         <div class="card" style="padding:20px;">
-          <h3 style="font-weight:700;color:#0f172a;margin:0 0 6px;">🔗 Integrasi Google Sheets</h3>
+          <h3 style="font-weight:700;color:#0f172a;margin:0 0 6px;">🔗 Integrasi Google Sheets (Realtime)</h3>
           <p style="font-size:12px;color:#64748b;margin:0 0 14px;">Kirim data otomatis ke Google Sheets via Google Apps Script webhook.</p>
           <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;font-size:12px;color:#92400e;margin-bottom:14px;">
             <p style="font-weight:700;margin:0 0 6px;">📋 Cara Setup:</p>
@@ -476,10 +533,20 @@
           <div style="display:flex;flex-direction:column;gap:12px;">
             <div>
               <label class="lbl-f">URL Webhook Google Apps Script</label>
-              <input id="gs-url" type="url" placeholder="https://script.google.com/macros/s/..." class="inp" value=""/>
+              <input id="gs-url" type="url" placeholder="https://script.google.com/macros/s/..." class="inp"/>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+                <span id="gs-status-lbl" style="font-size:11px;color:#64748b;flex:1;">Belum ada URL</span>
+                <button type="button" class="btn bsuc bsm" onclick="saveGsUrl()">💾 Simpan URL</button>
+                <button type="button" class="btn bg2 bsm" onclick="localStorage.removeItem('sikunjung_gs_url');document.getElementById('gs-url').value='';document.getElementById('gs-status-lbl').textContent='Belum ada URL';showToast('URL dihapus','info');">✕ Hapus</button>
+              </div>
+              <p style="font-size:11px;color:#16a34a;margin:4px 0 0;">✅ Setelah URL disimpan, data kunjungan baru akan otomatis terkirim ke Sheets (realtime).</p>
+            </div>
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:11px;color:#065f46;">
+              <strong>📋 Contoh Apps Script (doPost):</strong><br>
+              <code style="font-size:10px;background:#fff;padding:2px 4px;border-radius:3px;">function doPost(e){var data=JSON.parse(e.postData.contents);var sheet=SpreadsheetApp.getActiveSheet();if(data.type==='realtime_push')sheet.appendRow([data.data.tgl_kunjungan,data.data.no_antrean,data.data.nama_pengunjung,new Date()])}</code>
             </div>
             <div>
-              <label class="lbl-f">Data yang dikirim</label>
+              <label class="lbl-f">Kirim manual — pilih data</label>
               <select id="gs-type" class="inp">
                 <option value="kunjungan_today">Kunjungan Hari Ini</option>
                 <option value="kunjungan_all">Semua Kunjungan</option>
@@ -487,7 +554,7 @@
               </select>
             </div>
             <div id="gs-msg" style="display:none;border-radius:8px;padding:10px;font-size:12px;font-weight:600;"></div>
-            <button class="btn bp" onclick="sendToGSheets()" style="justify-content:center;">📤 Kirim ke Google Sheets</button>
+            <button class="btn bp" onclick="sendToGSheets()" style="justify-content:center;">📤 Kirim Manual Sekarang</button>
           </div>
         </div>
       </div>
@@ -630,59 +697,17 @@ let qrScanner=null, ktpScanner=null, scanCD=false;
 let osWbp=null, osBrg=[];
 let wbpTab='aktif';
 const PAGE_SIZE=15;
-let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1;
-
-// ============================================================
-// WIT HELPER — Waktu Indonesia Timur (UTC+9)
-// Ambon/Maluku menggunakan WIT, bukan WIB (UTC+7)
-// ============================================================
-function getWITDate() {
-  // Offset WIT = UTC+9 = 9 * 60 menit
-  const now = new Date();
-  const witOffsetMs = 9 * 60 * 60 * 1000;
-  const witDate = new Date(now.getTime() + witOffsetMs);
-  return witDate.toISOString().split('T')[0]; // format YYYY-MM-DD
-}
-
-function getWITTime() {
-  const now = new Date();
-  const witOffsetMs = 9 * 60 * 60 * 1000;
-  const witDate = new Date(now.getTime() + witOffsetMs);
-  return witDate.toISOString().split('T')[1].slice(0,5); // format HH:MM
-}
-
-function getWITDateDisplay() {
-  // Untuk tampilan label tanggal yang benar di topbar
-  const now = new Date();
-  const witOffsetMs = 9 * 60 * 60 * 1000;
-  const witDate = new Date(now.getTime() + witOffsetMs);
-  return witDate.toLocaleDateString('id-ID', {
-    weekday:'long', day:'numeric', month:'long', year:'numeric',
-    timeZone: 'Asia/Jayapura' // WIT timezone
-  });
-}
-
-// Parse daftar_barang secara aman (handle string JSON dari Supabase)
-function parseBarang(raw) {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'string') {
-    try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; }
-    catch(e) { return []; }
-  }
-  return [];
-}
+let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1;
 
 // ============================================================
 // BOOT — FIX SESSION PERSISTENCE
 // ============================================================
 document.addEventListener('DOMContentLoaded',()=>{
-  // ✅ FIX: Gunakan WIT (UTC+9) untuk semua tampilan tanggal
-  document.getElementById('tday-lbl').textContent = getWITDateDisplay();
+  document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
 
-  // Set default tanggal backup — pakai WIT
-  const today = getWITDate();
+  // Set default tanggal backup
+  const today=new Date().toISOString().split('T')[0];
   const bkDari=document.getElementById('bk-dari');
   const bkSampai=document.getElementById('bk-sampai');
   if(bkDari) bkDari.value=today;
@@ -700,6 +725,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   let loginHandled = false;
 
   db.auth.onAuthStateChange((event, session)=>{
+    if(event==='PASSWORD_RECOVERY'){
+      // ✅ FIX: User clicked password reset link — show reset form, don't go to dashboard
+      loginHandled=true;
+      showResetPasswordForm();
+      return;
+    }
     if((event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED') && session && session.user){
       if(!loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
     } else if(event==='SIGNED_OUT'){
@@ -718,6 +749,37 @@ document.addEventListener('DOMContentLoaded',()=>{
 function showAG(){document.getElementById('auth-guard').style.display='flex';}
 function hideAG(){document.getElementById('auth-guard').style.display='none';}
 function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+
+function showResetPasswordForm(){
+  // Hide auth guard, show inline reset form
+  document.getElementById('auth-guard').style.display='flex';
+  ['frm-login','frm-forgot'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('frm-reset').style.display='flex';
+}
+
+async function doResetPassword(){
+  const baru=document.getElementById('rp-baru').value;
+  const konfirm=document.getElementById('rp-konfirm').value;
+  const msg=document.getElementById('rp-msg');
+  msg.style.display='none';
+  if(!baru||baru.length<8){showFErr2('rp-msg','⚠ Password minimal 8 karakter.');return;}
+  if(baru!==konfirm){showFErr2('rp-msg','⚠ Password tidak sama.');return;}
+  const btn=document.getElementById('btn-rp');
+  btn.innerHTML='<span class="spin"></span> Menyimpan...';btn.disabled=true;
+  const{error}=await db.auth.updateUser({password:baru});
+  btn.innerHTML='✅ Simpan Password Baru';btn.disabled=false;
+  if(error){
+    showFErr2('rp-msg','⚠ Gagal: '+error.message);
+  } else {
+    msg.textContent='✅ Password berhasil diubah! Silakan login.';
+    msg.style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
+    setTimeout(()=>{
+      document.getElementById('frm-reset').style.display='none';
+      document.getElementById('frm-login').style.display='flex';
+      showToast('Password diubah! Silakan login kembali.','success');
+    },2000);
+  }
+}
 
 function showForgotPass(){
   document.getElementById('login-form').style.display='none';
@@ -746,7 +808,34 @@ async function doForgotPass(){
   }
 }
 
+// Login rate limiting
+const LOGIN_MAX=5, LOGIN_LOCKOUT=3*60*1000;
+let loginAttempts=parseInt(sessionStorage.getItem('login_attempts')||'0');
+let loginLockedUntil=parseInt(sessionStorage.getItem('login_locked_until')||'0');
+let lockTimer=null;
+
+function checkLoginLock(){
+  const now=Date.now();
+  if(loginLockedUntil>now){
+    const sisa=Math.ceil((loginLockedUntil-now)/1000);
+    const m=Math.floor(sisa/60), s=sisa%60;
+    showFErr2('l-err',`⛔ Terlalu banyak percobaan. Tunggu ${m}:${String(s).padStart(2,'0')} lagi.`);
+    document.getElementById('btn-login').disabled=true;
+    document.getElementById('btn-login').innerHTML=`⛔ Dikunci ${m}:${String(s).padStart(2,'0')}`;
+    if(lockTimer) clearTimeout(lockTimer);
+    lockTimer=setTimeout(()=>{
+      document.getElementById('btn-login').disabled=false;
+      document.getElementById('btn-login').innerHTML='Masuk ke Dashboard';
+      document.getElementById('l-err').style.display='none';
+      loginAttempts=0; sessionStorage.removeItem('login_attempts'); sessionStorage.removeItem('login_locked_until');
+    }, loginLockedUntil-now);
+    return true;
+  }
+  return false;
+}
+
 async function doLogin(){
+  if(checkLoginLock()) return;
   const email=document.getElementById('l-email').value.trim();
   const pass=document.getElementById('l-pass').value;
   const btn=document.getElementById('btn-login');
@@ -754,10 +843,23 @@ async function doLogin(){
   if(!email||!pass){showFErr2('l-err','Email dan password wajib diisi.');return;}
   btn.innerHTML='<span class="spin"></span> Masuk...';btn.disabled=true;
   const{error}=await db.auth.signInWithPassword({email,password:pass});
-  btn.innerHTML='Masuk ke Dashboard';btn.disabled=false;
   if(error){
-    const msg=error.message.includes('Invalid')||error.message.includes('credentials')?'Email atau password salah.':'Login gagal: '+error.message;
-    showFErr2('l-err',msg);
+    loginAttempts++;
+    sessionStorage.setItem('login_attempts',loginAttempts);
+    const sisa=LOGIN_MAX-loginAttempts;
+    if(loginAttempts>=LOGIN_MAX){
+      loginLockedUntil=Date.now()+LOGIN_LOCKOUT;
+      sessionStorage.setItem('login_locked_until',loginLockedUntil);
+      checkLoginLock();
+    } else {
+      btn.innerHTML='Masuk ke Dashboard';btn.disabled=false;
+      const msg=error.message.includes('Invalid')||error.message.includes('credentials')?`Email atau password salah. Sisa percobaan: ${sisa}`:'Login gagal: '+error.message;
+      showFErr2('l-err',msg);
+    }
+  } else {
+    loginAttempts=0;
+    sessionStorage.removeItem('login_attempts');sessionStorage.removeItem('login_locked_until');
+    btn.innerHTML='Masuk ke Dashboard';btn.disabled=false;
   }
 }
 
@@ -774,9 +876,10 @@ function onLogin(user, page='dashboard'){
   const setEmail=document.getElementById('set-email');
   if(setEmail)setEmail.textContent=user.email;
   setupRealtime();
+  setupSessionKeepAlive();
+  loadGsUrl();
   loadWbp();
   loadKel();
-  loadDash(); // ✅ FIX: panggil loadDash() saat login agar dashboard tidak stuck loading
   // ✅ FIX: restore saved page on login/refresh
   navTo(page, document.querySelector('[data-p="'+page+'"]'));
   // Auto cleanup stale visits from previous days
@@ -785,7 +888,7 @@ function onLogin(user, page='dashboard'){
 
 // ✅ Auto-delete 'menunggu' visits from previous days (no-show cleanup)
 async function autoCleanupStaleVisits(){
-  const td = getWITDate(); // ✅ WIT
+  const td = new Date().toISOString().split('T')[0];
   await db.from('kunjungan').delete().eq('status','menunggu').lt('tgl_kunjungan',td);
 }
 
@@ -846,8 +949,26 @@ function closeSB(){document.getElementById('sidebar').classList.remove('open');d
 // ============================================================
 // REALTIME
 // ============================================================
+// ✅ Prevent auto-logout: keep session alive
+function setupSessionKeepAlive(){
+  setInterval(async()=>{
+    const{data:{session}}=await db.auth.getSession();
+    if(!session){
+      // Session expired — refresh
+      const{data,error}=await db.auth.refreshSession();
+      if(error) console.warn('Session refresh failed:',error.message);
+    }
+  }, 4*60*1000); // check every 4 minutes
+}
+
 function setupRealtime(){
-  db.channel('rt-kunjungan').on('postgres_changes',{event:'*',schema:'public',table:'kunjungan'},()=>{
+  db.channel('rt-kunjungan').on('postgres_changes',{event:'INSERT',schema:'public',table:'kunjungan'},async(payload)=>{
+    loadDash();
+    if(curPage==='kunjungan')loadKunj();
+    if(curPage==='barang'){brgPage=1;loadBarang();}
+    // Auto push to Google Sheets if URL is saved
+    if(payload.new) gsPushRealtime(payload.new);
+  }).on('postgres_changes',{event:'UPDATE',schema:'public',table:'kunjungan'},()=>{
     loadDash();
     if(curPage==='kunjungan')loadKunj();
     if(curPage==='barang')loadBarang();
@@ -858,25 +979,17 @@ function setupRealtime(){
 // DASHBOARD
 // ============================================================
 async function loadDash(){
-  const today = getWITDate(); // ✅ WIT
-  // Skeleton loading sementara fetch
-  document.getElementById('dash-tb').innerHTML=`<tr><td colspan="6" style="padding:0;">
-    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
-      ${[1,2,3].map(()=>`<div style="height:40px;background:#f1f5f9;border-radius:8px;animation:sk 1.2s infinite;"></div>`).join('')}
-    </div></td></tr>`;
-  ['s-tot','s-men','s-had','s-sel','s-brg','s-wbp'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.innerHTML='<span class="spin"></span>';
-  });
+  const today=new Date().toISOString().split('T')[0]; // ✅ only today
   const[{data:k},{data:w}]=await Promise.all([
     db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
     db.from('wbp').select('id,status').eq('status','aktif')
   ]);
   const kd=k||[],wd=w||[];
   document.getElementById('s-tot').textContent=kd.length;
-  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
+  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
+  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
   document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
-  // ✅ FIX: parseBarang agar JSONB string juga terbaca dengan benar
-  document.getElementById('s-brg').textContent=kd.filter(x=>parseBarang(x.daftar_barang).length>0).length;
+  document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
   document.getElementById('s-wbp').textContent=wd.length;
   const nb=document.getElementById('nb-m');
   const tunggu=kd.filter(x=>x.status==='menunggu').length;
@@ -894,7 +1007,7 @@ async function loadDash(){
 }
 
 function kunjRow(v,showAksi=true){
-  const b=parseBarang(v.daftar_barang); // ✅ FIX: parse aman
+  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
   const bHtml=b.length?b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' '):'<span style="color:#94a3b8;font-size:11px;">—</span>';
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
   const aksi=showAksi?`<td style="white-space:nowrap;">
@@ -908,15 +1021,15 @@ function kunjRow(v,showAksi=true){
     <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
     <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
     <td>${esc(v.wbp?.nama_wbp||'—')}<br><span style="font-size:10px;color:#94a3b8;">${esc(v.wbp?.kamar||'—')}</span></td>
-    <td style="font-weight:600;white-space:nowrap;">${jamVal}</td>
-    <td style="max-width:200px;">${bHtml}</td>
+    <td style="font-weight:600;">${jamVal}</td>
+    <td style="max-width:180px;">${bHtml}</td>
     <td><span class="${st}">${v.status}</span></td>
     ${aksi}
   </tr>`;
 }
 
 function kunjMobCard(v,showAksi=true){
-  const b=parseBarang(v.daftar_barang); // ✅ FIX: parse aman
+  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
   return `<div class="mc2">
     <div class="mc2-row">
@@ -940,13 +1053,9 @@ function kunjMobCard(v,showAksi=true){
 // KUNJUNGAN
 // ============================================================
 async function loadKunj(){
-  // Skeleton lazy loading
-  document.getElementById('kunj-tb').innerHTML=`<tr><td colspan="7" style="padding:0;">
-    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
-      ${[1,2,3,4].map(()=>`<div style="height:40px;background:#f1f5f9;border-radius:8px;animation:sk 1.2s infinite;"></div>`).join('')}
-    </div></td></tr>`;
+  document.getElementById('kunj-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
   document.getElementById('kunj-mc').innerHTML='';
-  const today = getWITDate(); // ✅ WIT
+  const today=new Date().toISOString().split('T')[0]; // ✅ only today
   const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).in('status',['menunggu','hadir']).order('no_antrean');
   if(error){showToast('Gagal: '+error.message,'error');return;}
   allKunj=data||[];
@@ -984,8 +1093,8 @@ function renderKunj(){
 // RIWAYAT
 // ============================================================
 async function loadRiwayat(){
-  // ✅ FIX: default to today (WIT) if dates not set
-  const today = getWITDate(); // ✅ WIT
+  // ✅ FIX: default to today if dates not set
+  const today=new Date().toISOString().split('T')[0];
   const rwDari=document.getElementById('rw-dari');
   const rwSampai=document.getElementById('rw-sampai');
   if(!rwDari.value) rwDari.value=today;
@@ -993,10 +1102,7 @@ async function loadRiwayat(){
   const dari=rwDari.value;
   const sampai=rwSampai.value;
   if(!dari||!sampai){showToast('Pilih rentang tanggal','warn');return;}
-  document.getElementById('rw-tb').innerHTML=`<tr><td colspan="8" style="padding:0;">
-    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
-      ${[1,2,3].map(()=>`<div style="height:40px;background:#f1f5f9;border-radius:8px;animation:sk 1.2s infinite;"></div>`).join('')}
-    </div></td></tr>`;
+  document.getElementById('rw-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
   const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('status','selesai').gte('tgl_kunjungan',dari).lte('tgl_kunjungan',sampai).order('tgl_kunjungan',{ascending:false}).order('no_antrean');
   if(error){showToast('Gagal: '+error.message,'error');return;}
   allRiwayat=data||[];
@@ -1012,23 +1118,26 @@ function renderRiwayat(){
   const tbody=document.getElementById('rw-tb');
   const mc=document.getElementById('rw-mc');
   if(!items.length){
-    tbody.innerHTML='<tr><td colspan="7" class="empty">Tidak ada data riwayat</td></tr>';
+    tbody.innerHTML='<tr><td colspan="8" class="empty">Tidak ada data riwayat</td></tr>';
     mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Tidak ada data</p>';
     document.getElementById('rw-pag').innerHTML='';
     return;
   }
   tbody.innerHTML=slice.map(v=>{
-    const b=parseBarang(v.daftar_barang); // ✅ FIX
+    const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
     const bHtml=b.length?b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' '):'<span style="color:#94a3b8;font-size:11px;">—</span>';
-    const mt=v.metode_daftar==='online'?'so':'sos';
+    const mtLabel=v.metode_daftar==='online'?'Online':'Onsite (Petugas)';
+    const mtCls=v.metode_daftar==='online'?'so':'sos';
+    const jam=v.jam_kunjungan||'—';
     return `<tr>
       <td style="white-space:nowrap;">${v.tgl_kunjungan}</td>
       <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
       <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
       <td>${esc(v.wbp?.nama_wbp||'—')}</td>
       <td>${esc(v.wbp?.kamar||'—')}</td>
+      <td style="font-weight:600;white-space:nowrap;">${jam}</td>
       <td>${bHtml}</td>
-      <td><span class="${mt}">${v.metode_daftar}</span></td>
+      <td><span class="${mtCls}">${mtLabel}</span></td>
     </tr>`;
   }).join('');
   mc.innerHTML=slice.map(v=>{
@@ -1049,66 +1158,49 @@ function renderRiwayat(){
 // ============================================================
 // BARANG
 // ============================================================
-let allBarang=[], brgPage=1;
+let allBarangData=[];
 async function loadBarang(){
-  const skEl=document.getElementById('brg-skeleton');
-  const listEl=document.getElementById('brg-list');
-  skEl.style.display='block'; listEl.innerHTML='';
-  document.getElementById('brg-pag').innerHTML='';
-  const today = getWITDate();
+  document.getElementById('brg-tb').innerHTML='<tr><td colspan="6" class="empty"><span class="spin"></span></td></tr>';
+  const today=new Date().toISOString().split('T')[0];
   const{data}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
-  skEl.style.display='none';
-  allBarang = data||[];
+  allBarangData=data||[];
   brgPage=1;
   renderBarang();
 }
-
 function renderBarang(){
-  const listEl=document.getElementById('brg-list');
-  const pagEl=document.getElementById('brg-pag');
-  if(!allBarang.length){
-    listEl.innerHTML='<p style="text-align:center;color:#94a3b8;padding:32px;font-size:13px;">Belum ada kunjungan hari ini</p>';
-    pagEl.innerHTML=''; return;
-  }
-  const{slice}=paginate(allBarang, brgPage);
-  listEl.innerHTML = slice.map(v=>{
-    const b=parseBarang(v.daftar_barang);
+  const data=allBarangData;
+  const rows=[], mobs=[];
+  data.forEach(v=>{
+    const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
     const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
-    const stLabel={'menunggu':'⏳ Menunggu','hadir':'✅ Hadir','selesai':'🏁 Selesai'}[v.status]||v.status;
-    return `<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;">
-      <!-- Header card pengunjung -->
-      <div style="background:#f8fafc;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:32px;height:32px;background:#dbeafe;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1d4ed8;font-size:13px;flex-shrink:0;">${String(v.no_antrean).padStart(2,'0')}</div>
-          <div>
-            <p style="font-weight:700;font-size:13px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p>
-            <p style="font-size:11px;color:#64748b;margin:0;">NIK: ${v.nik_pengunjung} · WBP: <strong>${esc(v.wbp?.nama_wbp||'—')}</strong> (${esc(v.wbp?.kamar||'—')})</p>
-          </div>
-        </div>
-        <span class="${st}" style="font-size:11px;">${stLabel}</span>
-      </div>
-      <!-- Isi barang -->
-      <div style="padding:10px 14px;">
-        ${b.length===0
-          ? '<p style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">Tidak ada barang bawaan</p>'
-          : `<div style="display:flex;flex-direction:column;gap:6px;">
-              ${b.map((br,i)=>`
-                <div style="display:flex;align-items:center;justify-content:space-between;background:#fffbeb;border:1px solid #fef3c7;border-radius:8px;padding:7px 12px;">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:15px;">📦</span>
-                    <span style="font-size:13px;font-weight:600;color:#0f172a;">${esc(br.nama)}</span>
-                  </div>
-                  <div style="background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:12px;">×${br.jumlah}</div>
-                </div>`).join('')}
-              <div style="font-size:11px;color:#92400e;margin-top:2px;font-weight:600;">
-                Total: ${b.reduce((a,x)=>a+Number(x.jumlah),0)} pcs dari ${b.length} jenis barang
-              </div>
-            </div>`
-        }
-      </div>
-    </div>`;
-  }).join('');
-  renderPag('brg-pag', brgPage, Math.ceil(allBarang.length/PAGE_SIZE), (p)=>{brgPage=p; renderBarang();});
+    if(!b.length){
+      rows.push(`<tr><td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td><td>${esc(v.nama_pengunjung)}</td><td>${esc(v.wbp?.nama_wbp||'—')}</td><td colspan="2" style="color:#94a3b8;font-style:italic;font-size:11px;">Tidak ada barang</td><td><span class="${st}">${v.status}</span></td></tr>`);
+      mobs.push(`<div class="mc2"><div class="mc2-row"><strong>#${String(v.no_antrean).padStart(3,'0')} ${esc(v.nama_pengunjung)}</strong><span class="${st}">${v.status}</span></div><div style="font-size:11px;color:#64748b;">WBP: ${esc(v.wbp?.nama_wbp||'—')} | Tidak ada barang</div></div>`);
+    } else {
+      b.forEach((br,i)=>{
+        const rs=b.length;
+        rows.push(`<tr>
+          ${i===0?`<td rowspan="${rs}" style="vertical-align:middle;"><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
+          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.nama_pengunjung)}</td>
+          <td rowspan="${rs}" style="vertical-align:middle;">${esc(v.wbp?.nama_wbp||'—')}</td>`:''}
+          <td><span class="gt">📦 ${esc(br.nama)}</span></td>
+          <td style="font-weight:700;">${br.jumlah}</td>
+          ${i===0?`<td rowspan="${rs}" style="vertical-align:middle;"><span class="${st}">${v.status}</span></td>`:''}
+        </tr>`);
+      });
+      mobs.push(`<div class="mc2"><div class="mc2-row"><strong>#${String(v.no_antrean).padStart(3,'0')} ${esc(v.nama_pengunjung)}</strong><span class="${st}">${v.status}</span></div><div style="font-size:11px;color:#64748b;margin-bottom:4px;">WBP: ${esc(v.wbp?.nama_wbp||'—')}</div>${b.map(x=>`<span class="gt" style="margin-right:4px;">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join('')}</div>`);
+    }
+  });
+  const BPSIZE=10;
+  const bStart=(brgPage-1)*BPSIZE;
+  const bTotal=Math.ceil(rows.length/BPSIZE);
+  const pRows=rows.slice(bStart,bStart+BPSIZE);
+  const pMobs=mobs.slice(bStart,bStart+BPSIZE);
+  const tbody=document.getElementById('brg-tb');
+  const mc=document.getElementById('brg-mc');
+  tbody.innerHTML=pRows.length?pRows.join(''):'<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
+  mc.innerHTML=pMobs.join('');
+  renderPag('brg-pag',brgPage,bTotal,p=>{brgPage=p;renderBarang();});
 }
 
 // ============================================================
@@ -1309,7 +1401,7 @@ async function saveKel(){
 function openDetail(id){
   const v=allKunj.find(x=>x.id===id)||allRiwayat.find(x=>x.id===id);
   if(!v)return;
-  const b=parseBarang(v.daftar_barang); // ✅ FIX
+  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
   document.getElementById('m-detail-body').innerHTML=`
     <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:16px;">
@@ -1358,48 +1450,17 @@ async function upStatus(id,status){
 // QR SCANNER
 // ============================================================
 async function startScan(){
-  // ✅ FIX: Minta izin kamera eksplisit dulu sebelum mulai Html5Qrcode
-  const errEl = document.getElementById('scan-err');
-  errEl.style.display='none';
-  document.getElementById('scan-ok').style.display='none';
-
-  try {
-    // Cek apakah browser mendukung getUserMedia
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      errEl.innerHTML='⚠ Browser tidak mendukung akses kamera. Gunakan Chrome/Safari versi terbaru dengan HTTPS.';
-      errEl.style.display='';
-      return;
-    }
-    // Minta izin kamera secara eksplisit — ini memunculkan dialog izin browser
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    // Langsung hentikan stream sementara, Html5Qrcode akan buka sendiri
-    stream.getTracks().forEach(t => t.stop());
-  } catch(permErr) {
-    let msg = '⚠ Izin kamera ditolak. ';
-    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
-      msg += 'Klik ikon 🔒 di address bar browser → Izinkan kamera, lalu coba lagi.';
-    } else if (permErr.name === 'NotFoundError') {
-      msg += 'Tidak ada kamera yang ditemukan di perangkat ini.';
-    } else {
-      msg += permErr.message;
-    }
-    errEl.innerHTML = msg;
-    errEl.style.display = '';
-    return;
-  }
-
-  if(qrScanner) await qrScanner.stop().catch(()=>{});
-  // ✅ Reset div agar tidak error "already started"
-  const readerDiv = document.getElementById('qr-reader');
-  if(readerDiv) readerDiv.innerHTML = '';
+  if(qrScanner)await qrScanner.stop().catch(()=>{});
   qrScanner=new Html5Qrcode('qr-reader');
   document.getElementById('btn-scan-start').style.display='none';
   document.getElementById('btn-scan-stop').style.display='';
+  document.getElementById('scan-err').style.display='none';
+  document.getElementById('scan-ok').style.display='none';
   try{
     await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},onQR,()=>{});
   }catch(e){
-    errEl.innerHTML='⚠ Kamera tidak bisa dibuka: '+e.message+'. Pastikan halaman dibuka lewat HTTPS.';
-    errEl.style.display='';
+    document.getElementById('scan-err').textContent='⚠ Kamera tidak bisa dibuka: '+e.message;
+    document.getElementById('scan-err').style.display='';
     document.getElementById('btn-scan-start').style.display='';
     document.getElementById('btn-scan-stop').style.display='none';
   }
@@ -1430,7 +1491,7 @@ async function onQR(text){
   }
   const{error:ue}=await db.from('kunjungan').update({status:'hadir'}).eq('id',data.id);
   if(ue){showToast('Gagal update status','error');return;}
-  const br=parseBarang(data.daftar_barang); // ✅ FIX
+  const br=Array.isArray(data.daftar_barang)?data.daftar_barang:[];
   document.getElementById('scan-det').innerHTML=`
     <p><strong>Pengunjung:</strong> ${esc(data.nama_pengunjung)}</p>
     <p><strong>WBP:</strong> ${esc(data.wbp?.nama_wbp||'—')} – ${esc(data.wbp?.kamar||'—')}</p>
@@ -1445,63 +1506,27 @@ async function onQR(text){
 // KTP SCANNER
 // ============================================================
 async function startKtpScan(){
-  const resultEl = document.getElementById('ktp-scan-result');
-
-  // ✅ FIX: Minta izin kamera eksplisit dulu
-  try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      resultEl.innerHTML='⚠ Browser tidak mendukung akses kamera. Gunakan Chrome/Safari versi terbaru dengan HTTPS.';
-      resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-      return;
-    }
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    stream.getTracks().forEach(t => t.stop());
-  } catch(permErr) {
-    let msg = '⚠ Izin kamera ditolak. ';
-    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
-      msg += 'Klik ikon 🔒 di address bar → Izinkan Kamera, lalu klik tombol ini lagi.';
-    } else if (permErr.name === 'NotFoundError') {
-      msg += 'Tidak ada kamera ditemukan di perangkat ini.';
-    } else {
-      msg += permErr.message;
-    }
-    resultEl.innerHTML = msg;
-    resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-    return;
-  }
-
-  // Hentikan scanner lama jika ada
+  // ✅ FIX: Reset div before reinitializing to avoid "already started" error
+  const readerDiv=document.getElementById('ktp-reader');
+  if(readerDiv) readerDiv.innerHTML='';
   if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
-
-  // ✅ FIX GELAP: Tampilkan area scan dulu, reset innerHTML, baru init SETELAH div visible
-  const scanArea = document.getElementById('ktp-scan-area');
-  const readerDiv = document.getElementById('ktp-reader');
-  readerDiv.innerHTML = '';
-  scanArea.style.display = 'block';
-  document.getElementById('btn-scan-ktp').style.display = 'none';
-  resultEl.style.display = 'none';
-
-  // ✅ Tunggu 1 frame agar browser render div dulu sebelum Html5Qrcode mengambil dimensi
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
+  ktpScanner=new Html5Qrcode('ktp-reader');
+  document.getElementById('ktp-scan-area').style.display='block';
+  document.getElementById('btn-scan-ktp').style.display='none';
+  document.getElementById('ktp-scan-result').style.display='none';
   try{
-    ktpScanner = new Html5Qrcode('ktp-reader');
     await ktpScanner.start(
       {facingMode:'environment'},
-      {
-        fps: 10,
-        qrbox: (w, h) => ({width: Math.min(w, 280), height: Math.min(h, 160)}),
-        aspectRatio: 1.777 // 16:9
-      },
+      {fps:10,qrbox:{width:260,height:160}},
       onKtpScan,
       ()=>{}
     );
     showToast('Kamera aktif – arahkan ke barcode belakang KTP','info');
   }catch(e){
-    scanArea.style.display = 'none';
-    document.getElementById('btn-scan-ktp').style.display = '';
-    resultEl.innerHTML = '⚠ Kamera gagal dibuka: ' + e.message + '. Pastikan halaman diakses lewat HTTPS.';
-    resultEl.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+    document.getElementById('ktp-scan-area').style.display='none';
+    document.getElementById('btn-scan-ktp').style.display='';
+    showToast('Kamera tidak bisa dibuka. Pastikan izin kamera diaktifkan di browser.','error');
+    console.error('KTP scan error:',e);
   }
 }
 
@@ -1509,6 +1534,68 @@ async function stopKtpScan(){
   if(ktpScanner){await ktpScanner.stop().catch(()=>{});ktpScanner=null;}
   document.getElementById('ktp-scan-area').style.display='none';
   document.getElementById('btn-scan-ktp').style.display='';
+}
+
+function validateNIK(nik){
+  if(!/^\d{16}$/.test(nik)) return false;
+  // Validasi kode wilayah (2 digit pertama 11-96)
+  const prov=parseInt(nik.substring(0,2));
+  if(prov<11||prov>96) return false;
+  // Validasi tanggal lahir (digit 7-12)
+  let tgl=parseInt(nik.substring(6,8));
+  if(tgl>40) tgl-=40; // perempuan +40
+  if(tgl<1||tgl>31) return false;
+  const bln=parseInt(nik.substring(8,10));
+  if(bln<1||bln>12) return false;
+  return true;
+}
+
+async function parseKtpText(text){
+  let nik='', nama='';
+  const t=(text||'').trim();
+  if(/^\d{16}$/.test(t)){ nik=t; }
+  else if(t.includes('|')){
+    const parts=t.split('|');
+    nik=(parts[0]||'').replace(/\D/g,'');
+    nama=parts[1]||'';
+  } else {
+    const m=t.match(/\b\d{16}\b/); if(m) nik=m[0];
+    const nm=t.match(/[A-Z][A-Z ]{3,}/); if(nm) nama=nm[0].trim();
+  }
+
+  if(!validateNIK(nik)){
+    showKtpResult('⚠ Kode terbaca tapi bukan NIK valid ('+nik+'). Coba foto lebih dekat ke barcode.','err');
+    return;
+  }
+
+  document.getElementById('os-nik').value=nik;
+  if(nama) document.getElementById('os-nama').value=nama;
+
+  // Auto-lookup WBP dari keluarga terdaftar
+  const{data:kelData}=await db.from('keluarga_wbp')
+    .select('*,wbp(id,nama_wbp,kamar,status)')
+    .eq('nik_keluarga',nik).maybeSingle();
+
+  if(kelData&&kelData.wbp){
+    if(kelData.wbp.status==='bebas'){
+      showKtpResult(`⚠ WBP ${esc(kelData.wbp.nama_wbp)} sudah BEBAS — kunjungan tidak dapat dilakukan.`,'err');
+      return;
+    }
+    if(!nama&&kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
+    selWbpOs(kelData.wbp.id,kelData.wbp.nama_wbp,kelData.wbp.kamar);
+    showKtpResult(`✅ NIK: ${nik} | ${kelData.nama_keluarga} → WBP: ${esc(kelData.wbp.nama_wbp)} (${esc(kelData.wbp.kamar)})`,'ok');
+    showToast('Semua data terisi otomatis dari KTP ✅','success');
+  } else {
+    showKtpResult(`✅ NIK terbaca: ${nik}${nama?' | '+esc(nama):''}. Pilih WBP secara manual.`,'warn');
+    showToast('NIK terbaca. Pilih WBP yang dikunjungi.','info');
+  }
+}
+
+function showKtpResult(html,type){
+  const el=document.getElementById('ktp-scan-result');
+  el.innerHTML=html;
+  const css={ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'};
+  el.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;'+(css[type]||css.err);
 }
 
 async function onKtpScan(text){
@@ -1622,10 +1709,10 @@ async function submitOnsite(){
   if(!osWbp){showFErr2('os-err','Pilih WBP yang dikunjungi.');return;}
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
-  const today = getWITDate(); // ✅ WIT
+  const today=new Date().toISOString().split('T')[0];
   // ✅ FIX: barang as proper JSONB array with integer jumlah
   const barangFinal = osBrg.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1}));
-  const jamVal = document.getElementById('os-jam')?.value || getWITTime(); // ✅ WIT time
+  const jamVal = document.getElementById('os-jam')?.value || new Date().toTimeString().slice(0,5);
   const{error}=await db.from('kunjungan').insert({
     wbp_id:osWbp.id, nama_pengunjung:nm, nik_pengunjung:nik,
     tgl_kunjungan:today, status:'hadir',
@@ -1682,7 +1769,7 @@ async function doSearch(){
 async function exportExcel(type){
   showToast('Menyiapkan data...','info');
   let data=[], filename='', sheetName='';
-  const today = getWITDate(); // ✅ WIT
+  const today=new Date().toISOString().split('T')[0];
 
   if(type==='today'){
     const{data:d}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
@@ -1695,7 +1782,7 @@ async function exportExcel(type){
       'Kamar':v.wbp?.kamar||'',
       'Status':v.status,
       'Metode':v.metode_daftar,
-      'Barang Bawaan':parseBarang(v.daftar_barang).map(b=>b.nama+' ×'+b.jumlah).join('; '), // ✅ FIX
+      'Barang Bawaan':Array.isArray(v.daftar_barang)?v.daftar_barang.map(b=>b.nama+' ×'+b.jumlah).join('; '):'',
     }));
     filename=`kunjungan_${today}.xlsx`;
     sheetName='Kunjungan';
@@ -1713,7 +1800,7 @@ async function exportExcel(type){
       'Kamar':v.wbp?.kamar||'',
       'Status':v.status,
       'Metode':v.metode_daftar,
-      'Barang Bawaan':parseBarang(v.daftar_barang).map(b=>b.nama+' ×'+b.jumlah).join('; '), // ✅ FIX
+      'Barang Bawaan':Array.isArray(v.daftar_barang)?v.daftar_barang.map(b=>b.nama+' ×'+b.jumlah).join('; '):'',
     }));
     filename=`kunjungan_${dari}_sd_${sampai}.xlsx`;
     sheetName='Kunjungan';
@@ -1754,8 +1841,40 @@ async function exportExcel(type){
 }
 
 // ============================================================
-// GOOGLE SHEETS INTEGRATION
+// GOOGLE SHEETS INTEGRATION — Auto realtime push
 // ============================================================
+const GS_KEY='sikunjung_gs_url';
+let gsRealtimeActive=false;
+
+function loadGsUrl(){
+  const saved=localStorage.getItem(GS_KEY)||'';
+  const el=document.getElementById('gs-url');
+  if(el&&saved) el.value=saved;
+  const lbl=document.getElementById('gs-status-lbl');
+  if(lbl) lbl.textContent=saved?'✅ URL tersimpan – realtime aktif':'Belum ada URL';
+}
+
+function saveGsUrl(){
+  const url=(document.getElementById('gs-url')?.value||'').trim();
+  if(url) localStorage.setItem(GS_KEY,url);
+  const lbl=document.getElementById('gs-status-lbl');
+  if(lbl) lbl.textContent=url?'✅ URL tersimpan – realtime aktif':'Belum ada URL';
+  showToast(url?'URL tersimpan – realtime ke Sheets aktif':'URL dihapus','success');
+}
+
+// Called from realtime channel automatically on every new kunjungan
+async function gsPushRealtime(kunjunganData){
+  const url=localStorage.getItem(GS_KEY);
+  if(!url||!kunjunganData) return;
+  try{
+    await fetch(url,{
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'realtime_push', data:kunjunganData, timestamp:new Date().toISOString()})
+    });
+  }catch(e){ console.warn('GS push failed:',e.message); }
+}
+
 async function sendToGSheets(){
   const url=document.getElementById('gs-url').value.trim();
   const type=document.getElementById('gs-type').value;
@@ -1767,7 +1886,7 @@ async function sendToGSheets(){
   }
   showToast('Mengambil data...','info');
   let data=[];
-  const today = getWITDate(); // ✅ WIT
+  const today=new Date().toISOString().split('T')[0];
   if(type==='kunjungan_today'){
     const{data:d}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
     data=d||[];
