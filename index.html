@@ -195,6 +195,15 @@
 const SUPABASE_URL = 'https://cbnqdvkxukortmntmfzh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibnFkdmt4dWtvcnRtbnRtZnpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjM3MzksImV4cCI6MjA5MDY5OTczOX0.WSAQeI0wJlNbi9ECL1ECyduLdZnm-cVPMpH4peLLT_0';
 
+// ============================================================
+// WIT HELPER — Waktu Indonesia Timur (UTC+9, Ambon/Maluku)
+// ============================================================
+function getWITDate() {
+  const now = new Date();
+  const witDate = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return witDate.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
 // Inisialisasi Supabase client
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -359,14 +368,16 @@ async function doSubmit() {
   const btn = document.getElementById('btn-submit');
   btn.innerHTML = '<span class="spinner"></span> Mendaftarkan...';
   btn.disabled = true;
-  const today = new Date().toISOString().split('T')[0];
+  const today = getWITDate(); // ✅ WIT — tanggal sesuai zona WIT
   try {
     const jamVal = document.getElementById('inp-jam')?.value || '';
+    // ✅ FIX: pastikan daftar_barang selalu array of object dengan tipe yang benar
+    const barangFinal = S.barang.map(b => ({ nama: String(b.nama).trim(), jumlah: parseInt(b.jumlah) || 1 }));
     const { data, error } = await db.from('kunjungan').insert({
       wbp_id: S.wbp.id, nama_pengunjung: S.nama, nik_pengunjung: S.nik,
       tgl_kunjungan: today, status:'menunggu',
-      daftar_barang: S.barang.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1})),
-      jam_kunjungan: jamVal||null,
+      daftar_barang: barangFinal,
+      jam_kunjungan: jamVal || null,
       metode_daftar:'online'
     }).select().single();
     if (error) throw error;
@@ -391,7 +402,9 @@ function showStep3(data) {
   document.getElementById('r-antrean').textContent = '#'+String(data.no_antrean).padStart(3,'0');
   document.getElementById('r-wbp').textContent     = S.wbp.nama_wbp;
   document.getElementById('r-kamar').textContent   = S.wbp.kamar;
-  document.getElementById('r-tgl').textContent     = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('r-tgl').textContent = new Date(
+    Date.now() + 9 * 60 * 60 * 1000
+  ).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}); // ✅ WIT
   document.getElementById('r-hub').textContent     = S.kel.hubungan;
   document.getElementById('r-jam').textContent     = data.jam_kunjungan || '(tidak ditentukan)';
   if (S.barang.length > 0) {

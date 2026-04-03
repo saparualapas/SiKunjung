@@ -623,14 +623,56 @@ const PAGE_SIZE=15;
 let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1;
 
 // ============================================================
+// WIT HELPER — Waktu Indonesia Timur (UTC+9)
+// Ambon/Maluku menggunakan WIT, bukan WIB (UTC+7)
+// ============================================================
+function getWITDate() {
+  // Offset WIT = UTC+9 = 9 * 60 menit
+  const now = new Date();
+  const witOffsetMs = 9 * 60 * 60 * 1000;
+  const witDate = new Date(now.getTime() + witOffsetMs);
+  return witDate.toISOString().split('T')[0]; // format YYYY-MM-DD
+}
+
+function getWITTime() {
+  const now = new Date();
+  const witOffsetMs = 9 * 60 * 60 * 1000;
+  const witDate = new Date(now.getTime() + witOffsetMs);
+  return witDate.toISOString().split('T')[1].slice(0,5); // format HH:MM
+}
+
+function getWITDateDisplay() {
+  // Untuk tampilan label tanggal yang benar di topbar
+  const now = new Date();
+  const witOffsetMs = 9 * 60 * 60 * 1000;
+  const witDate = new Date(now.getTime() + witOffsetMs);
+  return witDate.toLocaleDateString('id-ID', {
+    weekday:'long', day:'numeric', month:'long', year:'numeric',
+    timeZone: 'Asia/Jayapura' // WIT timezone
+  });
+}
+
+// Parse daftar_barang secara aman (handle string JSON dari Supabase)
+function parseBarang(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; }
+    catch(e) { return []; }
+  }
+  return [];
+}
+
+// ============================================================
 // BOOT — FIX SESSION PERSISTENCE
 // ============================================================
 document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  // ✅ FIX: Gunakan WIT (UTC+9) untuk semua tampilan tanggal
+  document.getElementById('tday-lbl').textContent = getWITDateDisplay();
   document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
 
-  // Set default tanggal backup
-  const today=new Date().toISOString().split('T')[0];
+  // Set default tanggal backup — pakai WIT
+  const today = getWITDate();
   const bkDari=document.getElementById('bk-dari');
   const bkSampai=document.getElementById('bk-sampai');
   if(bkDari) bkDari.value=today;
@@ -724,6 +766,7 @@ function onLogin(user, page='dashboard'){
   setupRealtime();
   loadWbp();
   loadKel();
+  loadDash(); // ✅ FIX: panggil loadDash() saat login agar dashboard tidak stuck loading
   // ✅ FIX: restore saved page on login/refresh
   navTo(page, document.querySelector('[data-p="'+page+'"]'));
   // Auto cleanup stale visits from previous days
@@ -732,7 +775,7 @@ function onLogin(user, page='dashboard'){
 
 // ✅ Auto-delete 'menunggu' visits from previous days (no-show cleanup)
 async function autoCleanupStaleVisits(){
-  const td = new Date().toISOString().split('T')[0];
+  const td = getWITDate(); // ✅ WIT
   await db.from('kunjungan').delete().eq('status','menunggu').lt('tgl_kunjungan',td);
 }
 
@@ -805,7 +848,7 @@ function setupRealtime(){
 // DASHBOARD
 // ============================================================
 async function loadDash(){
-  const today=new Date().toISOString().split('T')[0]; // ✅ only today
+  const today = getWITDate(); // ✅ WIT
   const[{data:k},{data:w}]=await Promise.all([
     db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
     db.from('wbp').select('id,status').eq('status','aktif')
@@ -815,7 +858,8 @@ async function loadDash(){
   document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
   document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
   document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
-  document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
+  // ✅ FIX: parseBarang agar JSONB string juga terbaca dengan benar
+  document.getElementById('s-brg').textContent=kd.filter(x=>parseBarang(x.daftar_barang).length>0).length;
   document.getElementById('s-wbp').textContent=wd.length;
   const nb=document.getElementById('nb-m');
   const tunggu=kd.filter(x=>x.status==='menunggu').length;
@@ -833,7 +877,7 @@ async function loadDash(){
 }
 
 function kunjRow(v,showAksi=true){
-  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+  const b=parseBarang(v.daftar_barang); // ✅ FIX: parse aman
   const bHtml=b.length?b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' '):'<span style="color:#94a3b8;font-size:11px;">—</span>';
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
   const aksi=showAksi?`<td style="white-space:nowrap;">
@@ -855,7 +899,7 @@ function kunjRow(v,showAksi=true){
 }
 
 function kunjMobCard(v,showAksi=true){
-  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+  const b=parseBarang(v.daftar_barang); // ✅ FIX: parse aman
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
   return `<div class="mc2">
     <div class="mc2-row">
@@ -881,7 +925,7 @@ function kunjMobCard(v,showAksi=true){
 async function loadKunj(){
   document.getElementById('kunj-tb').innerHTML='<tr><td colspan="7" class="empty"><span class="spin"></span></td></tr>';
   document.getElementById('kunj-mc').innerHTML='';
-  const today=new Date().toISOString().split('T')[0]; // ✅ only today
+  const today = getWITDate(); // ✅ WIT
   const{data,error}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).in('status',['menunggu','hadir']).order('no_antrean');
   if(error){showToast('Gagal: '+error.message,'error');return;}
   allKunj=data||[];
@@ -919,8 +963,8 @@ function renderKunj(){
 // RIWAYAT
 // ============================================================
 async function loadRiwayat(){
-  // ✅ FIX: default to today if dates not set
-  const today=new Date().toISOString().split('T')[0];
+  // ✅ FIX: default to today (WIT) if dates not set
+  const today = getWITDate(); // ✅ WIT
   const rwDari=document.getElementById('rw-dari');
   const rwSampai=document.getElementById('rw-sampai');
   if(!rwDari.value) rwDari.value=today;
@@ -950,7 +994,7 @@ function renderRiwayat(){
     return;
   }
   tbody.innerHTML=slice.map(v=>{
-    const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+    const b=parseBarang(v.daftar_barang); // ✅ FIX
     const bHtml=b.length?b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' '):'<span style="color:#94a3b8;font-size:11px;">—</span>';
     const mt=v.metode_daftar==='online'?'so':'sos';
     return `<tr>
@@ -983,11 +1027,11 @@ function renderRiwayat(){
 // ============================================================
 async function loadBarang(){
   document.getElementById('brg-tb').innerHTML='<tr><td colspan="6" class="empty"><span class="spin"></span></td></tr>';
-  const today=new Date().toISOString().split('T')[0];
+  const today = getWITDate(); // ✅ WIT
   const{data}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
   const rows=[], mobs=[];
   (data||[]).forEach(v=>{
-    const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
+    const b=parseBarang(v.daftar_barang); // ✅ FIX: parse aman
     const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
     if(!b.length){
       rows.push(`<tr><td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td><td>${esc(v.nama_pengunjung)}</td><td>${esc(v.wbp?.nama_wbp||'—')}</td><td colspan="2" style="color:#94a3b8;font-style:italic;font-size:11px;">Tidak ada barang</td><td><span class="${st}">${v.status}</span></td></tr>`);
@@ -1211,9 +1255,7 @@ async function saveKel(){
 function openDetail(id){
   const v=allKunj.find(x=>x.id===id)||allRiwayat.find(x=>x.id===id);
   if(!v)return;
-  const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
-  const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
-  document.getElementById('m-detail-body').innerHTML=`
+  const b=parseBarang(v.daftar_barang); // ✅ FIX
     <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:16px;">
       <div><p style="font-weight:700;font-size:16px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p><p style="color:#64748b;font-size:12px;margin:4px 0 0;">NIK: ${v.nik_pengunjung}</p></div>
       <span class="${st}">${v.status.toUpperCase()}</span>
@@ -1301,7 +1343,7 @@ async function onQR(text){
   }
   const{error:ue}=await db.from('kunjungan').update({status:'hadir'}).eq('id',data.id);
   if(ue){showToast('Gagal update status','error');return;}
-  const br=Array.isArray(data.daftar_barang)?data.daftar_barang:[];
+  const br=parseBarang(data.daftar_barang); // ✅ FIX
   document.getElementById('scan-det').innerHTML=`
     <p><strong>Pengunjung:</strong> ${esc(data.nama_pengunjung)}</p>
     <p><strong>WBP:</strong> ${esc(data.wbp?.nama_wbp||'—')} – ${esc(data.wbp?.kamar||'—')}</p>
@@ -1457,10 +1499,10 @@ async function submitOnsite(){
   if(!osWbp){showFErr2('os-err','Pilih WBP yang dikunjungi.');return;}
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
-  const today=new Date().toISOString().split('T')[0];
+  const today = getWITDate(); // ✅ WIT
   // ✅ FIX: barang as proper JSONB array with integer jumlah
   const barangFinal = osBrg.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1}));
-  const jamVal = document.getElementById('os-jam')?.value || new Date().toTimeString().slice(0,5);
+  const jamVal = document.getElementById('os-jam')?.value || getWITTime(); // ✅ WIT time
   const{error}=await db.from('kunjungan').insert({
     wbp_id:osWbp.id, nama_pengunjung:nm, nik_pengunjung:nik,
     tgl_kunjungan:today, status:'hadir',
@@ -1517,7 +1559,7 @@ async function doSearch(){
 async function exportExcel(type){
   showToast('Menyiapkan data...','info');
   let data=[], filename='', sheetName='';
-  const today=new Date().toISOString().split('T')[0];
+  const today = getWITDate(); // ✅ WIT
 
   if(type==='today'){
     const{data:d}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
@@ -1530,7 +1572,7 @@ async function exportExcel(type){
       'Kamar':v.wbp?.kamar||'',
       'Status':v.status,
       'Metode':v.metode_daftar,
-      'Barang Bawaan':Array.isArray(v.daftar_barang)?v.daftar_barang.map(b=>b.nama+' ×'+b.jumlah).join('; '):'',
+      'Barang Bawaan':parseBarang(v.daftar_barang).map(b=>b.nama+' ×'+b.jumlah).join('; '), // ✅ FIX
     }));
     filename=`kunjungan_${today}.xlsx`;
     sheetName='Kunjungan';
@@ -1548,7 +1590,7 @@ async function exportExcel(type){
       'Kamar':v.wbp?.kamar||'',
       'Status':v.status,
       'Metode':v.metode_daftar,
-      'Barang Bawaan':Array.isArray(v.daftar_barang)?v.daftar_barang.map(b=>b.nama+' ×'+b.jumlah).join('; '):'',
+      'Barang Bawaan':parseBarang(v.daftar_barang).map(b=>b.nama+' ×'+b.jumlah).join('; '), // ✅ FIX
     }));
     filename=`kunjungan_${dari}_sd_${sampai}.xlsx`;
     sheetName='Kunjungan';
@@ -1602,7 +1644,7 @@ async function sendToGSheets(){
   }
   showToast('Mengambil data...','info');
   let data=[];
-  const today=new Date().toISOString().split('T')[0];
+  const today = getWITDate(); // ✅ WIT
   if(type==='kunjungan_today'){
     const{data:d}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
     data=d||[];
