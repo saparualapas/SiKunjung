@@ -18,14 +18,14 @@
     #sidebar .logo h1{color:#fff;font-size:16px;font-weight:800;margin:0;}
     #sidebar .logo p{color:#94a3b8;font-size:11px;margin:2px 0 0;}
     .logo-badge{display:inline-block;background:#1d4ed8;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:4px;}
-    nav{flex:1;overflow-y:auto;padding:8px 0;}
+    nav{flex:1;overflow-y:auto;padding:8px 0 60px 0;-webkit-overflow-scrolling:touch;}
     .sec-lbl{color:#475569;font-size:10px;font-weight:700;letter-spacing:.08em;padding:12px 16px 4px;text-transform:uppercase;}
     .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:#94a3b8;font-size:13px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s;user-select:none;}
     .nav-item:hover{background:rgba(255,255,255,.05);color:#e2e8f0;}
     .nav-item.active{background:rgba(29,78,216,.25);color:#60a5fa;border-left-color:#3b82f6;}
     .nav-item .ic{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
     .nb{margin-left:auto;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
-    #sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);}
+    #sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
     #sb-email{color:#64748b;font-size:11px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     #btn-lo{width:100%;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.2);padding:8px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
     #btn-lo:hover{background:rgba(239,68,68,.35);color:#fff;}
@@ -133,7 +133,7 @@
       <h1 style="font-size:20px;font-weight:800;color:#0f172a;margin:0;">Admin Panel</h1>
       <p style="color:#64748b;font-size:13px;margin-top:4px;">SiKunjung – Lapas Kelas III Saparua</p>
     </div>
-    <div id="login-form" style="display:flex;flex-direction:column;gap:14px;">
+    <div id="frm-login" style="display:flex;flex-direction:column;gap:14px;">
       <div><label class="lbl-f">Email</label><input id="l-email" type="email" placeholder="admin@lapas.go.id" class="inp"/></div>
       <div>
         <label class="lbl-f">Password</label>
@@ -147,7 +147,7 @@
       <button onclick="showForgotPass()" type="button" style="background:none;border:none;color:#3b82f6;font-size:12px;cursor:pointer;text-align:center;padding:4px;">Lupa password?</button>
     </div>
     <!-- FORGOT PASSWORD -->
-    <div id="forgot-form" style="display:none;flex-direction:column;gap:14px;">
+    <div id="frm-forgot" style="display:none;flex-direction:column;gap:14px;">
       <div style="text-align:center;margin-bottom:8px;">
         <p style="font-size:14px;font-weight:700;color:#0f172a;margin:0 0 4px;">Reset Password</p>
         <p style="font-size:12px;color:#64748b;">Link reset akan dikirim ke email Anda</p>
@@ -158,7 +158,7 @@
       <button onclick="showLoginForm()" type="button" style="background:none;border:none;color:#64748b;font-size:12px;cursor:pointer;text-align:center;">← Kembali ke Login</button>
     </div>
     <!-- RESET PASSWORD FORM (dari email link) -->
-    <div id="frm-reset" style="display:none;flex-direction:column;gap:14px;">
+    <div id="frm-reset" style="display:none;flex-direction:column;gap:14px;width:100%;">
       <div style="text-align:center;margin-bottom:4px;">
         <p style="font-size:15px;font-weight:700;color:#0f172a;margin:0 0 4px;">🔑 Atur Password Baru</p>
         <p style="font-size:12px;color:#64748b;">Masukkan password baru untuk akun Anda</p>
@@ -248,6 +248,7 @@
           <tbody id="dash-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="dash-mc"></div>
+        <div class="pag" id="dash-pag"></div>
       </div>
     </div>
 
@@ -380,31 +381,33 @@
 
           <!-- Scan KTP -->
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:16px;">
-            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 10px;">📷 Scan KTP (Otomatis isi NIK)</p>
-            <!-- Mode 1: Live Camera Scan -->
-            <div id="ktp-live-mode" style="margin-bottom:10px;">
-              <div id="ktp-scan-area" style="display:none;margin-bottom:8px;">
-                <div style="border:3px solid #2563eb;border-radius:10px;overflow:hidden;background:#000;min-height:180px;display:flex;align-items:center;justify-content:center;">
-                  <div id="ktp-reader"></div>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:8px;">
-                  <button type="button" class="btn bsuc bsm" onclick="captureKtpFrame()" id="btn-ktp-capture">📸 Ambil Gambar</button>
-                  <button type="button" class="btn bdan bsm" onclick="stopKtpScan()">■ Stop</button>
-                </div>
-              </div>
-              <button id="btn-scan-ktp" type="button" class="btn bp bsm" onclick="startKtpScan()">📹 Scan Langsung</button>
-            </div>
-            <!-- Mode 2: Upload photo -->
-            <div style="border-top:1px solid #bfdbfe;padding-top:10px;">
-              <p style="font-size:11px;font-weight:600;color:#1d4ed8;margin:0 0 6px;">— atau foto KTP dari galeri —</p>
-              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1px solid #bfdbfe;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:#1d4ed8;">
-                🖼️ Pilih Foto KTP
-                <input type="file" id="ktp-file" accept="image/*" capture="environment" onchange="processKtpFile(this)" style="display:none;"/>
+            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 6px;">📷 Scan / Foto KTP (Otomatis isi NIK &amp; Nama)</p>
+            <p style="font-size:11px;color:#1e40af;margin:0 0 12px;">Foto barcode di <strong>belakang KTP</strong> (garis-garis hitam / PDF417)</p>
+            
+            <!-- Tombol: Foto langsung dari kamera HP -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+              <label id="lbl-foto-kamera" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
+                📷 Foto Kamera
+                <input type="file" id="ktp-kamera" accept="image/*" capture="environment" onchange="processKtpFile(this,'kamera')" style="display:none;"/>
               </label>
-              <canvas id="ktp-canvas" style="display:none;max-width:100%;border-radius:8px;margin-top:8px;"></canvas>
+              <label id="lbl-foto-galeri" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
+                🖼️ Dari Galeri
+                <input type="file" id="ktp-galeri" accept="image/*" onchange="processKtpFile(this,'galeri')" style="display:none;"/>
+              </label>
             </div>
-            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12px;font-weight:600;"></div>
-            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Arahkan ke barcode PDF417 (garis-garis) di belakang KTP, atau foto barcode dari jarak dekat.</p>
+
+            <!-- Preview gambar yang dipilih -->
+            <div id="ktp-preview-wrap" style="display:none;margin-bottom:8px;">
+              <img id="ktp-preview-img" style="max-width:100%;max-height:200px;border-radius:8px;border:2px solid #bfdbfe;" alt="Preview KTP"/>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="ktp-loading" style="display:none;text-align:center;padding:10px;font-size:12px;color:#1d4ed8;font-weight:600;">
+              <span class="spin"></span> Membaca barcode KTP...
+            </div>
+
+            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:9px 12px;margin-top:8px;font-size:12px;font-weight:600;"></div>
+            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Tips: Pastikan pencahayaan cukup, kamera tegak lurus ke barcode, dan gambar tidak blur.</p>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:14px;">
@@ -474,9 +477,7 @@
               <p style="font-size:10px;color:#64748b;margin:0;">WBP + Keluarga<br>Tiap tanggal 1</p>
             </div>
           </div>
-          <div style="background:#fff;border-radius:8px;padding:10px;font-size:11px;color:#0369a1;">
-            <strong>🔒 Backup Backend Supabase:</strong> Supabase menyimpan backup otomatis harian selama 7 hari (Pro plan). Untuk keamanan ekstra, aktifkan Point-in-Time Recovery di <a href="https://supabase.com/dashboard" target="_blank" style="color:#2563eb;">Supabase Dashboard → Settings → Database → Backups</a>.
-          </div>
+
         </div>
         <div id="backup-reminder" style="display:none;"></div>
         <div class="card" style="padding:20px;margin-bottom:14px;">
@@ -691,13 +692,14 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // ============================================================
 // STATE
 // ============================================================
-let allKunj=[], allWbp=[], allKel=[], allRiwayat=[];
+let allKunj=[], allWbp=[], allKel=[], allRiwayat=[], allDash=[];
 let curFilter='all', curPage='dashboard';
 let qrScanner=null, ktpScanner=null, scanCD=false;
 let osWbp=null, osBrg=[];
 let wbpTab='aktif';
 const PAGE_SIZE=15;
-let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1;
+const DASH_PAGE_SIZE=10;
+let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1, dashPage=1;
 
 // ============================================================
 // BOOT — FIX SESSION PERSISTENCE
@@ -723,23 +725,33 @@ document.addEventListener('DOMContentLoaded',()=>{
   // ✅ FIX: Save current page to sessionStorage for persistence on refresh
   const savedPage = sessionStorage.getItem('sikunjung-page') || 'dashboard';
   let loginHandled = false;
+  let inResetMode = false; // ✅ track apakah kita sedang di mode reset password
 
   db.auth.onAuthStateChange((event, session)=>{
     if(event==='PASSWORD_RECOVERY'){
-      // ✅ FIX: User clicked password reset link — show reset form, don't go to dashboard
+      // User klik link reset — tampilkan form, JANGAN masuk dashboard
+      inResetMode=true;
       loginHandled=true;
       showResetPasswordForm();
       return;
     }
+    if(event==='SIGNED_OUT'){
+      loginHandled=false;
+      inResetMode=false;
+      showAG();
+      return;
+    }
+    // Jika sedang di mode reset, event SIGNED_IN tidak boleh masuk dashboard
+    if(inResetMode) return;
     if((event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED') && session && session.user){
       if(!loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
-    } else if(event==='SIGNED_OUT'){
-      loginHandled=false; showAG();
     }
   });
 
   db.auth.getSession().then(({data:{session}})=>{
-    if(session && session.user && !loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
+    if(session && session.user && !loginHandled && !inResetMode){
+      loginHandled=true; hideAG(); onLogin(session.user, savedPage);
+    }
   });
 });
 
@@ -751,10 +763,18 @@ function hideAG(){document.getElementById('auth-guard').style.display='none';}
 function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 
 function showResetPasswordForm(){
-  // Hide auth guard, show inline reset form
   document.getElementById('auth-guard').style.display='flex';
-  ['frm-login','frm-forgot'].forEach(id=>document.getElementById(id).style.display='none');
-  document.getElementById('frm-reset').style.display='flex';
+  // Sembunyikan semua form lain
+  ['frm-login','frm-forgot'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  // Tampilkan form reset password
+  const resetEl=document.getElementById('frm-reset');
+  if(resetEl) resetEl.style.display='flex';
+  // Jangan masuk ke dashboard
+  document.getElementById('main').style.display='none';
+  document.getElementById('sidebar').style.display='none';
 }
 
 async function doResetPassword(){
@@ -773,21 +793,31 @@ async function doResetPassword(){
   } else {
     msg.textContent='✅ Password berhasil diubah! Silakan login.';
     msg.style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
-    setTimeout(()=>{
+    setTimeout(async()=>{
+      // Sign out dulu supaya session reset bersih
+      await db.auth.signOut();
+      inResetMode=false;
+      loginHandled=false;
+      // Show main & sidebar again
+      const mainEl=document.getElementById('main');
+      const sbEl=document.getElementById('sidebar');
+      if(mainEl) mainEl.style.display='';
+      if(sbEl) sbEl.style.display='';
       document.getElementById('frm-reset').style.display='none';
       document.getElementById('frm-login').style.display='flex';
+      document.getElementById('auth-guard').style.display='flex';
       showToast('Password diubah! Silakan login kembali.','success');
     },2000);
   }
 }
 
 function showForgotPass(){
-  document.getElementById('login-form').style.display='none';
-  document.getElementById('forgot-form').style.display='flex';
+  document.getElementById('frm-login').style.display='none';
+  document.getElementById('frm-forgot').style.display='flex';
 }
 function showLoginForm(){
-  document.getElementById('forgot-form').style.display='none';
-  document.getElementById('login-form').style.display='flex';
+  document.getElementById('frm-forgot').style.display='none';
+  document.getElementById('frm-login').style.display='flex';
 }
 
 async function doForgotPass(){
@@ -880,9 +910,8 @@ function onLogin(user, page='dashboard'){
   loadGsUrl();
   loadWbp();
   loadKel();
-  // ✅ FIX: restore saved page on login/refresh
+  loadDash(); // ✅ FIX: always load dashboard stats on login
   navTo(page, document.querySelector('[data-p="'+page+'"]'));
-  // Auto cleanup stale visits from previous days
   autoCleanupStaleVisits();
 }
 
@@ -936,8 +965,9 @@ function navTo(p,el){
   const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
   document.getElementById('pg-title').textContent=titles[p]||p;
   closeSB();
+  if(p==='dashboard')loadDash();
   if(p==='kunjungan'){kunjPage=1;loadKunj();}
-  if(p==='barang')loadBarang();
+  if(p==='barang'){brgPage=1;loadBarang();}
   if(p==='wbp'){wbpPage=1;renderWbp();}
   if(p==='keluarga'){kelPage=1;renderKel();}
   if(p!=='scan'&&qrScanner)stopScan();
@@ -994,16 +1024,25 @@ async function loadDash(){
   const nb=document.getElementById('nb-m');
   const tunggu=kd.filter(x=>x.status==='menunggu').length;
   if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';
+  allDash=kd;
+  dashPage=1;
+  renderDashTable();
+}
+
+function renderDashTable(){
   const tbody=document.getElementById('dash-tb');
   const mc=document.getElementById('dash-mc');
-  if(!kd.length){
+  if(!allDash.length){
     tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
-    mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
+    if(mc) mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
+    const pg=document.getElementById('dash-pag'); if(pg) pg.innerHTML='';
     return;
   }
-  const slice=kd.slice(0,15);
+  const start=(dashPage-1)*DASH_PAGE_SIZE;
+  const slice=allDash.slice(start,start+DASH_PAGE_SIZE);
   tbody.innerHTML=slice.map(v=>kunjRow(v,false)).join('');
-  mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
+  if(mc) mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
+  renderPag('dash-pag',dashPage,Math.ceil(allDash.length/DASH_PAGE_SIZE),(p)=>{dashPage=p;renderDashTable();});
 }
 
 function kunjRow(v,showAksi=true){
@@ -1503,124 +1542,106 @@ async function onQR(text){
 }
 
 // ============================================================
-// KTP SCANNER
+// KTP SCANNER — file-based approach (lebih reliable di HP)
 // ============================================================
-async function startKtpScan(){
-  // ✅ FIX: Reset div before reinitializing to avoid "already started" error
-  const readerDiv=document.getElementById('ktp-reader');
-  if(readerDiv) readerDiv.innerHTML='';
-  if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
-  ktpScanner=new Html5Qrcode('ktp-reader');
-  document.getElementById('ktp-scan-area').style.display='block';
-  document.getElementById('btn-scan-ktp').style.display='none';
-  document.getElementById('ktp-scan-result').style.display='none';
-  try{
-    await ktpScanner.start(
-      {facingMode:'environment'},
-      {fps:10,qrbox:{width:260,height:160}},
-      onKtpScan,
-      ()=>{}
-    );
-    showToast('Kamera aktif – arahkan ke barcode belakang KTP','info');
-  }catch(e){
-    document.getElementById('ktp-scan-area').style.display='none';
-    document.getElementById('btn-scan-ktp').style.display='';
-    showToast('Kamera tidak bisa dibuka. Pastikan izin kamera diaktifkan di browser.','error');
-    console.error('KTP scan error:',e);
+async function stopKtpScan(){
+  if(ktpScanner){
+    try{await ktpScanner.stop();}catch(e){}
+    try{await ktpScanner.clear();}catch(e){}
+    ktpScanner=null;
   }
 }
 
-async function stopKtpScan(){
-  if(ktpScanner){await ktpScanner.stop().catch(()=>{});ktpScanner=null;}
-  document.getElementById('ktp-scan-area').style.display='none';
-  document.getElementById('btn-scan-ktp').style.display='';
+function showKtpResult(html,type){
+  const el=document.getElementById('ktp-scan-result');
+  if(!el) return;
+  el.innerHTML=html;
+  const css={ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'};
+  el.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;'+(css[type]||css.err);
 }
 
 function validateNIK(nik){
   if(!/^\d{16}$/.test(nik)) return false;
-  // Validasi kode wilayah (2 digit pertama 11-96)
   const prov=parseInt(nik.substring(0,2));
   if(prov<11||prov>96) return false;
-  // Validasi tanggal lahir (digit 7-12)
   let tgl=parseInt(nik.substring(6,8));
-  if(tgl>40) tgl-=40; // perempuan +40
+  if(tgl>40) tgl-=40;
   if(tgl<1||tgl>31) return false;
   const bln=parseInt(nik.substring(8,10));
   if(bln<1||bln>12) return false;
   return true;
 }
 
-async function parseKtpText(text){
+function parseKtpRaw(text){
+  // Berbagai format barcode KTP Indonesia
   let nik='', nama='';
   const t=(text||'').trim();
-  if(/^\d{16}$/.test(t)){ nik=t; }
-  else if(t.includes('|')){
-    const parts=t.split('|');
-    nik=(parts[0]||'').replace(/\D/g,'');
-    nama=parts[1]||'';
-  } else {
-    const m=t.match(/\b\d{16}\b/); if(m) nik=m[0];
-    const nm=t.match(/[A-Z][A-Z ]{3,}/); if(nm) nama=nm[0].trim();
-  }
-
-  if(!validateNIK(nik)){
-    showKtpResult('⚠ Kode terbaca tapi bukan NIK valid ('+nik+'). Coba foto lebih dekat ke barcode.','err');
-    return;
-  }
-
-  document.getElementById('os-nik').value=nik;
-  if(nama) document.getElementById('os-nama').value=nama;
-
-  // Auto-lookup WBP dari keluarga terdaftar
-  const{data:kelData}=await db.from('keluarga_wbp')
-    .select('*,wbp(id,nama_wbp,kamar,status)')
-    .eq('nik_keluarga',nik).maybeSingle();
-
-  if(kelData&&kelData.wbp){
-    if(kelData.wbp.status==='bebas'){
-      showKtpResult(`⚠ WBP ${esc(kelData.wbp.nama_wbp)} sudah BEBAS — kunjungan tidak dapat dilakukan.`,'err');
-      return;
-    }
-    if(!nama&&kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
-    selWbpOs(kelData.wbp.id,kelData.wbp.nama_wbp,kelData.wbp.kamar);
-    showKtpResult(`✅ NIK: ${nik} | ${kelData.nama_keluarga} → WBP: ${esc(kelData.wbp.nama_wbp)} (${esc(kelData.wbp.kamar)})`,'ok');
-    showToast('Semua data terisi otomatis dari KTP ✅','success');
-  } else {
-    showKtpResult(`✅ NIK terbaca: ${nik}${nama?' | '+esc(nama):''}. Pilih WBP secara manual.`,'warn');
-    showToast('NIK terbaca. Pilih WBP yang dikunjungi.','info');
-  }
-}
-
-function showKtpResult(html,type){
-  const el=document.getElementById('ktp-scan-result');
-  el.innerHTML=html;
-  const css={ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'};
-  el.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;'+(css[type]||css.err);
-}
-
-async function onKtpScan(text){
-  await stopKtpScan();
-  let nik='', nama='';
-  const t=text.trim();
-  // Parse berbagai format KTP Indonesia
   if(/^\d{16}$/.test(t)){
     nik=t;
   } else if(t.includes('|')){
     const parts=t.split('|');
     nik=(parts[0]||'').replace(/\D/g,'');
     nama=parts[1]||'';
+  } else if(t.includes('\n')){
+    // Multi-line format
+    const lines=t.split('\n');
+    for(const l of lines){
+      const m=l.match(/\b(\d{16})\b/);
+      if(m){nik=m[1];break;}
+    }
+    // Cari nama (huruf kapital semua)
+    for(const l of lines){
+      const nm=l.match(/^([A-Z][A-Z ]{3,})$/);
+      if(nm){nama=nm[1].trim();break;}
+    }
   } else {
-    const m=t.match(/\b\d{16}\b/);
-    if(m) nik=m[0];
-    const nm=t.match(/[A-Z][A-Z ]{3,}/);
-    if(nm) nama=nm[0].trim();
+    const m=t.match(/\b(\d{16})\b/); if(m) nik=m[1];
+    const nm=t.match(/[A-Z][A-Z ]{3,}/); if(nm) nama=nm[0].trim();
+  }
+  return {nik, nama};
+}
+
+async function processKtpFile(input, mode){
+  const file = input.files[0];
+  if(!file) return;
+
+  // Reset input value so same file can be selected again
+  input.value = '';
+
+  // Show preview
+  const previewWrap=document.getElementById('ktp-preview-wrap');
+  const previewImg=document.getElementById('ktp-preview-img');
+  if(previewWrap && previewImg){
+    const url=URL.createObjectURL(file);
+    previewImg.src=url;
+    previewWrap.style.display='block';
   }
 
-  if(nik.length===16){
+  // Show loading
+  const loading=document.getElementById('ktp-loading');
+  if(loading) loading.style.display='block';
+  document.getElementById('ktp-scan-result').style.display='none';
+
+  try{
+    // Pakai Html5Qrcode.scanFile() — tidak butuh div, tidak butuh kamera
+    const scanner = new Html5Qrcode('ktp-reader-hidden');
+    const text = await scanner.scanFile(file, false);
+    try{await scanner.clear();}catch(e){}
+
+    if(loading) loading.style.display='none';
+    const {nik, nama} = parseKtpRaw(text);
+
+    if(!nik || !validateNIK(nik)){
+      showKtpResult('⚠ Barcode terbaca tapi NIK tidak valid. Coba foto barcode PDF417 di belakang KTP dari jarak 10-15cm dengan pencahayaan cukup.','err');
+      showToast('Gagal baca NIK dari KTP','warn');
+      return;
+    }
+
+    // Isi form
     document.getElementById('os-nik').value=nik;
     if(nama) document.getElementById('os-nama').value=nama;
 
-    // ✅ Auto-lookup WBP dari tabel keluarga_wbp
+    // Auto-lookup keluarga & WBP
     const{data:kelData}=await db.from('keluarga_wbp')
       .select('*,wbp(id,nama_wbp,kamar,status)')
       .eq('nik_keluarga',nik)
@@ -1628,24 +1649,28 @@ async function onKtpScan(text){
 
     if(kelData && kelData.wbp){
       if(kelData.wbp.status==='bebas'){
-        document.getElementById('ktp-scan-result').innerHTML=`⚠ NIK terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS. Kunjungan tidak bisa dilakukan.`;
-        document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
+        showKtpResult(`⚠ NIK terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS. Kunjungan tidak bisa dilakukan.`,'err');
         return;
       }
       if(!nama && kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
-      selWbpOs(kelData.wbp.id,kelData.wbp.nama_wbp,kelData.wbp.kamar);
-      document.getElementById('ktp-scan-result').innerHTML=`✅ NIK: ${nik} | ${kelData.nama_keluarga} → WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)})`;
-      document.getElementById('ktp-scan-result').style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-      showToast('Data terisi otomatis dari KTP ✅','success');
+      selWbpOs(kelData.wbp.id, kelData.wbp.nama_wbp, kelData.wbp.kamar);
+      showKtpResult(`✅ NIK: ${nik}${kelData.nama_keluarga?' | '+esc(kelData.nama_keluarga):''} → WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)}) — Data terisi otomatis`,'ok');
+      showToast('✅ Semua data terisi otomatis dari KTP!','success');
     } else {
-      document.getElementById('ktp-scan-result').innerHTML=`✅ NIK terbaca: <strong>${nik}</strong>${nama?' | '+esc(nama):''}. Pilih WBP secara manual.`;
-      document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-      showToast('NIK terbaca. Pilih WBP yang dikunjungi.','warn');
+      showKtpResult(`✅ NIK terbaca: <strong>${nik}</strong>${nama?' | '+esc(nama):''}. NIK belum terdaftar sebagai keluarga — pilih WBP secara manual.`,'warn');
+      showToast('NIK terbaca. Pilih WBP yang dikunjungi.','info');
     }
-  } else {
-    document.getElementById('ktp-scan-result').innerHTML='⚠ Tidak dapat membaca NIK. Dekatkan kamera ke barcode hitam di belakang KTP.';
-    document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-    showToast('Gagal baca NIK — coba lagi','warn');
+
+  } catch(err){
+    if(loading) loading.style.display='none';
+    // Html5Qrcode melempar error jika tidak ada barcode terdeteksi
+    const errMsg = err && err.message ? err.message : String(err);
+    if(errMsg.includes('No barcode') || errMsg.includes('No QR code') || errMsg.includes('No multi')){
+      showKtpResult('⚠ Barcode tidak terdeteksi dalam gambar ini. Pastikan:<br>• Foto bagian <strong>belakang KTP</strong> (ada barcode garis-garis)<br>• Pencahayaan cukup terang<br>• Tidak blur / tidak goyang<br>• Barcode mengisi sebagian besar frame foto','err');
+    } else {
+      showKtpResult('⚠ Gagal membaca file: '+errMsg,'err');
+    }
+    showToast('Barcode tidak terbaca — coba foto ulang','warn');
   }
 }
 
