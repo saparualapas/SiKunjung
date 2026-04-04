@@ -431,27 +431,48 @@
           <p style="color:#64748b;font-size:13px;margin:0 0 18px;">Scan KTP pengunjung atau isi manual</p>
 
           <!-- Scan KTP OCR -->
-          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:16px;">
-            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 4px;">📷 Foto KTP → Isi Otomatis</p>
-            <p style="font-size:11px;color:#1e40af;margin:0 0 12px;">Foto <strong>bagian depan KTP</strong> yang terlihat jelas, sistem akan baca NIK & nama secara otomatis.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px;margin-bottom:16px;">
+            <p style="font-size:13px;font-weight:700;color:#1d4ed8;margin:0 0 3px;">📷 Foto KTP → Isi Otomatis</p>
+            <p style="font-size:11px;color:#1e40af;margin:0 0 12px;">Foto bagian <strong>depan KTP</strong> yang tampak jelas. NIK & nama akan terisi otomatis.</p>
+
+            <!-- Tombol pilih foto -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+              <label id="btn-ktp-kamera" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.3);">
                 📷 Ambil Foto
-                <input type="file" id="ktp-kamera" accept="image/*" capture="environment" onchange="processKtpOcr(this)" style="display:none;"/>
+                <input type="file" id="ktp-kamera" accept="image/*" capture="environment" style="display:none;" onchange="handleKtpFile(this)"/>
               </label>
-              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1.5px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;">
+              <label id="btn-ktp-galeri" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:2px solid #2563eb;color:#1d4ed8;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;">
                 🖼️ Dari Galeri
-                <input type="file" id="ktp-galeri" accept="image/*" onchange="processKtpOcr(this)" style="display:none;"/>
+                <input type="file" id="ktp-galeri" accept="image/*" style="display:none;" onchange="handleKtpFile(this)"/>
               </label>
+              <button type="button" id="btn-ktp-ulang" onclick="resetKtpScan()" style="display:none;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;">
+                🔄 Ulangi
+              </button>
             </div>
-            <div id="ktp-preview-wrap" style="display:none;margin-bottom:8px;">
-              <img id="ktp-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;border:2px solid #bfdbfe;display:block;" alt="Preview KTP"/>
+
+            <!-- Preview gambar KTP -->
+            <div id="ktp-preview-wrap" style="display:none;margin-bottom:10px;position:relative;">
+              <img id="ktp-preview-img" style="max-width:100%;max-height:220px;width:100%;object-fit:contain;border-radius:8px;border:2px solid #bfdbfe;display:block;background:#f8fafc;" alt="Preview KTP"/>
+              <div id="ktp-nik-overlay" style="display:none;position:absolute;bottom:8px;left:8px;background:rgba(30,64,175,.9);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:monospace;"></div>
             </div>
-            <div id="ktp-loading" style="display:none;padding:10px 0;font-size:12px;color:#1d4ed8;font-weight:600;">
-              <span class="spin"></span> <span id="ktp-ocr-status">Memuat OCR...</span>
+
+            <!-- Progress loading -->
+            <div id="ktp-loading" style="display:none;margin-bottom:8px;">
+              <div style="background:#dbeafe;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;">
+                <span class="spin"></span>
+                <div style="flex:1;">
+                  <div id="ktp-ocr-status" style="font-size:12px;color:#1d4ed8;font-weight:600;">Memuat mesin OCR...</div>
+                  <div style="background:#bfdbfe;border-radius:4px;height:4px;margin-top:5px;overflow:hidden;">
+                    <div id="ktp-progress-bar" style="height:100%;background:#2563eb;border-radius:4px;width:0%;transition:width .3s;"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;"></div>
-            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Pastikan foto terang, tidak buram, dan NIK terlihat jelas. Foto landscape lebih baik.</p>
+
+            <!-- Hasil scan -->
+            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;line-height:1.7;"></div>
+
+            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Tips: Foto landscape, dekat, cahaya terang. Atau isi NIK manual di bawah jika OCR tidak berhasil.</p>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:14px;">
@@ -1673,19 +1694,28 @@ async function onQR(text){
 }
 
 // ============================================================
-// KTP OCR — Tesseract.js baca teks dari foto KTP
+// ============================================================
+// ============================================================
+// KTP OCR — Tesseract.js v5, multi-pass, high accuracy
 // ============================================================
 let tesseractWorker = null;
-let tesseractReady = false;
+let tesseractReady  = false;
+let ktpCurrentFile  = null;
 
+// ─── Init Tesseract worker (lazy, singleton) ─────────────────
 async function initTesseract(){
-  if(tesseractReady) return true;
+  if(tesseractReady && tesseractWorker) return true;
   try{
     tesseractWorker = await Tesseract.createWorker('ind+eng', 1, {
       logger: m => {
-        const el=document.getElementById('ktp-ocr-status');
-        if(el && m.status==='recognizing text'){
-          el.textContent='Membaca teks... '+Math.round((m.progress||0)*100)+'%';
+        const prog = document.getElementById('ktp-progress-bar');
+        const lbl  = document.getElementById('ktp-ocr-status');
+        if(m.status === 'recognizing text'){
+          const pct = Math.round((m.progress||0)*100);
+          if(prog) prog.style.width = pct+'%';
+          if(lbl)  lbl.textContent  = 'Membaca teks... '+pct+'%';
+        } else if(m.status){
+          if(lbl) lbl.textContent = m.status.charAt(0).toUpperCase()+m.status.slice(1)+'...';
         }
       }
     });
@@ -1697,231 +1727,413 @@ async function initTesseract(){
   }
 }
 
+// ─── Show result box ─────────────────────────────────────────
 function showKtpResult(html, type){
-  const el=document.getElementById('ktp-scan-result');
+  const el = document.getElementById('ktp-scan-result');
   if(!el) return;
-  el.innerHTML=html;
-  const css={
-    ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',
-    err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',
-    warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
+  el.innerHTML = html;
+  const css = {
+    ok:   'background:#f0fdf4;border:1px solid #86efac;color:#065f46;',
+    err:  'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',
+    warn: 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
   };
-  el.style.cssText='display:block;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;line-height:1.6;'+(css[type]||css.err);
+  el.style.cssText = 'display:block;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;line-height:1.7;'+(css[type]||css.err);
 }
 
-function extractNikFromText(text){
-  // Bersihkan noise OCR: O→0, I/l→1, S→5, B→8
-  const clean = text
-    .replace(/[Oo]/g, c => /[0-9]/.test(c) ? c : '0')  // jangan replace O dalam kata
-    .split('\n').map(line => {
-      // Per baris, ganti karakter yang sering salah baca di angka
-      return line.replace(/(?<=[\d\s:])([OoIlSBsb])(?=[\d\s])/g, ch => {
-        return {O:'0',o:'0',I:'1',l:'1',S:'5',s:'5',B:'8',b:'8'}[ch]||ch;
-      });
-    }).join('\n');
+// ─── Reset KTP section ───────────────────────────────────────
+function resetKtpScan(){
+  ktpCurrentFile = null;
+  ['ktp-kamera','ktp-galeri'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.value='';
+  });
+  var pw=document.getElementById('ktp-preview-wrap');   if(pw) pw.style.display='none';
+  var res=document.getElementById('ktp-scan-result');   if(res) res.style.display='none';
+  var load=document.getElementById('ktp-loading');      if(load) load.style.display='none';
+  var ulang=document.getElementById('btn-ktp-ulang');   if(ulang) ulang.style.display='none';
+  var ov=document.getElementById('ktp-nik-overlay');    if(ov) ov.style.display='none';
+}
 
-  // Cari NIK dengan berbagai pola
-  const patterns = [
-    /NIK\s*[:\-\.]*\s*(\d{16})/i,
-    /NIK\s*[:\-\.]*\s*([0-9OoIlSsBb]{16})/i,
-    /Nomor\s+Induk[^\n]*?([0-9]{16})/i,
-    /^\s*(\d{16})\s*$/m,           // 16 digit sendirian di satu baris
-    /\b(\d{16})\b/,                // 16 digit di tengah teks
-  ];
+// ─── Handle file input from either button ────────────────────
+function handleKtpFile(input){
+  var file = input.files[0];
+  if(!file) return;
+  ktpCurrentFile = file;
 
-  for(const pat of patterns){
-    const m=(clean||text).match(pat);
-    if(m && m[1]){
-      // Bersihkan hasil: ganti karakter mirip angka
-      const nik = m[1].replace(/[Oo]/g,'0').replace(/[Il]/g,'1').replace(/[Ss]/g,'5').replace(/[Bb]/g,'8');
-      if(/^\d{16}$/.test(nik)) return nik;
-    }
+  // ✅ Create objectURL BEFORE resetting input value
+  var objectUrl = URL.createObjectURL(file);
+
+  // Show preview immediately
+  var pw = document.getElementById('ktp-preview-wrap');
+  var pi = document.getElementById('ktp-preview-img');
+  if(pw && pi){
+    pi.onload = function(){ URL.revokeObjectURL(objectUrl); };
+    pi.src = objectUrl;
+    pw.style.display = 'block';
   }
-  return null;
+
+  // Show Ulangi button
+  var ulang = document.getElementById('btn-ktp-ulang');
+  if(ulang) ulang.style.display = '';
+
+  // Reset input so same file can be selected again
+  input.value = '';
+
+  // Start OCR
+  processKtpOcr(file);
 }
 
-function extractNamaFromText(text){
-  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const stopWords=['TEMPAT','LAHIR','JENIS','KELAMIN','GOLONGAN','DARAH','ALAMAT','RT','RW','KEL','KEC','AGAMA','PEKERJAAN','BERLAKU','NIK','NAMA','PROVINSI','KOTA','KABUPATEN','KEWARGANEGARAAN','STATUS','PERKAWINAN','REPUBLIK','INDONESIA'];
+// ─── Image preprocessing ─────────────────────────────────────
+function preprocessImageForOcr(file, mode){
+  return new Promise(function(resolve){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
 
-  // Cari baris yang mengandung label Nama
-  const patterns = [
-    /Nama\s*[:\-]?\s*([A-Z][A-Za-z .'-]{2,40})/i,
-    /^Nama[\s:\-\.]+(.+)$/im,
-  ];
-  for(const pat of patterns){
-    const m=text.match(pat);
-    if(m && m[1]){
-      let nama=m[1].trim();
-      // Potong di stopword pertama
-      for(const sw of stopWords){
-        const idx=nama.toUpperCase().indexOf(sw);
-        if(idx>0) nama=nama.substring(0,idx).trim();
+      // Scale up: minimum 1600px wide for better OCR accuracy
+      var targetW = Math.max(1600, img.width * 2);
+      var scale   = Math.min(4, targetW / img.width);
+      var W = Math.round(img.width  * scale);
+      var H = Math.round(img.height * scale);
+
+      var canvas = document.createElement('canvas');
+      canvas.width  = W;
+      canvas.height = H;
+      var ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, W, H);
+
+      var imgData = ctx.getImageData(0, 0, W, H);
+      var d = imgData.data;
+
+      // Convert to grayscale
+      var gray = new Uint8Array(W * H);
+      for(var i=0, p=0; i<d.length; i+=4, p++){
+        gray[p] = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
       }
-      // Hapus karakter non-nama
-      nama=nama.replace(/[^A-Za-z .'-]/g,'').trim();
-      if(nama.length>=3) return nama;
-    }
-  }
 
-  // Fallback: cari baris semua huruf kapital yang panjangnya wajar (nama orang)
-  for(const line of lines){
-    if(/^[A-Z][A-Z .'-]{3,35}$/.test(line) &&
-       !stopWords.some(sw=>line.startsWith(sw)) &&
-       !line.match(/^(NIK|NAMA|ALAMAT|PROV|KAB|KOTA|KEC|KEL|RT|RW)/)){
-      return line;
-    }
-  }
-  return null;
-}
+      var out = new Uint8Array(W * H);
 
-function validateNIK(nik){
-  if(!/^\d{16}$/.test(nik)) return false;
-  const prov=parseInt(nik.substring(0,2));
-  if(prov<11||prov>96) return false;
-  let tgl=parseInt(nik.substring(6,8));
-  if(tgl>40) tgl-=40;
-  if(tgl<1||tgl>31) return false;
-  const bln=parseInt(nik.substring(8,10));
-  if(bln<1||bln>12) return false;
-  return true;
-}
+      if(mode === 'threshold'){
+        // Adaptive threshold — good for uneven lighting
+        var R = Math.round(Math.min(W, H) / 20);
+        for(var y=0; y<H; y++){
+          for(var x=0; x<W; x++){
+            var sum=0, count=0;
+            var x0=Math.max(0,x-R), x1=Math.min(W-1,x+R);
+            var y0=Math.max(0,y-R), y1=Math.min(H-1,y+R);
+            for(var yy=y0; yy<=y1; yy++){
+              for(var xx=x0; xx<=x1; xx++){
+                sum+=gray[yy*W+xx]; count++;
+              }
+            }
+            out[y*W+x] = gray[y*W+x] < (sum/count)*0.92 ? 0 : 255;
+          }
+        }
+      } else if(mode === 'sharpen'){
+        // Sharpening kernel
+        var kern = [-1,-1,-1,-1,9,-1,-1,-1,-1];
+        for(var y=1; y<H-1; y++){
+          for(var x=1; x<W-1; x++){
+            var v=0;
+            for(var ky=-1; ky<=1; ky++){
+              for(var kx=-1; kx<=1; kx++){
+                v += gray[(y+ky)*W+(x+kx)] * kern[(ky+1)*3+(kx+1)];
+              }
+            }
+            out[y*W+x] = Math.min(255, Math.max(0, v));
+          }
+        }
+      } else {
+        // 'auto': contrast stretch + gamma
+        var mn=255, mx=0;
+        for(var i=0; i<gray.length; i++){ mn=Math.min(mn,gray[i]); mx=Math.max(mx,gray[i]); }
+        var range = mx - mn || 1;
+        for(var i=0; i<gray.length; i++){
+          var normalized = (gray[i] - mn) / range;
+          out[i] = Math.round(Math.pow(normalized, 0.8) * 255);
+        }
+      }
 
-// Preprocess image untuk OCR lebih akurat (grayscale + contrast + threshold)
-function preprocessImageForOcr(file){
-  return new Promise((resolve)=>{
-    const img=new Image();
-    const url=URL.createObjectURL(file);
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      // Scale up kecil supaya teks lebih jelas
-      const scale=Math.max(1, Math.min(3, 2000/Math.max(img.width,img.height)));
-      canvas.width=img.width*scale;
-      canvas.height=img.height*scale;
-      const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      // Grayscale + contrast boost
-      const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-      const d=imgData.data;
-      for(let i=0;i<d.length;i+=4){
-        // Grayscale
-        const gray=Math.round(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);
-        // Contrast stretch (multiply + offset)
-        const contrast=1.5;
-        const c2=Math.min(255,Math.max(0,Math.round((gray-128)*contrast+128)));
-        d[i]=d[i+1]=d[i+2]=c2;
+      // Write back to canvas
+      for(var i=0, p=0; i<d.length; i+=4, p++){
+        d[i]=d[i+1]=d[i+2]=out[p];
         d[i+3]=255;
       }
-      ctx.putImageData(imgData,0,0);
-      // Kembalikan sebagai blob
-      canvas.toBlob(blob=>{ URL.revokeObjectURL(url); resolve(blob||file); },'image/png',1.0);
+      ctx.putImageData(imgData, 0, 0);
+      canvas.toBlob(function(b){ resolve(b || file); }, 'image/png', 1.0);
     };
-    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(file); };
-    img.src=url;
+    img.onerror = function(){ resolve(file); };
+    img.src = url;
   });
 }
 
-async function processKtpOcr(input){
-  const file=input.files[0];
+// ─── NIK Extraction — aggressive OCR noise correction ────────
+function extractNikFromText(rawText){
+  if(!rawText) return null;
+
+  // Clean line by line, replace OCR lookalike chars in digit context
+  var lines = rawText.split('\n').map(function(line){
+    return line
+      .replace(/[Oo]/g, '0')
+      .replace(/[Il\|]/g, '1')
+      .replace(/[Ss]/g, '5')
+      .replace(/[Bb]/g, '8')
+      .replace(/[Gg]/g, '9')
+      .replace(/[Zz]/g, '2')
+      .replace(/\s+/g, ' ')
+      .trim();
+  });
+  var clean = lines.join('\n');
+
+  // Patterns ordered by specificity
+  // 1. "NIK : 1234567890123456"
+  var m = clean.match(/NIK\s*[:\-\.=]*\s*(\d{16})/i);
+  if(m && m[1]) return m[1];
+
+  // 2. "NIK : 8101 1213 0099 9000" (with spaces — join digits)
+  m = clean.match(/NIK\s*[:\-\.=]*\s*([\d\s]{18,22})/i);
+  if(m && m[1]){
+    var joined = m[1].replace(/\s/g,'');
+    if(joined.length === 16) return joined;
+  }
+
+  // 3. Standalone line of exactly 16 digits
+  m = clean.match(/^\s*(\d{16})\s*$/m);
+  if(m && m[1]) return m[1];
+
+  // 4. 16 digits anywhere (word boundary)
+  m = clean.match(/\b(\d{16})\b/);
+  if(m && m[1]) return m[1];
+
+  // 5. 17 digits — try both offsets
+  m = clean.match(/\b(\d{17})\b/);
+  if(m && m[1]){
+    var a = m[1].slice(0,16);
+    var b = m[1].slice(1,17);
+    if(validateNIK(a)) return a;
+    if(validateNIK(b)) return b;
+    return a; // return first 16 as best guess
+  }
+
+  // 6. 15 digits — pad with best guess
+  m = clean.match(/\b(\d{15})\b/);
+  if(m && m[1]) return m[1];
+
+  return null;
+}
+
+// ─── Name Extraction ─────────────────────────────────────────
+function extractNamaFromText(rawText){
+  if(!rawText) return null;
+
+  var STOP = ['TEMPAT','LAHIR','JENIS','KELAMIN','GOL','DARAH','ALAMAT',
+    'RT','RW','KEL','KEC','AGAMA','PEKERJAAN','BERLAKU','KEWARGANEGARAAN',
+    'STATUS','PERKAWINAN','REPUBLIK','INDONESIA','PROVINSI','KOTA','KABUPATEN',
+    'WNI','LAKI','PEREMPUAN','SEUMUR','HIDUP','NIK','KRISTEN','ISLAM',
+    'HINDU','BUDHA','KATHOLIK','KONGHUCU','PELAJAR','MAHASISWA','BELUM'];
+
+  // Pattern 1: "Nama : ULIS LEUWOL"
+  var m = rawText.match(/Nama\s*[:\-\.=]*\s*([A-Z][A-Za-z .'\-]{2,40})/i);
+  if(m && m[1]){
+    var nama = m[1].trim();
+    for(var i=0; i<STOP.length; i++){
+      var idx = nama.toUpperCase().indexOf(STOP[i]);
+      if(idx > 0){ nama = nama.substring(0, idx).trim(); break; }
+    }
+    nama = nama.replace(/[^A-Za-z .']/g,'').trim();
+    if(nama.length >= 2) return toTitleCase(nama);
+  }
+
+  // Pattern 2: line "^Nama ..."
+  m = rawText.match(/^Nama[\s:\-\.=]+(.+)$/im);
+  if(m && m[1]){
+    var nama = m[1].trim().replace(/[^A-Za-z .']/g,'');
+    if(nama.length >= 2) return toTitleCase(nama);
+  }
+
+  // Pattern 3: ALL-CAPS line that looks like a name
+  var lines = rawText.split('\n');
+  for(var i=0; i<lines.length; i++){
+    var line = lines[i].trim();
+    if(!line || /\d/.test(line)) continue;
+    if(STOP.some(function(sw){ return line.toUpperCase().startsWith(sw); })) continue;
+    if(/^[A-Z][A-Z .']{2,40}$/.test(line)){
+      return toTitleCase(line);
+    }
+  }
+  return null;
+}
+
+function toTitleCase(s){
+  return s.replace(/\S+/g, function(w){
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  });
+}
+
+// ─── NIK Validator ───────────────────────────────────────────
+function validateNIK(nik){
+  if(!nik || !/^\d{16}$/.test(nik)) return false;
+  var prov = parseInt(nik.substring(0,2));
+  if(prov < 11 || prov > 96) return false;
+  var tgl = parseInt(nik.substring(6,8));
+  if(tgl > 40) tgl -= 40; // perempuan +40
+  if(tgl < 1 || tgl > 31) return false;
+  var bln = parseInt(nik.substring(8,10));
+  if(bln < 1 || bln > 12) return false;
+  return true;
+}
+
+// ─── Main OCR Entry Point ────────────────────────────────────
+async function processKtpOcr(file){
   if(!file) return;
-  input.value=''; // reset supaya bisa pilih file yang sama lagi
 
-  // Preview gambar asli
-  const pw=document.getElementById('ktp-preview-wrap');
-  const pi=document.getElementById('ktp-preview-img');
-  if(pw&&pi){ pi.src=URL.createObjectURL(file); pw.style.display='block'; }
+  var loading    = document.getElementById('ktp-loading');
+  var statusEl   = document.getElementById('ktp-ocr-status');
+  var progressEl = document.getElementById('ktp-progress-bar');
+  var resultEl   = document.getElementById('ktp-scan-result');
+  var nikOverlay = document.getElementById('ktp-nik-overlay');
 
-  // Show loading
-  const loading=document.getElementById('ktp-loading');
-  const statusEl=document.getElementById('ktp-ocr-status');
-  if(loading) loading.style.display='flex';
-  if(statusEl) statusEl.textContent='Memuat mesin OCR...';
-  document.getElementById('ktp-scan-result').style.display='none';
+  if(loading)    loading.style.display  = 'block';
+  if(resultEl)   resultEl.style.display = 'none';
+  if(nikOverlay) nikOverlay.style.display = 'none';
+  if(progressEl) progressEl.style.width = '0%';
 
   try{
-    // Init Tesseract jika belum
-    const ready=await initTesseract();
-    if(!ready){ throw new Error('Gagal memuat mesin OCR'); }
+    if(statusEl) statusEl.textContent = 'Memuat mesin OCR...';
+    var ready = await initTesseract();
+    if(!ready) throw new Error('Gagal memuat mesin OCR');
 
-    if(statusEl) statusEl.textContent='Memproses gambar...';
-    // Preprocess dulu sebelum OCR
-    const processedBlob = await preprocessImageForOcr(file);
+    // Multi-pass: try 3 preprocessing modes × 3 PSM settings
+    var modes  = ['auto', 'sharpen', 'threshold'];
+    var psms   = ['6', '4', '11'];
+    var bestNik  = null;
+    var bestNama = null;
+    var allTexts = [];
 
-    if(statusEl) statusEl.textContent='Membaca teks KTP...';
+    for(var mi=0; mi<modes.length; mi++){
+      var mode = modes[mi];
+      if(statusEl) statusEl.textContent = 'Analisis '+(mi+1)+'/3: '+mode+'...';
+      if(progressEl) progressEl.style.width = (mi*28)+'%';
 
-    // OCR dengan config untuk KTP: PSM 6 = assume uniform block of text
-    const { data: { text } } = await tesseractWorker.recognize(processedBlob, {}, {
-      tessedit_pageseg_mode: '6',
-    });
-    console.log('OCR raw:', text); // debug
+      var blob = await preprocessImageForOcr(file, mode);
 
-    if(loading) loading.style.display='none';
+      for(var pi=0; pi<psms.length; pi++){
+        try{
+          var result = await tesseractWorker.recognize(blob, {}, {
+            tessedit_pageseg_mode: psms[pi]
+          });
+          var text = result.data.text;
+          allTexts.push(text);
+          console.log('Pass '+(mi+1)+' PSM'+psms[pi]+':', text.substring(0,120));
 
-    // Ekstrak NIK
-    const nik = extractNikFromText(text);
-    const nama = extractNamaFromText(text);
+          var nik  = extractNikFromText(text);
+          var nama = extractNamaFromText(text);
 
-    if(!nik || !validateNIK(nik)){
-      // Tampilkan teks yang berhasil dibaca supaya petugas bisa cek manual
-      const textPreview=text.substring(0,300).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-      let hint='';
-      if(nik) hint='<br><small>Angka terbaca: '+nik+' (tidak valid)</small>';
+          if(nik && validateNIK(nik) && !bestNik){ bestNik=nik; }
+          if(nik && !bestNik){ bestNik=nik; }
+          if(nama && !bestNama){ bestNama=nama; }
+
+          // Stop early if found valid NIK + name
+          if(bestNik && validateNIK(bestNik) && bestNama) break;
+        }catch(e){ console.warn('OCR pass error:', e.message); }
+      }
+      if(bestNik && validateNIK(bestNik) && bestNama) break;
+    }
+
+    // Last resort: combine all texts and try again
+    if(!bestNik && allTexts.length){
+      var combined = allTexts.join('\n');
+      bestNik  = bestNik  || extractNikFromText(combined);
+      bestNama = bestNama || extractNamaFromText(combined);
+    }
+
+    if(progressEl) progressEl.style.width = '100%';
+    if(loading) loading.style.display = 'none';
+
+    // ── Nothing found ──
+    if(!bestNik){
+      var preview = (allTexts[0]||'').substring(0,400)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       showKtpResult(
-        '⚠ NIK tidak berhasil dibaca otomatis.'+hint+'<br><br>'+
-        '<strong>Teks yang terbaca:</strong><br>'+
-        '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;max-height:80px;overflow-y:auto;margin-top:4px;white-space:pre-wrap;">'+textPreview+'</div><br>'+
-        '<strong>Coba:</strong> Foto lebih dekat, cahaya lebih terang, atau isi NIK manual di bawah.',
+        '<strong>⚠ NIK tidak berhasil dibaca otomatis.</strong><br>'+
+        '<small style="font-weight:400;">Pastikan foto KTP bagian depan jelas dan tidak buram.</small><br><br>'+
+        '<strong style="font-size:11px;">Teks yang terbaca:</strong>'+
+        '<div style="background:#fff8f8;border:1px solid #fecaca;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;max-height:90px;overflow-y:auto;margin:4px 0 6px;white-space:pre-wrap;color:#374151;">'+preview+'</div>'+
+        '<strong>Saran:</strong> Foto lebih dekat &amp; terang, atau isi NIK manual di bawah.',
         'err'
       );
       return;
     }
 
-    // Isi form
-    document.getElementById('os-nik').value=nik;
-    if(nama){
-      // Title case
-      const namaTitleCase=nama.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
-      document.getElementById('os-nama').value=namaTitleCase;
-    }
+    // Show NIK overlay on image
+    if(nikOverlay){ nikOverlay.textContent='NIK: '+bestNik; nikOverlay.style.display='block'; }
 
-    // Auto-lookup keluarga & WBP
-    const{data:kelData}=await db.from('keluarga_wbp')
+    // Fill form with OCR result first
+    document.getElementById('os-nik').value = bestNik;
+    if(bestNama) document.getElementById('os-nama').value = bestNama;
+
+    // ── Database lookup ──
+    var kelResult = await db.from('keluarga_wbp')
       .select('*,wbp(id,nama_wbp,kamar,status)')
-      .eq('nik_keluarga',nik)
+      .eq('nik_keluarga', bestNik)
       .maybeSingle();
+    var kelData = kelResult.data;
 
     if(kelData && kelData.wbp){
-      if(kelData.wbp.status==='bebas'){
-        showKtpResult(`⚠ NIK ${nik} terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS.`,'err');
+      // ── NIK ADA di database ──
+      if(kelData.wbp.status === 'bebas'){
+        showKtpResult(
+          '<strong>⚠ NIK terdaftar, tapi WBP '+esc(kelData.wbp.nama_wbp)+' sudah BEBAS.</strong><br>'+
+          'Kunjungan tidak dapat dilakukan.',
+          'err'
+        );
         return;
       }
-      if(!nama && kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
+      // ✅ Pakai nama dari database, auto-relasi WBP
+      document.getElementById('os-nama').value = kelData.nama_keluarga;
       selWbpOs(kelData.wbp.id, kelData.wbp.nama_wbp, kelData.wbp.kamar);
       showKtpResult(
-        `✅ NIK terbaca: <strong>${nik}</strong>`+
-        (nama?` | ${esc(nama)}`:'')+
-        `<br>WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)}) — Semua data terisi otomatis!`,
+        '<strong>✅ NIK cocok di database!</strong><br>'+
+        '<strong>NIK:</strong> '+bestNik+'<br>'+
+        '<strong>Nama:</strong> '+esc(kelData.nama_keluarga)+' <small style="font-weight:400;">(dari database)</small><br>'+
+        '<strong>WBP:</strong> '+esc(kelData.wbp.nama_wbp)+' — Kamar '+esc(kelData.wbp.kamar)+'<br>'+
+        '<span style="color:#065f46;">Semua data sudah terisi otomatis ✅</span>',
         'ok'
       );
-      showToast('✅ Data KTP terbaca & terisi otomatis!','success');
+      showToast('✅ KTP cocok! Semua data terisi otomatis.','success');
+
     } else {
+      // ── NIK TIDAK ADA di database — tetap isi dari OCR ──
+      var namaDisplay = bestNama || '(tidak terbaca)';
+      var nikInfo = validateNIK(bestNik)
+        ? '<strong>NIK:</strong> '+bestNik
+        : '<strong>NIK:</strong> '+bestNik+' <small style="color:#92400e;">(perlu verifikasi manual)</small>';
       showKtpResult(
-        `✅ NIK terbaca: <strong>${nik}</strong>`+
-        (nama?`<br>Nama: <strong>${esc(nama)}</strong>`:'')+
-        `<br>NIK belum terdaftar sebagai keluarga — pilih WBP secara manual.`,
+        '<strong>⚠ NIK terbaca tapi belum terdaftar sebagai keluarga WBP.</strong><br>'+
+        nikInfo+'<br>'+
+        '<strong>Nama dari KTP:</strong> '+esc(namaDisplay)+'<br>'+
+        '<span style="color:#92400e;">Silakan pilih WBP yang dikunjungi di bawah.</span>',
         'warn'
       );
-      showToast('NIK terbaca. Pilih WBP yang dikunjungi.','info');
+      showToast('NIK terbaca. Pilih WBP secara manual.','warn');
     }
 
   }catch(err){
-    if(loading) loading.style.display='none';
-    showKtpResult('⚠ Gagal memproses foto: '+(err.message||'error tidak diketahui'),'err');
+    if(loading) loading.style.display = 'none';
+    showKtpResult(
+      '<strong>⚠ Gagal memproses foto:</strong> '+(err.message||'error tidak diketahui')+'<br>'+
+      '<small style="font-weight:400;">Coba foto ulang atau isi NIK manual di kolom bawah.</small>',
+      'err'
+    );
     showToast('OCR gagal — coba foto ulang','warn');
     console.error('OCR error:', err);
   }
 }
-// Stub - no longer uses live camera scanner
+
+// Stub — KTP scan no longer uses live camera
 async function stopKtpScan(){ if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;} }
 
 // ============================================================
