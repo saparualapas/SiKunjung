@@ -202,6 +202,9 @@
       </div>
       <div><label class="lbl-f">Email Admin</label><input id="fp-email" type="email" placeholder="admin@lapas.go.id" class="inp"/></div>
       <div id="fp-msg" style="display:none;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;"></div>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 12px;font-size:11px;color:#92400e;margin-bottom:4px;">
+        ⚠️ Pastikan URL <strong id="fp-domain"></strong> sudah ditambahkan ke <strong>Supabase → Auth → Redirect URLs</strong>
+      </div>
       <button id="btn-fp" class="btn bp" style="justify-content:center;padding:12px;font-size:14px;" onclick="doForgotPass()">Kirim Link Reset</button>
       <button onclick="showLoginForm()" type="button" style="background:none;border:none;color:#64748b;font-size:12px;cursor:pointer;text-align:center;">← Kembali ke Login</button>
     </div>
@@ -456,11 +459,10 @@
             <div><label class="lbl-f">Nama Pengunjung *</label><input id="os-nama" type="text" placeholder="Nama lengkap" class="inp"/></div>
             <div>
               <label class="lbl-f">WBP yang Dikunjungi *</label>
-              <input id="os-wbp-inp" type="text" placeholder="Ketik nama atau NIK WBP..." class="inp" oninput="searchWbpOs(this.value)"/>
-              <div id="os-dd" style="display:none;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-top:4px;"></div>
-              <div id="os-wbp-sel" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px;font-size:12px;margin-top:6px;">
-                <span style="font-weight:700;color:#1d4ed8;">✓ WBP: </span><span id="os-wbp-info" style="color:#1e40af;"></span>
-              </div>
+              <select id="os-wbp-sel" class="inp" onchange="onWbpSelect(this)" style="background:#fff;">
+                <option value="">-- Pilih WBP Aktif --</option>
+              </select>
+              <div id="os-wbp-info-box" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px;margin-top:6px;color:#1e40af;font-weight:600;"></div>
             </div>
             <div>
               <label class="lbl-f">Barang Bawaan (opsional)</label>
@@ -808,6 +810,9 @@ function stopIdleTracking(){
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+  // Set domain hint in forgot form
+  const fpDomain=document.getElementById('fp-domain');
+  if(fpDomain) fpDomain.textContent=window.location.origin+'/';
 
   // Set default tanggal backup
   const today=new Date().toISOString().split('T')[0];
@@ -829,10 +834,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   db.auth.onAuthStateChange((event, session)=>{
     if(event==='PASSWORD_RECOVERY'){
-      // Redirect ke halaman reset.html khusus
+      // Token valid dari email reset — tampilkan form reset di halaman ini
       loginHandled=true;
-      const base=window.location.href.replace(/admin\.html.*$/,'');
-      window.location.replace(base+'reset.html'+window.location.hash);
+      showResetPasswordForm();
       return;
     }
     if((event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED') && session && session.user){
@@ -863,19 +867,32 @@ function hideLoader(){
 function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 
 function showResetPasswordForm(){
-  // Hide auth guard, show inline reset form
+  // Sembunyikan main app, tampilkan halaman reset password
   document.getElementById('auth-guard').style.display='flex';
-  ['frm-login','frm-forgot'].forEach(id=>document.getElementById(id).style.display='none');
-  document.getElementById('frm-reset').style.display='flex';
+  const mainEl=document.getElementById('main');
+  const sbEl=document.getElementById('sidebar');
+  if(mainEl) mainEl.style.display='none';
+  if(sbEl) sbEl.style.display='none';
+  // Sembunyikan semua sub-form login
+  ['login-form','forgot-form'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  // Tampilkan form reset
+  const resetEl=document.getElementById('frm-reset');
+  if(resetEl){ resetEl.style.display='flex'; resetEl.style.flexDirection='column'; }
+  // Tandai bahwa form ini valid (ada token)
+  window._resetTokenValid = true;
 }
 
 async function doResetPassword(){
+  if(!window._resetTokenValid){ showFErr2('rp-msg','⚠ Akses tidak valid. Gunakan link dari email.'); return; }
   const baru=document.getElementById('rp-baru').value;
   const konfirm=document.getElementById('rp-konfirm').value;
   const msg=document.getElementById('rp-msg');
   msg.style.display='none';
   if(!baru||baru.length<8){showFErr2('rp-msg','⚠ Password minimal 8 karakter.');return;}
-  if(baru!==konfirm){showFErr2('rp-msg','⚠ Password tidak sama.');return;}
+  if(baru!==konfirm){showFErr2('rp-msg','⚠ Konfirmasi password tidak sama.');return;}
   const btn=document.getElementById('btn-rp');
   btn.innerHTML='<span class="spin"></span> Menyimpan...';btn.disabled=true;
   const{error}=await db.auth.updateUser({password:baru});
@@ -883,15 +900,23 @@ async function doResetPassword(){
   if(error){
     showFErr2('rp-msg','⚠ Gagal: '+error.message);
   } else {
-    msg.textContent='✅ Password berhasil diubah! Silakan login.';
+    msg.textContent='✅ Password berhasil diubah! Mengarahkan ke login...';
     msg.style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
-    setTimeout(()=>{
+    window._resetTokenValid=false;
+    setTimeout(async()=>{
+      await db.auth.signOut();
+      history.replaceState(null,'',window.location.pathname);
       document.getElementById('frm-reset').style.display='none';
-      document.getElementById('frm-login').style.display='flex';
-      showToast('Password diubah! Silakan login kembali.','success');
-    },2000);
+      document.getElementById('login-form').style.display='flex';
+      const mainEl=document.getElementById('main');
+      const sbEl=document.getElementById('sidebar');
+      if(mainEl) mainEl.style.display='';
+      if(sbEl) sbEl.style.display='';
+      showToast('Password berhasil diubah! Silakan login.','success');
+    },1800);
   }
 }
+
 
 function showForgotPass(){
   document.getElementById('login-form').style.display='none';
@@ -909,8 +934,10 @@ async function doForgotPass(){
   if(!email){msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';msg.textContent='⚠ Masukkan email Anda.';return;}
   const btn=document.getElementById('btn-fp');
   btn.innerHTML='<span class="spin"></span> Mengirim...';btn.disabled=true;
-  const baseUrl=window.location.href.replace(/admin\.html.*$/,'');
-  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:baseUrl+'reset.html'});
+  // Pakai window.location.origin = domain root, tidak ada path tambahan
+  // Supabase akan append #access_token=...&type=recovery ke URL ini
+  // admin.html akan tangkap via onAuthStateChange('PASSWORD_RECOVERY')
+  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/'});
   btn.innerHTML='Kirim Link Reset';btn.disabled=false;
   if(error){
     msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
@@ -1058,6 +1085,7 @@ function navTo(p,el){
   if(p==='barang')loadBarang();
   if(p==='wbp'){wbpPage=1;renderWbp();}
   if(p==='keluarga'){kelPage=1;renderKel();}
+  if(p==='onsite') populateWbpDropdown();
   if(p!=='scan'&&qrScanner)stopScan();
   if(p!=='onsite'&&ktpScanner)stopKtpScan();
 }
@@ -1353,6 +1381,7 @@ async function loadWbp(){
   allWbp=(data||[]).map(w=>({...w,status:w.status||'aktif'}));
   renderWbp();
   populateWbpSel();
+  populateWbpDropdown();
 }
 
 function setWbpTab(tab){
@@ -1681,37 +1710,66 @@ function showKtpResult(html, type){
 }
 
 function extractNikFromText(text){
-  // Cari NIK dalam teks OCR
-  // Format: "NIK : 1234567890123456" atau "NIK: 1234567890123456" atau 16 digit standalone
+  // Bersihkan noise OCR: O→0, I/l→1, S→5, B→8
+  const clean = text
+    .replace(/[Oo]/g, c => /[0-9]/.test(c) ? c : '0')  // jangan replace O dalam kata
+    .split('\n').map(line => {
+      // Per baris, ganti karakter yang sering salah baca di angka
+      return line.replace(/(?<=[\d\s:])([OoIlSBsb])(?=[\d\s])/g, ch => {
+        return {O:'0',o:'0',I:'1',l:'1',S:'5',s:'5',B:'8',b:'8'}[ch]||ch;
+      });
+    }).join('\n');
+  
+  // Cari NIK dengan berbagai pola
   const patterns = [
-    /NIK\s*[:\-]?\s*(\d{16})/i,
-    /Nomor\s+Induk\s+Kependudukan\s*[:\-]?\s*(\d{16})/i,
-    /(\d{16})/,
+    /NIK\s*[:\-\.]*\s*(\d{16})/i,
+    /NIK\s*[:\-\.]*\s*([0-9OoIlSsBb]{16})/i,
+    /Nomor\s+Induk[^\n]*?([0-9]{16})/i,
+    /^\s*(\d{16})\s*$/m,           // 16 digit sendirian di satu baris
+    /\b(\d{16})\b/,                // 16 digit di tengah teks
   ];
+  
   for(const pat of patterns){
-    const m=text.match(pat);
-    if(m && m[1]) return m[1];
+    const m=(clean||text).match(pat);
+    if(m && m[1]){
+      // Bersihkan hasil: ganti karakter mirip angka
+      const nik = m[1].replace(/[Oo]/g,'0').replace(/[Il]/g,'1').replace(/[Ss]/g,'5').replace(/[Bb]/g,'8');
+      if(/^\d{16}$/.test(nik)) return nik;
+    }
   }
   return null;
 }
 
 function extractNamaFromText(text){
-  // Cari nama setelah label Nama
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const stopWords=['TEMPAT','LAHIR','JENIS','KELAMIN','GOLONGAN','DARAH','ALAMAT','RT','RW','KEL','KEC','AGAMA','PEKERJAAN','BERLAKU','NIK','NAMA','PROVINSI','KOTA','KABUPATEN','KEWARGANEGARAAN','STATUS','PERKAWINAN','REPUBLIK','INDONESIA'];
+  
+  // Cari baris yang mengandung label Nama
   const patterns = [
-    /Nama\s*[:\-]?\s*([A-Z][A-Z .'-]{2,40})/i,
-    /Nama\s+Lengkap\s*[:\-]?\s*([A-Z][A-Z .'-]{2,40})/i,
+    /Nama\s*[:\-]?\s*([A-Z][A-Za-z .'-]{2,40})/i,
+    /^Nama[\s:\-\.]+(.+)$/im,
   ];
   for(const pat of patterns){
     const m=text.match(pat);
     if(m && m[1]){
-      // Bersihkan — hapus kata-kata non-nama
-      const stopWords=['TEMPAT','LAHIR','JENIS','KELAMIN','GOLONGAN','DARAH','ALAMAT','RT','RW','KELURAHAN','KECAMATAN','AGAMA','STATUS','PEKERJAAN','BERLAKU','NIK','NAMA'];
-      let nama = m[1].trim();
+      let nama=m[1].trim();
+      // Potong di stopword pertama
       for(const sw of stopWords){
         const idx=nama.toUpperCase().indexOf(sw);
-        if(idx>2) nama=nama.substring(0,idx).trim();
+        if(idx>0) nama=nama.substring(0,idx).trim();
       }
-      if(nama.length >= 3) return nama;
+      // Hapus karakter non-nama
+      nama=nama.replace(/[^A-Za-z .'-]/g,'').trim();
+      if(nama.length>=3) return nama;
+    }
+  }
+  
+  // Fallback: cari baris semua huruf kapital yang panjangnya wajar (nama orang)
+  for(const line of lines){
+    if(/^[A-Z][A-Z .'-]{3,35}$/.test(line) && 
+       !stopWords.some(sw=>line.startsWith(sw)) &&
+       !line.match(/^(NIK|NAMA|ALAMAT|PROV|KAB|KOTA|KEC|KEL|RT|RW)/)){
+      return line;
     }
   }
   return null;
@@ -1729,12 +1787,46 @@ function validateNIK(nik){
   return true;
 }
 
+// Preprocess image untuk OCR lebih akurat (grayscale + contrast + threshold)
+function preprocessImageForOcr(file){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      // Scale up kecil supaya teks lebih jelas
+      const scale=Math.max(1, Math.min(3, 2000/Math.max(img.width,img.height)));
+      canvas.width=img.width*scale;
+      canvas.height=img.height*scale;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      // Grayscale + contrast boost
+      const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const d=imgData.data;
+      for(let i=0;i<d.length;i+=4){
+        // Grayscale
+        const gray=Math.round(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);
+        // Contrast stretch (multiply + offset)
+        const contrast=1.5;
+        const c2=Math.min(255,Math.max(0,Math.round((gray-128)*contrast+128)));
+        d[i]=d[i+1]=d[i+2]=c2;
+        d[i+3]=255;
+      }
+      ctx.putImageData(imgData,0,0);
+      // Kembalikan sebagai blob
+      canvas.toBlob(blob=>{ URL.revokeObjectURL(url); resolve(blob||file); },'image/png',1.0);
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(file); };
+    img.src=url;
+  });
+}
+
 async function processKtpOcr(input){
   const file=input.files[0];
   if(!file) return;
   input.value=''; // reset supaya bisa pilih file yang sama lagi
 
-  // Preview
+  // Preview gambar asli
   const pw=document.getElementById('ktp-preview-wrap');
   const pi=document.getElementById('ktp-preview-img');
   if(pw&&pi){ pi.src=URL.createObjectURL(file); pw.style.display='block'; }
@@ -1751,10 +1843,16 @@ async function processKtpOcr(input){
     const ready=await initTesseract();
     if(!ready){ throw new Error('Gagal memuat mesin OCR'); }
 
+    if(statusEl) statusEl.textContent='Memproses gambar...';
+    // Preprocess dulu sebelum OCR
+    const processedBlob = await preprocessImageForOcr(file);
+    
     if(statusEl) statusEl.textContent='Membaca teks KTP...';
 
-    // Jalankan OCR
-    const { data: { text } } = await tesseractWorker.recognize(file);
+    // OCR dengan config untuk KTP: PSM 6 = assume uniform block of text
+    const { data: { text } } = await tesseractWorker.recognize(processedBlob, {}, {
+      tessedit_pageseg_mode: '6',
+    });
     console.log('OCR raw:', text); // debug
 
     if(loading) loading.style.display='none';
@@ -1764,15 +1862,15 @@ async function processKtpOcr(input){
     const nama = extractNamaFromText(text);
 
     if(!nik || !validateNIK(nik)){
+      // Tampilkan teks yang berhasil dibaca supaya petugas bisa cek manual
+      const textPreview=text.substring(0,300).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
       let hint='';
-      if(nik) hint=` (terbaca: ${nik} — tidak valid)`;
+      if(nik) hint='<br><small>Angka terbaca: '+nik+' (tidak valid)</small>';
       showKtpResult(
-        '⚠ NIK tidak berhasil dibaca dari foto ini'+hint+'.<br>'+
-        'Tips:<br>'+
-        '• Pastikan KTP bagian <strong>depan</strong>, bukan belakang<br>'+
-        '• Foto <strong>landscape</strong> (horizontal), seluruh KTP kelihatan<br>'+
-        '• Cahaya cukup, tidak ada bayangan, tidak blur<br>'+
-        '• Bersihkan lensa kamera sebelum foto',
+        '⚠ NIK tidak berhasil dibaca otomatis.'+hint+'<br><br>'+
+        '<strong>Teks yang terbaca:</strong><br>'+
+        '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px;font-size:10px;font-family:monospace;max-height:80px;overflow-y:auto;margin-top:4px;white-space:pre-wrap;">'+textPreview+'</div><br>'+
+        '<strong>Coba:</strong> Foto lebih dekat, cahaya lebih terang, atau isi NIK manual di bawah.',
         'err'
       );
       return;
@@ -1829,28 +1927,24 @@ async function stopKtpScan(){ if(ktpScanner){try{await ktpScanner.stop();}catch(
 // ============================================================
 // ONSITE
 // ============================================================
-let wbpOsTimer;
-function searchWbpOs(q){
-  clearTimeout(wbpOsTimer);
-  const dd=document.getElementById('os-dd');
-  if(q.length<2){dd.style.display='none';return;}
-  wbpOsTimer=setTimeout(async()=>{
-    const{data}=await db.from('wbp').select('*').eq('status','aktif').or(`nama_wbp.ilike.%${q}%,nik_wbp.ilike.%${q}%`).limit(6);
-    if(!data||!data.length){dd.style.display='none';return;}
-    dd.innerHTML=data.map(w=>`<div style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''" onclick="selWbpOs('${w.id}','${esc(w.nama_wbp)}','${esc(w.kamar)}')">
-      <p style="font-weight:600;color:#0f172a;margin:0;">${esc(w.nama_wbp)}</p>
-      <p style="font-size:11px;color:#64748b;margin:0;">${esc(w.kamar)}</p>
-    </div>`).join('');
-    dd.style.display='';
-  },300);
+// Isi dropdown WBP aktif dari data yang sudah diload
+function populateWbpDropdown(){
+  const sel=document.getElementById('os-wbp-sel');
+  if(!sel) return;
+  const aktif=allWbp.filter(w=>(w.status||'aktif')==='aktif').sort((a,b)=>a.nama_wbp.localeCompare(b.nama_wbp));
+  sel.innerHTML='<option value="">-- Pilih WBP Aktif ('+aktif.length+') --</option>'+
+    aktif.map(w=>`<option value="${w.id}" data-km="${esc(w.kamar)}">${esc(w.nama_wbp)} — ${esc(w.kamar)}</option>`).join('');
 }
 
-function selWbpOs(id,nm,km){
-  osWbp={id,nama_wbp:nm,kamar:km};
-  document.getElementById('os-wbp-inp').value=nm;
-  document.getElementById('os-wbp-info').textContent=`${nm} – ${km}`;
-  document.getElementById('os-wbp-sel').style.display='';
-  document.getElementById('os-dd').style.display='none';
+function onWbpSelect(sel){
+  const opt=sel.options[sel.selectedIndex];
+  if(!sel.value){ osWbp=null; document.getElementById('os-wbp-info-box').style.display='none'; return; }
+  const nm=opt.text.split(' — ')[0];
+  const km=opt.getAttribute('data-km')||'';
+  osWbp={id:sel.value,nama_wbp:nm,kamar:km};
+  const box=document.getElementById('os-wbp-info-box');
+  box.textContent='✓ WBP: '+nm+' – Kamar: '+km;
+  box.style.display='block';
 }
 
 function addOsBrg(){
@@ -1883,7 +1977,8 @@ async function submitOnsite(){
   document.getElementById('os-err').style.display='none';
   if(nik.length!==16){showFErr2('os-err','NIK harus 16 digit.');return;}
   if(!nm){showFErr2('os-err','Nama wajib diisi.');return;}
-  if(!osWbp){showFErr2('os-err','Pilih WBP yang dikunjungi.');return;}
+  const selEl=document.getElementById('os-wbp-sel');
+  if(!osWbp || !selEl || !selEl.value){showFErr2('os-err','Pilih WBP yang dikunjungi.');return;}
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
@@ -1902,8 +1997,10 @@ async function submitOnsite(){
   showToast('✅ '+nm+' berhasil terdaftar & hadir!','success');
   document.getElementById('os-nik').value='';
   document.getElementById('os-nama').value='';
-  document.getElementById('os-wbp-inp').value='';
-  document.getElementById('os-wbp-sel').style.display='none';
+  const osSelEl=document.getElementById('os-wbp-sel');
+  if(osSelEl) osSelEl.value='';
+  const osInfoBox=document.getElementById('os-wbp-info-box');
+  if(osInfoBox){ osInfoBox.style.display='none'; osInfoBox.textContent=''; }
   document.getElementById('ktp-scan-result').style.display='none';
   osWbp=null;osBrg=[];renderOsBrg();
   loadDash();

@@ -108,29 +108,48 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 let isReady = false;
 
-// Tunggu Supabase proses URL hash (token dari email)
+// Proteksi: halaman ini hanya valid kalau ada token di URL atau PASSWORD_RECOVERY event
+// Jika tidak ada, redirect ke admin.html
+const hasTokenInUrl = window.location.hash.includes('access_token') && 
+                      window.location.hash.includes('type=recovery');
+
+// Jika tidak ada token sama sekali di URL, langsung redirect
+if (!hasTokenInUrl) {
+  window.location.replace('admin.html');
+}
+
 db.auth.onAuthStateChange((event, session) => {
-  if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+  if (event === 'PASSWORD_RECOVERY') {
     isReady = true;
+  } else if (event === 'SIGNED_IN' && session && hasTokenInUrl) {
+    // SIGNED_IN setelah recovery token diproses — valid
+    isReady = true;
+  } else if (event === 'SIGNED_IN' && !hasTokenInUrl) {
+    // Login biasa bukan dari link reset — redirect ke dashboard
+    window.location.replace('admin.html');
   }
 });
 
 window.addEventListener('load', async () => {
-  // Beri waktu Supabase proses hash
-  await new Promise(r => setTimeout(r, 800));
+  if (!hasTokenInUrl) return; // sudah redirect di atas
+
+  // Beri waktu Supabase proses hash token
+  await new Promise(r => setTimeout(r, 1000));
 
   const { data: { session } } = await db.auth.getSession();
   const loading = document.getElementById('loading');
   const card = document.getElementById('main-card');
 
   loading.classList.add('hide');
+  setTimeout(() => { loading.style.display = 'none'; }, 500);
   card.style.opacity = '1';
-  card.style.transition = 'opacity .3s';
+  card.style.transition = 'opacity .4s';
 
   if (!session) {
-    // Tidak ada sesi valid — URL mungkin sudah expired
-    showMsg('Link reset sudah kedaluwarsa atau tidak valid. Minta link baru dari halaman login.', 'err');
+    // Token expired atau tidak valid
+    showMsg('⚠ Link reset sudah kedaluwarsa atau tidak valid. Silakan minta link baru dari halaman login.', 'err');
     document.getElementById('btn-save').disabled = true;
+    document.getElementById('btn-save').style.opacity = '0.5';
   } else {
     isReady = true;
   }
