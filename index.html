@@ -26,9 +26,35 @@
     .pulse { animation:pulse .4s ease; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.01)} }
     .barang-item { animation: fadeIn 0.3s ease; }
+    /* Splash screen */
+    #page-loader{position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1e40af 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s;}
+    #page-loader.hide{opacity:0;pointer-events:none;}
+    .pl-logo{width:72px;height:72px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;animation:pop .6s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+    .pl-title{color:#fff;font-size:20px;font-weight:800;letter-spacing:-.3px;animation:pop .6s .1s both cubic-bezier(.34,1.56,.64,1);}
+    .pl-sub{color:#93c5fd;font-size:13px;font-weight:500;animation:pop .6s .2s both cubic-bezier(.34,1.56,.64,1);}
+    .pl-dots{display:flex;gap:8px;animation:pop .6s .3s both cubic-bezier(.34,1.56,.64,1);}
+    .pl-dot{width:10px;height:10px;border-radius:50%;background:#3b82f6;animation:bounce 1.2s infinite;}
+    .pl-dot:nth-child(2){animation-delay:.2s;background:#60a5fa;}
+    .pl-dot:nth-child(3){animation-delay:.4s;background:#93c5fd;}
+    @keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1.2);opacity:1}}
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100">
+
+<!-- Splash Screen -->
+<div id="page-loader">
+  <div class="pl-logo">🏛️</div>
+  <div>
+    <div class="pl-title">SiKunjung</div>
+    <div class="pl-sub" style="text-align:center;">Lapas Kelas III Saparua</div>
+  </div>
+  <div class="pl-dots">
+    <div class="pl-dot"></div>
+    <div class="pl-dot"></div>
+    <div class="pl-dot"></div>
+  </div>
+</div>
 
   <!-- HEADER -->
   <div class="bg-blue-800 text-white px-4 py-4 shadow-lg">
@@ -224,6 +250,15 @@ const S = { kel: null, wbp: null, barang: [], nik: '', nama: '' };
 // DOM READY
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Sembunyikan splash screen setelah halaman siap
+  setTimeout(() => {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      loader.classList.add('hide');
+      setTimeout(() => { loader.style.display = 'none'; }, 500);
+    }
+  }, 900);
+
   document.getElementById('inp-nik').addEventListener('input', onNikInput);
   document.getElementById('btn-next1').addEventListener('click', step1Next);
   document.getElementById('btn-back1').addEventListener('click', () => goStep(1));

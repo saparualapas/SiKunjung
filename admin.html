@@ -1044,7 +1044,7 @@ async function changePassword(){
 // ============================================================
 function navTo(p,el){
   curPage=p;
-  sessionStorage.setItem('sikunjung-page', p); // ✅ persist page
+  sessionStorage.setItem('sikunjung-page', p);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const navEl = el || document.querySelector('[data-p="'+p+'"]');
   if(navEl) navEl.classList.add('active');
@@ -1053,6 +1053,7 @@ function navTo(p,el){
   const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
   document.getElementById('pg-title').textContent=titles[p]||p;
   closeSB();
+  if(p==='dashboard')loadDash();          // ← FIX: dashboard tidak pernah load sebelumnya!
   if(p==='kunjungan'){kunjPage=1;loadKunj();}
   if(p==='barang')loadBarang();
   if(p==='wbp'){wbpPage=1;renderWbp();}
@@ -1096,31 +1097,54 @@ function setupRealtime(){
 // DASHBOARD
 // ============================================================
 async function loadDash(){
-  const today=new Date().toISOString().split('T')[0]; // ✅ only today
-  const[{data:k},{data:w}]=await Promise.all([
-    db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
-    db.from('wbp').select('id,status').eq('status','aktif')
-  ]);
-  const kd=k||[],wd=w||[];
-  document.getElementById('s-tot').textContent=kd.length;
-  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
-  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
-  document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
-  document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
-  document.getElementById('s-wbp').textContent=wd.length;
-  const nb=document.getElementById('nb-m');
-  const tunggu=kd.filter(x=>x.status==='menunggu').length;
-  if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';
+  const today=new Date().toISOString().split('T')[0];
   const tbody=document.getElementById('dash-tb');
   const mc=document.getElementById('dash-mc');
-  if(!kd.length){
-    tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
-    mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
-    return;
+  try{
+    // Query kunjungan hari ini
+    const resK=await db.from('kunjungan')
+      .select('*,wbp(nama_wbp,kamar)')
+      .eq('tgl_kunjungan',today)
+      .order('no_antrean');
+    if(resK.error) throw new Error('kunjungan: '+resK.error.message);
+    const kd=resK.data||[];
+
+    // Query WBP — kolom status mungkin belum ada, filter di JS
+    const resW=await db.from('wbp').select('id,status');
+    const wd=(resW.data||[]).filter(x=>(x.status||'aktif')==='aktif');
+
+    // Update stat cards
+    document.getElementById('s-tot').textContent=kd.length;
+    document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
+    document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
+    document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
+    document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
+    document.getElementById('s-wbp').textContent=wd.length;
+
+    // Badge antrean menunggu di sidebar
+    const nb=document.getElementById('nb-m');
+    const tunggu=kd.filter(x=>x.status==='menunggu').length;
+    if(nb){if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';}
+
+    // Tabel kunjungan terbaru
+    if(!kd.length){
+      if(tbody) tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
+      if(mc) mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
+      return;
+    }
+    const slice=kd.slice(0,15);
+    if(tbody) tbody.innerHTML=slice.map(v=>kunjRow(v,false)).join('');
+    if(mc) mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
+
+  }catch(e){
+    console.error('loadDash error:',e);
+    showToast('Gagal memuat dashboard: '+e.message,'error');
+    // Tampilkan 0 agar tidak stuck
+    ['s-tot','s-men','s-had','s-sel','s-brg','s-wbp'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.textContent='0';
+    });
+    if(tbody) tbody.innerHTML='<tr><td colspan="6" class="empty">⚠ Gagal memuat data. Periksa koneksi & RLS Supabase.</td></tr>';
   }
-  const slice=kd.slice(0,15);
-  tbody.innerHTML=slice.map(v=>kunjRow(v,false)).join('');
-  mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
 }
 
 function kunjRow(v,showAksi=true){
