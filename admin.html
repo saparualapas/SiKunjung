@@ -521,7 +521,7 @@
 
     <!-- BACKUP -->
     <div id="pg-backup" class="page">
-      <div style="max-width:600px;">
+      <div>
         <div class="card" style="padding:20px;margin-bottom:14px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);">
           <h3 style="font-weight:700;color:#0f172a;margin:0 0 8px;">⏰ Jadwal Backup yang Disarankan</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:10px;">
@@ -608,7 +608,7 @@
               </div>
               <p style="font-size:11px;color:#16a34a;margin:4px 0 0;">✅ Setelah URL disimpan, data kunjungan baru akan otomatis terkirim ke Sheets (realtime).</p>
             </div>
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:11px;color:#065f46;">
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:11px;color:#065f46; overflow: auto;">
               <strong>📋 Contoh Apps Script (doPost):</strong><br>
               <code style="font-size:10px;background:#fff;padding:2px 4px;border-radius:3px;">function doPost(e){var data=JSON.parse(e.postData.contents);var sheet=SpreadsheetApp.getActiveSheet();if(data.type==='realtime_push')sheet.appendRow([data.data.tgl_kunjungan,data.data.no_antrean,data.data.nama_pengunjung,new Date()])}</code>
             </div>
