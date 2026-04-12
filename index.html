@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< HEAD
+  <title>Pendaftaran Kunjungan – Lapas Kelas III</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+=======
+  <title>SiKunjung – Lapas Kelas III Saparua</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .step-line { transition: width 0.5s ease; }
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+<<<<<<< HEAD
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .card-shadow { box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .btn-primary { background: linear-gradient(135deg, #1e40af, #2563eb); }
+    .btn-primary:hover { background: linear-gradient(135deg, #1d3a9e, #1e56d0); }
+    .input-focus:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .badge-menunggu { background:#fef3c7; color:#92400e; }
+    .badge-hadir { background:#d1fae5; color:#065f46; }
+    .badge-selesai { background:#e0e7ff; color:#3730a3; }
+    .qr-container { background: white; padding: 16px; border-radius: 16px; display:inline-block; }
+    #qr-img { width: 200px; height: 200px; }
+    .barang-item { animation: fadeIn 0.3s ease; }
+    .spinner { border: 3px solid #e5e7eb; border-top: 3px solid #2563eb; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display:inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 24px; border-radius:12px; font-weight:600; font-size:14px; z-index:9999; animation:fadeIn 0.3s ease; }
+=======
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+    .card-shadow { box-shadow:0 4px 24px rgba(0,0,0,.08); }
+    .btn-primary { background:linear-gradient(135deg,#1e40af,#2563eb); }
+    .btn-primary:hover { background:linear-gradient(135deg,#1d3a9e,#1e56d0); }
+    .input-focus:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+    .qr-container { background:white; padding:16px; border-radius:16px; display:inline-block; }
+    #qr-img { width:200px; height:200px; }
+    .spinner { border:3px solid #e5e7eb; border-top:3px solid #2563eb; border-radius:50%; width:18px; height:18px; animation:spin .8s linear infinite; display:inline-block; vertical-align:middle; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 24px; border-radius:12px; font-weight:600; font-size:14px; z-index:9999; animation:fadeIn .3s ease; white-space:nowrap; }
+    .nik-valid { border-color:#16a34a !important; background:#f0fdf4; }
+    .nik-invalid { border-color:#dc2626 !important; background:#fef2f2; }
+    .pulse { animation:pulse .4s ease; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.01)} }
+    .barang-item { animation: fadeIn 0.3s ease; }
+    /* Splash screen */
+    #page-loader{position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#1e40af 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s;}
+    #page-loader.hide{opacity:0;pointer-events:none;}
+    .pl-logo{width:72px;height:72px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;animation:pop .6s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+    .pl-title{color:#fff;font-size:20px;font-weight:800;letter-spacing:-.3px;animation:pop .6s .1s both cubic-bezier(.34,1.56,.64,1);}
+    .pl-sub{color:#93c5fd;font-size:13px;font-weight:500;animation:pop .6s .2s both cubic-bezier(.34,1.56,.64,1);}
+    .pl-dots{display:flex;gap:8px;animation:pop .6s .3s both cubic-bezier(.34,1.56,.64,1);}
+    .pl-dot{width:10px;height:10px;border-radius:50%;background:#3b82f6;animation:bounce 1.2s infinite;}
+    .pl-dot:nth-child(2){animation-delay:.2s;background:#60a5fa;}
+    .pl-dot:nth-child(3){animation-delay:.4s;background:#93c5fd;}
+    @keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1.2);opacity:1}}
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100">
+
+<<<<<<< HEAD
+=======
+<!-- Splash Screen -->
+<div id="page-loader">
+  <div class="pl-logo">🏛️</div>
+  <div>
+    <div class="pl-title">SiKunjung</div>
+    <div class="pl-sub" style="text-align:center;">Lapas Kelas III Saparua</div>
+  </div>
+  <div class="pl-dots">
+    <div class="pl-dot"></div>
+    <div class="pl-dot"></div>
+    <div class="pl-dot"></div>
+  </div>
+</div>
+
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+  <!-- HEADER -->
+  <div class="bg-blue-800 text-white px-4 py-4 shadow-lg">
+    <div class="max-w-lg mx-auto flex items-center gap-3">
+      <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">🏛️</div>
+      <div>
+<<<<<<< HEAD
+        <h1 class="font-bold text-base leading-tight">Layanan Kunjungan</h1>
+        <p class="text-blue-200 text-xs">Lapas Kelas III Saparua</p>
+      </div>
+      <a href="admin.html" class="ml-auto text-xs text-blue-200 underline">Admin</a>
+    </div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="max-w-lg mx-auto px-4 pt-5 pb-2">
+    <div class="flex items-center gap-2">
+      <div id="step-dot-1" class="w-7 h-7 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold">1</div>
+      <div class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div id="step-line-1" class="h-full bg-blue-700 step-line" style="width:0%"></div>
+      </div>
+      <div id="step-dot-2" class="w-7 h-7 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold">2</div>
+      <div class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div id="step-line-2" class="h-full bg-blue-700 step-line" style="width:0%"></div>
+      </div>
+      <div id="step-dot-3" class="w-7 h-7 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold">3</div>
+    </div>
+    <div class="flex justify-between text-xs mt-1 text-gray-500">
+      <span>Identitas</span>
+      <span>Barang</span>
+      <span>QR Code</span>
+=======
+        <h1 class="font-bold text-base leading-tight">SiKunjung</h1>
+        <p class="text-blue-200 text-xs">Lapas Kelas III Saparua</p>
+      </div>
+      <div class="ml-auto flex items-center gap-3">
+        <button onclick="showPanduan()" class="text-xs bg-white/20 text-white px-2 py-1 rounded-lg font-semibold">❓ Panduan</button>
+        <a href="admin.html" class="text-xs text-blue-200 underline">Admin →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP DOTS -->
+  <div class="max-w-lg mx-auto px-4 pt-5 pb-2">
+    <div class="flex items-center gap-2">
+      <div id="sd1" class="w-7 h-7 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">1</div>
+      <div class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden"><div id="sl1" class="h-full bg-blue-700 step-line" style="width:0%"></div></div>
+      <div id="sd2" class="w-7 h-7 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold flex-shrink-0">2</div>
+      <div class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden"><div id="sl2" class="h-full bg-blue-700 step-line" style="width:0%"></div></div>
+      <div id="sd3" class="w-7 h-7 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold flex-shrink-0">3</div>
+    </div>
+    <div class="flex justify-between text-xs mt-1 text-gray-500 px-0.5">
+      <span>Identitas</span><span>Barang</span><span>QR Code</span>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+    </div>
+  </div>
+
+  <div class="max-w-lg mx-auto px-4 pb-10">
+
+<<<<<<< HEAD
+    <!-- STEP 1: IDENTITAS -->
+    <div id="step1" class="fade-in">
+      <div class="bg-white rounded-2xl card-shadow p-5 mt-4">
+        <h2 class="font-bold text-gray-800 text-lg mb-1">Data Pengunjung</h2>
+        <p class="text-gray-500 text-sm mb-5">Isi data sesuai KTP yang berlaku</p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-600 text-gray-700 mb-1.5">NIK Pengunjung <span class="text-red-500">*</span></label>
+            <input id="nik-pengunjung" type="text" maxlength="16" inputmode="numeric"
+              placeholder="16 digit NIK sesuai KTP"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition" />
+            <div id="nik-status" class="mt-1.5 text-xs hidden"></div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-600 text-gray-700 mb-1.5">Nama Lengkap Pengunjung <span class="text-red-500">*</span></label>
+            <input id="nama-pengunjung" type="text" placeholder="Sesuai KTP"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-600 text-gray-700 mb-1.5">Nama WBP yang Dikunjungi <span class="text-red-500">*</span></label>
+            <input id="nama-wbp" type="text" placeholder="Nama lengkap warga binaan"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition" />
+          </div>
+
+          <!-- Info WBP setelah validasi -->
+          <div id="info-wbp" class="hidden bg-green-50 border border-green-200 rounded-xl p-3">
+            <div class="flex items-start gap-2">
+              <span class="text-green-600 text-lg mt-0.5">✓</span>
+              <div>
+                <p class="text-xs font-semibold text-green-800">Data Terverifikasi</p>
+                <p id="info-wbp-detail" class="text-xs text-green-700 mt-0.5"></p>
+=======
+    <!-- STEP 1 -->
+    <div id="step1" class="fade-in">
+      <div class="bg-white rounded-2xl card-shadow p-5 mt-4">
+        <h2 class="font-bold text-gray-800 text-lg mb-0.5">Data Pengunjung</h2>
+        <p class="text-gray-500 text-xs mb-5">Masukkan NIK → nama WBP akan muncul otomatis</p>
+
+        <div class="space-y-4">
+          <!-- NIK -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">NIK Pengunjung <span class="text-red-500">*</span></label>
+            <input id="inp-nik" type="text" maxlength="16" inputmode="numeric" placeholder="16 digit NIK sesuai KTP"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition" />
+            <div id="nik-hint" class="mt-1.5 text-xs hidden"></div>
+          </div>
+
+          <!-- Nama -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
+            <input id="inp-nama" type="text" placeholder="Otomatis terisi setelah NIK valid"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition" />
+          </div>
+
+          <!-- Card WBP otomatis -->
+          <div id="card-wbp" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 pulse">
+            <div class="flex gap-3">
+              <div class="w-9 h-9 bg-green-200 rounded-xl flex items-center justify-center text-lg flex-shrink-0">✅</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-green-800 mb-2">NIK Terverifikasi – Data WBP Ditemukan</p>
+                <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                  <div><p class="text-green-600">Pengunjung</p><p id="cv-nama-kel" class="font-semibold text-green-900 truncate"></p></div>
+                  <div><p class="text-green-600">Hubungan</p><p id="cv-hubungan" class="font-semibold text-green-900"></p></div>
+                  <div><p class="text-green-600">WBP</p><p id="cv-nama-wbp" class="font-semibold text-green-900 truncate"></p></div>
+                  <div><p class="text-green-600">Kamar</p><p id="cv-kamar" class="font-semibold text-green-900"></p></div>
+                </div>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+              </div>
+            </div>
+          </div>
+
+<<<<<<< HEAD
+          <div id="error-step1" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700"></div>
+
+          <button id="btn-step1" onclick="validateStep1()"
+            class="w-full btn-primary text-white py-3.5 rounded-xl font-semibold text-sm transition">
+            Lanjutkan →
+          </button>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
+        <p class="font-semibold mb-1">📋 Informasi</p>
+        <ul class="space-y-1 list-disc list-inside">
+          <li>NIK harus terdaftar sebagai keluarga WBP</li>
+          <li>Kunjungan hanya pada hari &amp; jam yang ditentukan</li>
+=======
+          <!-- Error NIK -->
+          <div id="card-nik-err" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">
+            <p class="font-semibold">⚠ NIK Tidak Ditemukan</p>
+            <p id="nik-err-msg" class="mt-0.5"></p>
+          </div>
+
+          <!-- Error step1 -->
+          <div id="err-step1" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-700"></div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jam Kunjungan <span class="text-gray-400 font-normal">(opsional)</span></label>
+            <input id="inp-jam" type="time" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm input-focus outline-none transition"/>
+            <p class="text-xs text-gray-400 mt-1">Biarkan kosong jika tidak tahu jam pasti</p>
+          </div>
+          <button id="btn-next1" class="w-full btn-primary text-white py-3.5 rounded-xl font-semibold text-sm">Lanjutkan →</button>
+        </div>
+      </div>
+
+      <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
+        <p class="font-semibold mb-1">📋 Informasi</p>
+        <ul class="space-y-0.5 list-disc list-inside">
+          <li>NIK harus terdaftar sebagai keluarga WBP</li>
+          <li>Belum terdaftar? Hubungi petugas untuk pendaftaran onsite</li>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+          <li>Barang bawaan wajib diperiksa petugas</li>
+        </ul>
+      </div>
+    </div>
+
+<<<<<<< HEAD
+    <!-- STEP 2: DAFTAR BARANG -->
+    <div id="step2" class="hidden fade-in">
+      <div class="bg-white rounded-2xl card-shadow p-5 mt-4">
+        <h2 class="font-bold text-gray-800 text-lg mb-1">Daftar Barang Bawaan</h2>
+        <p class="text-gray-500 text-sm mb-4">Tambahkan barang yang akan dititipkan</p>
+
+        <div class="flex gap-2 mb-3">
+          <input id="input-barang" type="text" placeholder="Nama barang (contoh: Nasi bungkus)"
+            class="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm input-focus outline-none transition"
+            onkeypress="if(event.key==='Enter') tambahBarang()" />
+          <input id="input-jumlah" type="number" min="1" value="1" placeholder="Qty"
+            class="w-16 px-3 py-2.5 rounded-xl border border-gray-200 text-sm input-focus outline-none transition text-center" />
+          <button onclick="tambahBarang()"
+            class="btn-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold">+</button>
+        </div>
+
+        <div id="list-barang" class="space-y-2 max-h-52 overflow-y-auto mb-4"></div>
+
+        <div id="empty-barang" class="text-center py-6 text-gray-400 text-sm">
+          <span class="text-3xl block mb-1">📦</span>
+          Belum ada barang ditambahkan
+          <br><span class="text-xs">(Opsional — bisa dikosongkan)</span>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+          <button onclick="goToStep(1)" class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">← Kembali</button>
+          <button onclick="submitKunjungan()"
+            id="btn-submit"
+            class="flex-1 btn-primary text-white py-3 rounded-xl font-semibold text-sm transition">
+            Daftar Sekarang
+          </button>
+=======
+    <!-- STEP 2 -->
+    <div id="step2" class="hidden fade-in">
+      <div class="bg-white rounded-2xl card-shadow p-5 mt-4">
+        <h2 class="font-bold text-gray-800 text-lg mb-0.5">Daftar Barang Bawaan</h2>
+        <p class="text-gray-500 text-xs mb-4">Tambahkan barang yang dibawa <span class="text-gray-400">(boleh kosong)</span></p>
+
+        <div class="flex gap-2 mb-3">
+          <input id="inp-barang" type="text" placeholder="Nama barang"
+            class="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm input-focus outline-none transition" />
+          <input id="inp-qty" type="number" min="1" value="1"
+            class="w-14 px-2 py-2.5 rounded-xl border border-gray-200 text-sm input-focus outline-none transition text-center" />
+          <button id="btn-add-barang" class="btn-primary text-white px-4 py-2.5 rounded-xl font-bold text-sm">+</button>
+        </div>
+
+        <div id="list-barang" class="space-y-2 max-h-52 overflow-y-auto"></div>
+        <div id="empty-barang" class="text-center py-5 text-gray-400 text-sm">
+          <span class="text-3xl block mb-1">📦</span>Belum ada barang
+        </div>
+
+        <div class="flex gap-2 mt-5">
+          <button id="btn-back1" class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600">← Kembali</button>
+          <button id="btn-submit" class="flex-1 btn-primary text-white py-3 rounded-xl font-semibold text-sm">Daftar Sekarang</button>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+        </div>
+      </div>
+    </div>
+
+<<<<<<< HEAD
+    <!-- STEP 3: QR CODE -->
+=======
+    <!-- STEP 3 -->
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+    <div id="step3" class="hidden fade-in">
+      <div class="bg-white rounded-2xl card-shadow p-5 mt-4 text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">✅</div>
+        <h2 class="font-bold text-gray-800 text-xl mb-1">Pendaftaran Berhasil!</h2>
+        <p class="text-gray-500 text-sm mb-5">Tunjukkan QR Code ini kepada petugas</p>
+
+        <div class="qr-container border border-gray-100 card-shadow mx-auto mb-4 w-fit">
+<<<<<<< HEAD
+          <img id="qr-img" alt="QR Code Kunjungan" />
+        </div>
+
+        <div class="bg-blue-50 rounded-xl p-4 text-left mb-4">
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <p class="text-gray-500">Nama Pengunjung</p>
+              <p id="info-nama" class="font-semibold text-gray-800"></p>
+            </div>
+            <div>
+              <p class="text-gray-500">No. Antrean</p>
+              <p id="info-antrean" class="font-bold text-blue-700 text-lg"></p>
+            </div>
+            <div>
+              <p class="text-gray-500">Kunjungan ke</p>
+              <p id="info-wbp-nama" class="font-semibold text-gray-800"></p>
+            </div>
+            <div>
+              <p class="text-gray-500">Tanggal</p>
+              <p id="info-tanggal" class="font-semibold text-gray-800"></p>
+            </div>
+          </div>
+        </div>
+
+        <div id="info-barang-result" class="hidden bg-gray-50 rounded-xl p-3 text-left mb-4">
+          <p class="text-xs font-semibold text-gray-600 mb-2">📦 Barang Bawaan:</p>
+          <div id="list-barang-result" class="text-xs text-gray-700 space-y-1"></div>
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="screenshotQR()"
+            class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm transition">
+            📸 Screenshot QR
+          </button>
+          <button onclick="daftarLagi()"
+            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold text-sm transition">
+            Daftar Lagi
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-3">QR Code juga tersimpan di perangkat Anda sementara</p>
+=======
+          <img id="qr-img" alt="QR Code" />
+        </div>
+
+        <div class="bg-blue-50 rounded-xl p-4 text-left mb-4">
+          <div class="grid grid-cols-2 gap-y-3 text-xs">
+            <div><p class="text-gray-500">Pengunjung</p><p id="r-nama" class="font-semibold text-gray-800"></p></div>
+            <div><p class="text-gray-500">No. Antrean</p><p id="r-antrean" class="font-bold text-blue-700 text-xl"></p></div>
+            <div><p class="text-gray-500">WBP</p><p id="r-wbp" class="font-semibold text-gray-800"></p></div>
+            <div><p class="text-gray-500">Kamar</p><p id="r-kamar" class="font-semibold text-gray-800"></p></div>
+            <div><p class="text-gray-500">Tanggal</p><p id="r-tgl" class="font-semibold text-gray-800"></p></div>
+            <div><p class="text-gray-500">Hubungan</p><p id="r-hub" class="font-semibold text-gray-800"></p></div>
+            <div><p class="text-gray-500">Jam Kunjungan</p><p id="r-jam" class="font-semibold text-gray-800"></p></div>
+          </div>
+        </div>
+
+        <div id="r-barang-wrap" class="hidden bg-gray-50 rounded-xl p-3 text-left mb-4">
+          <p class="text-xs font-semibold text-gray-600 mb-1.5">📦 Barang Bawaan:</p>
+          <div id="r-barang-list" class="text-xs text-gray-700 space-y-0.5"></div>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="btn-ss" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-sm transition">📸 Screenshot QR</button>
+          <button id="btn-reset" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold text-sm transition">Daftar Lagi</button>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">QR tersimpan sementara di perangkat ini</p>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+      </div>
+    </div>
+
+  </div>
+
+<<<<<<< HEAD
+  <script>
+    // ============================================================
+    // SUPABASE CONFIG — Ganti dengan URL dan Key Anda
+    // ============================================================
+    const SUPABASE_URL = 'https://cbnqdvkxukortmntmfzh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibnFkdmt4dWtvcnRtbnRtZnpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjM3MzksImV4cCI6MjA5MDY5OTczOX0.WSAQeI0wJlNbi9ECL1ECyduLdZnm-cVPMpH4peLLT_0';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let state = {
+      step: 1,
+      wbp: null,
+      keluarga: null,
+      barang: [],
+      kunjunganId: null
+    };
+
+    // ============================================================
+    // STEP NAVIGATION
+    // ============================================================
+    function goToStep(n) {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById(`step${n}`).classList.remove('hidden');
+      document.getElementById(`step${n}`).classList.add('fade-in');
+      state.step = n;
+      updateStepIndicator(n);
+    }
+
+    function updateStepIndicator(n) {
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById(`step-dot-${i}`);
+        if (i < n) {
+          dot.className = 'w-7 h-7 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold';
+          dot.innerHTML = '✓';
+        } else if (i === n) {
+          dot.className = 'w-7 h-7 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold';
+          dot.innerHTML = i;
+        } else {
+          dot.className = 'w-7 h-7 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold';
+          dot.innerHTML = i;
+        }
+      }
+      if (n >= 2) document.getElementById('step-line-1').style.width = '100%';
+      if (n >= 3) document.getElementById('step-line-2').style.width = '100%';
+    }
+
+    // ============================================================
+    // STEP 1: VALIDASI
+    // ============================================================
+    async function validateStep1() {
+      const nik = document.getElementById('nik-pengunjung').value.trim();
+      const nama = document.getElementById('nama-pengunjung').value.trim();
+      const namaWbp = document.getElementById('nama-wbp').value.trim();
+      const errBox = document.getElementById('error-step1');
+
+      errBox.classList.add('hidden');
+      document.getElementById('info-wbp').classList.add('hidden');
+
+      if (nik.length !== 16 || isNaN(nik)) {
+        showError(errBox, 'NIK harus 16 digit angka.');
+        return;
+      }
+      if (!nama) { showError(errBox, 'Nama pengunjung wajib diisi.'); return; }
+      if (!namaWbp) { showError(errBox, 'Nama WBP wajib diisi.'); return; }
+
+      const btn = document.getElementById('btn-step1');
+      btn.innerHTML = '<span class="spinner"></span> Memvalidasi...';
+      btn.disabled = true;
+
+      try {
+        // Cari keluarga berdasarkan NIK
+        const { data: keluarga, error: kErr } = await supabase
+          .from('keluarga_wbp')
+          .select('*, wbp(*)')
+          .eq('nik_keluarga', nik)
+          .single();
+
+        if (kErr || !keluarga) {
+          showError(errBox, 'NIK tidak terdaftar sebagai keluarga WBP. Hubungi petugas untuk pendaftaran onsite.');
+          btn.innerHTML = 'Lanjutkan →'; btn.disabled = false;
+          return;
+        }
+
+        // Validasi nama WBP cocok
+        const wbpNama = keluarga.wbp.nama_wbp.toLowerCase();
+        if (!wbpNama.includes(namaWbp.toLowerCase()) && !namaWbp.toLowerCase().includes(wbpNama)) {
+          showError(errBox, `Nama WBP tidak cocok. Pastikan nama yang Anda masukkan sesuai dengan data terdaftar.`);
+          btn.innerHTML = 'Lanjutkan →'; btn.disabled = false;
+          return;
+        }
+
+        state.keluarga = keluarga;
+        state.wbp = keluarga.wbp;
+        state.nikPengunjung = nik;
+        state.namaPengunjung = nama;
+
+        document.getElementById('info-wbp-detail').textContent =
+          `${keluarga.nama_keluarga} (${keluarga.hubungan}) → ${keluarga.wbp.nama_wbp}, ${keluarga.wbp.kamar}`;
+        document.getElementById('info-wbp').classList.remove('hidden');
+
+        setTimeout(() => goToStep(2), 600);
+      } catch (e) {
+        showError(errBox, 'Terjadi kesalahan koneksi. Coba lagi.');
+      }
+
+      btn.innerHTML = 'Lanjutkan →'; btn.disabled = false;
+    }
+
+    // ============================================================
+    // NIK REALTIME HINT
+    // ============================================================
+    document.getElementById('nik-pengunjung').addEventListener('input', function() {
+      const s = document.getElementById('nik-status');
+      if (this.value.length === 16) {
+        s.className = 'mt-1.5 text-xs text-blue-600';
+        s.textContent = '✓ Format NIK valid';
+        s.classList.remove('hidden');
+      } else if (this.value.length > 0) {
+        s.className = 'mt-1.5 text-xs text-amber-600';
+        s.textContent = `${this.value.length}/16 digit`;
+        s.classList.remove('hidden');
+      } else {
+        s.classList.add('hidden');
+      }
+    });
+
+    // ============================================================
+    // STEP 2: MANAJEMEN BARANG
+    // ============================================================
+    function tambahBarang() {
+      const nama = document.getElementById('input-barang').value.trim();
+      const jumlah = parseInt(document.getElementById('input-jumlah').value) || 1;
+      if (!nama) return;
+
+      state.barang.push({ nama, jumlah });
+      document.getElementById('input-barang').value = '';
+      document.getElementById('input-jumlah').value = 1;
+      renderBarang();
+    }
+
+    function hapusBarang(i) {
+      state.barang.splice(i, 1);
+      renderBarang();
+    }
+
+    function renderBarang() {
+      const list = document.getElementById('list-barang');
+      const empty = document.getElementById('empty-barang');
+      list.innerHTML = '';
+      if (state.barang.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      state.barang.forEach((b, i) => {
+        list.innerHTML += `
+          <div class="barang-item flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5">
+            <div>
+              <span class="text-sm font-medium text-gray-800">${b.nama}</span>
+              <span class="ml-2 text-xs text-gray-500">× ${b.jumlah}</span>
+            </div>
+            <button onclick="hapusBarang(${i})" class="text-red-400 hover:text-red-600 text-lg leading-none">×</button>
+          </div>`;
+      });
+    }
+
+    // ============================================================
+    // SUBMIT KUNJUNGAN
+    // ============================================================
+    async function submitKunjungan() {
+      const btn = document.getElementById('btn-submit');
+      btn.innerHTML = '<span class="spinner"></span> Mendaftarkan...';
+      btn.disabled = true;
+
+      const today = new Date().toISOString().split('T')[0];
+
+      try {
+        const { data, error } = await supabase
+          .from('kunjungan')
+          .insert({
+            wbp_id: state.wbp.id,
+            nama_pengunjung: state.namaPengunjung,
+            nik_pengunjung: state.nikPengunjung,
+            tgl_kunjungan: today,
+            status: 'menunggu',
+            daftar_barang: state.barang,
+            metode_daftar: 'online'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        state.kunjunganId = data.id;
+
+        // Simpan ke LocalStorage sebagai backup offline
+        const localData = {
+          id: data.id,
+          no_antrean: data.no_antrean,
+          nama_pengunjung: data.nama_pengunjung,
+          nama_wbp: state.wbp.nama_wbp,
+          tgl_kunjungan: today,
+          barang: state.barang,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('last_kunjungan', JSON.stringify(localData));
+
+        showStep3(data);
+      } catch (e) {
+        showToast('Gagal mendaftar: ' + (e.message || 'Coba lagi'), 'error');
+        btn.innerHTML = 'Daftar Sekarang'; btn.disabled = false;
+      }
+    }
+
+    function showStep3(data) {
+      const today = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+      const qrData = data.id;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&bgcolor=ffffff&color=1e3a8a&qzone=2`;
+
+      document.getElementById('qr-img').src = qrUrl;
+      document.getElementById('info-nama').textContent = data.nama_pengunjung;
+      document.getElementById('info-antrean').textContent = `#${String(data.no_antrean).padStart(3,'0')}`;
+      document.getElementById('info-wbp-nama').textContent = state.wbp.nama_wbp;
+      document.getElementById('info-tanggal').textContent = today;
+
+      if (state.barang.length > 0) {
+        document.getElementById('info-barang-result').classList.remove('hidden');
+        document.getElementById('list-barang-result').innerHTML =
+          state.barang.map(b => `<div>• ${b.nama} <span class="text-gray-400">(${b.jumlah})</span></div>`).join('');
+      }
+
+      goToStep(3);
+    }
+
+    // ============================================================
+    // UTILS
+    // ============================================================
+    function showError(el, msg) {
+      el.textContent = '⚠ ' + msg;
+      el.classList.remove('hidden');
+    }
+
+    function showToast(msg, type = 'info') {
+      const t = document.createElement('div');
+      t.className = `toast ${type === 'error' ? 'bg-red-600' : 'bg-gray-800'} text-white`;
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    function screenshotQR() {
+      showToast('Tekan tombol Power + Volume Bawah untuk screenshot', 'info');
+    }
+
+    function daftarLagi() {
+      state = { step: 1, wbp: null, keluarga: null, barang: [], kunjunganId: null };
+      document.getElementById('nik-pengunjung').value = '';
+      document.getElementById('nama-pengunjung').value = '';
+      document.getElementById('nama-wbp').value = '';
+      document.getElementById('info-wbp').classList.add('hidden');
+      document.getElementById('error-step1').classList.add('hidden');
+      renderBarang();
+      goToStep(1);
+    }
+
+    // ============================================================
+    // LOAD LAST KUNJUNGAN FROM LOCALSTORAGE (Offline fallback)
+    // ============================================================
+    window.addEventListener('load', () => {
+      const last = localStorage.getItem('last_kunjungan');
+      if (last) {
+        try {
+          const d = JSON.parse(last);
+          const elapsed = (Date.now() - d.timestamp) / 1000 / 60;
+          if (elapsed < 60 * 8) { // Masih dalam 8 jam
+            const banner = document.createElement('div');
+            banner.className = 'max-w-lg mx-auto px-4 mt-3';
+            banner.innerHTML = `
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs flex items-center justify-between">
+                <div>
+                  <p class="font-semibold text-blue-800">📌 Pendaftaran Sebelumnya</p>
+                  <p class="text-blue-600">${d.nama_pengunjung} – Antrean #${String(d.no_antrean).padStart(3,'0')}</p>
+                </div>
+                <button onclick="showLastQR()" class="text-blue-600 font-semibold">Lihat QR</button>
+              </div>`;
+            document.querySelector('.max-w-lg').after(banner);
+          }
+        } catch(e) {}
+      }
+    });
+
+    function showLastQR() {
+      const d = JSON.parse(localStorage.getItem('last_kunjungan'));
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(d.id)}&bgcolor=ffffff&color=1e3a8a&qzone=2`;
+      document.getElementById('qr-img').src = qrUrl;
+      document.getElementById('info-nama').textContent = d.nama_pengunjung;
+      document.getElementById('info-antrean').textContent = `#${String(d.no_antrean).padStart(3,'0')}`;
+      document.getElementById('info-wbp-nama').textContent = d.nama_wbp;
+      document.getElementById('info-tanggal').textContent = new Date(d.tgl_kunjungan).toLocaleDateString('id-ID');
+      state.barang = d.barang || [];
+      state.wbp = { nama_wbp: d.nama_wbp };
+      if (state.barang.length > 0) {
+        document.getElementById('info-barang-result').classList.remove('hidden');
+        document.getElementById('list-barang-result').innerHTML =
+          state.barang.map(b => `<div>• ${b.nama} <span class="text-gray-400">(${b.jumlah})</span></div>`).join('');
+      }
+      goToStep(3);
+    }
+  </script>
+=======
+<script>
+// ============================================================
+// CONFIG — ganti dengan milik Anda
+// ============================================================
+const SUPABASE_URL = 'https://cbnqdvkxukortmntmfzh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibnFkdmt4dWtvcnRtbnRtZnpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjM3MzksImV4cCI6MjA5MDY5OTczOX0.WSAQeI0wJlNbi9ECL1ECyduLdZnm-cVPMpH4peLLT_0';
+
+// Inisialisasi Supabase client
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Cek sesi admin
+(async()=>{
+  try{
+    const {data:{session}}=await db.auth.getSession();
+    if(session){
+      const b=document.createElement('div');
+      b.style.cssText='position:fixed;top:0;left:0;right:0;background:#1e40af;color:#fff;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+      b.innerHTML='<span>🔐 Anda sedang login sebagai admin</span><a href="admin.html" style="background:#fff;color:#1e40af;padding:4px 14px;border-radius:6px;font-size:12px;text-decoration:none;font-weight:700;flex-shrink:0;">Buka Dashboard →</a>';
+      document.body.prepend(b);
+      document.body.style.paddingTop='44px';
+    }
+  }catch(e){}
+})();
+
+// ============================================================
+// STATE
+// ============================================================
+const S = { kel: null, wbp: null, barang: [], nik: '', nama: '' };
+
+// ============================================================
+// DOM READY
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Sembunyikan splash screen setelah halaman siap
+  setTimeout(() => {
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      loader.classList.add('hide');
+      setTimeout(() => { loader.style.display = 'none'; }, 500);
+    }
+  }, 900);
+
+  document.getElementById('inp-nik').addEventListener('input', onNikInput);
+  document.getElementById('btn-next1').addEventListener('click', step1Next);
+  document.getElementById('btn-back1').addEventListener('click', () => goStep(1));
+  document.getElementById('btn-add-barang').addEventListener('click', addBarang);
+  document.getElementById('inp-barang').addEventListener('keypress', e => { if(e.key==='Enter') addBarang(); });
+  document.getElementById('btn-submit').addEventListener('click', doSubmit);
+  document.getElementById('btn-ss').addEventListener('click', () => showToast('Tekan Power + Vol Bawah untuk screenshot','info'));
+  document.getElementById('btn-reset').addEventListener('click', resetAll);
+  checkLastQR();
+});
+
+// ============================================================
+// NIK LOOKUP — ketik NIK 16 digit → auto cari data keluarga+WBP
+// ============================================================
+let nikT;
+function onNikInput(e) {
+  const v = e.target.value.replace(/\D/g,'');
+  e.target.value = v;
+  S.kel = null; S.wbp = null;
+  hide('card-wbp'); hide('card-nik-err'); hide('err-step1');
+  e.target.classList.remove('nik-valid','nik-invalid');
+
+  const hint = document.getElementById('nik-hint');
+  if (v.length > 0 && v.length < 16) {
+    hint.className='mt-1.5 text-xs text-amber-600';
+    hint.textContent = v.length + '/16 digit';
+    hint.classList.remove('hidden');
+  } else { hint.classList.add('hidden'); }
+
+  clearTimeout(nikT);
+  if (v.length === 16) {
+    hint.className='mt-1.5 text-xs text-blue-500 flex items-center gap-1';
+    hint.innerHTML='<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> Mengecek NIK...';
+    hint.classList.remove('hidden');
+    nikT = setTimeout(() => lookupNIK(v), 600);
+  }
+}
+
+async function lookupNIK(nik) {
+  const nikEl = document.getElementById('inp-nik');
+  const hint  = document.getElementById('nik-hint');
+  try {
+    const { data, error } = await db
+      .from('keluarga_wbp')
+      .select('*, wbp(*)')
+      .eq('nik_keluarga', nik)
+      .maybeSingle();
+
+    hint.classList.add('hidden');
+
+    if (error) throw error;
+
+    if (!data) {
+      nikEl.classList.add('nik-invalid');
+      document.getElementById('nik-err-msg').textContent =
+        'NIK ini belum terdaftar sebagai keluarga WBP. Minta petugas untuk pendaftaran onsite.';
+      show('card-nik-err');
+      return;
+    }
+
+    // ✅ Cek apakah WBP sudah bebas
+    if (data.wbp && data.wbp.status === 'bebas') {
+      nikEl.classList.add('nik-invalid');
+      document.getElementById('nik-err-msg').textContent =
+        `WBP ${data.wbp.nama_wbp} sudah tidak berada di lapas (bebas). Kunjungan tidak dapat dilakukan.`;
+      show('card-nik-err');
+      return;
+    }
+
+    // Simpan state
+    S.kel = data; S.wbp = data.wbp;
+
+    // Auto-isi nama
+    document.getElementById('inp-nama').value = data.nama_keluarga;
+    S.nama = data.nama_keluarga;
+
+    // Tampilkan card WBP
+    document.getElementById('cv-nama-kel').textContent = data.nama_keluarga;
+    document.getElementById('cv-hubungan').textContent = data.hubungan;
+    document.getElementById('cv-nama-wbp').textContent = data.wbp.nama_wbp;
+    document.getElementById('cv-kamar').textContent    = data.wbp.kamar;
+    nikEl.classList.add('nik-valid');
+    show('card-wbp');
+
+  } catch(err) {
+    hint.classList.add('hidden');
+    setErr('err-step1', 'Koneksi gagal. Periksa internet dan coba lagi.');
+    showToast('Gagal terhubung ke server. Cek koneksi internet.', 'error');
+  }
+}
+
+// ============================================================
+// STEP 1 NEXT
+// ============================================================
+function step1Next() {
+  hide('err-step1');
+  const nik  = document.getElementById('inp-nik').value.trim();
+  const nama = document.getElementById('inp-nama').value.trim();
+  if (nik.length !== 16) { setErr('err-step1','Masukkan 16 digit NIK terlebih dahulu.'); return; }
+  if (!S.kel) { setErr('err-step1','NIK belum terverifikasi. Tunggu sebentar atau periksa kembali NIK.'); return; }
+  if (!nama) { setErr('err-step1','Nama pengunjung wajib diisi.'); return; }
+  S.nik = nik; S.nama = nama;
+  goStep(2);
+}
+
+// ============================================================
+// BARANG
+// ============================================================
+function addBarang() {
+  const n = document.getElementById('inp-barang').value.trim();
+  const q = parseInt(document.getElementById('inp-qty').value)||1;
+  if (!n) return;
+  S.barang.push({nama:n, jumlah: parseInt(q)||1});
+  document.getElementById('inp-barang').value = '';
+  document.getElementById('inp-qty').value = 1;
+  renderBarang();
+}
+function renderBarang() {
+  const list = document.getElementById('list-barang');
+  list.innerHTML = '';
+  document.getElementById('empty-barang').classList.toggle('hidden', S.barang.length > 0);
+  S.barang.forEach((b,i) => {
+    const d = document.createElement('div');
+    d.className = 'barang-item flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5';
+    d.innerHTML = `<div><span class="text-sm font-medium text-gray-800">${esc(b.nama)}</span><span class="ml-2 text-xs text-gray-500">×${b.jumlah}</span></div>
+      <button class="text-red-400 hover:text-red-600 text-xl font-bold px-1 leading-none" data-i="${i}">×</button>`;
+    d.querySelector('button').addEventListener('click', () => { S.barang.splice(i,1); renderBarang(); });
+    list.appendChild(d);
+  });
+}
+
+// ============================================================
+// SUBMIT
+// ============================================================
+async function doSubmit() {
+  const btn = document.getElementById('btn-submit');
+  btn.innerHTML = '<span class="spinner"></span> Mendaftarkan...';
+  btn.disabled = true;
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const jamVal = document.getElementById('inp-jam')?.value || '';
+    const { data, error } = await db.from('kunjungan').insert({
+      wbp_id: S.wbp.id, nama_pengunjung: S.nama, nik_pengunjung: S.nik,
+      tgl_kunjungan: today, status:'menunggu',
+      daftar_barang: S.barang.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1})),
+      jam_kunjungan: jamVal||null,
+      metode_daftar:'online'
+    }).select().single();
+    if (error) throw error;
+
+    localStorage.setItem('last_kunjungan', JSON.stringify({
+      id:data.id, no_antrean:data.no_antrean, nama_pengunjung:data.nama_pengunjung,
+      nama_wbp:S.wbp.nama_wbp, kamar:S.wbp.kamar, hubungan:S.kel.hubungan,
+      tgl_kunjungan:today, barang:S.barang, ts:Date.now()
+    }));
+    showStep3(data);
+  } catch(e) {
+    const msg = e.message||'Terjadi kesalahan, coba lagi';
+    showToast('Gagal mendaftar: '+msg, 'error');
+    btn.innerHTML='Daftar Sekarang'; btn.disabled=false;
+  }
+}
+
+function showStep3(data) {
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(data.id)}&bgcolor=ffffff&color=1e3a8a&qzone=2`;
+  document.getElementById('qr-img').src = qr;
+  document.getElementById('r-nama').textContent    = data.nama_pengunjung;
+  document.getElementById('r-antrean').textContent = '#'+String(data.no_antrean).padStart(3,'0');
+  document.getElementById('r-wbp').textContent     = S.wbp.nama_wbp;
+  document.getElementById('r-kamar').textContent   = S.wbp.kamar;
+  document.getElementById('r-tgl').textContent     = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('r-hub').textContent     = S.kel.hubungan;
+  document.getElementById('r-jam').textContent     = data.jam_kunjungan || '(tidak ditentukan)';
+  if (S.barang.length > 0) {
+    show('r-barang-wrap');
+    document.getElementById('r-barang-list').innerHTML = S.barang.map(b=>`<div>• ${esc(b.nama)} (${b.jumlah})</div>`).join('');
+  }
+  goStep(3);
+}
+
+// ============================================================
+// OFFLINE LAST QR
+// ============================================================
+function checkLastQR() {
+  try {
+    const raw = localStorage.getItem('last_kunjungan'); if (!raw) return;
+    const d = JSON.parse(raw);
+    if ((Date.now()-d.ts)/60000 > 480) return;
+    const wrap = document.querySelector('.max-w-lg.mx-auto.px-4.pt-5');
+    const b = document.createElement('div');
+    b.className = 'max-w-lg mx-auto px-4 mt-2';
+    b.innerHTML = `<div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between gap-2">
+      <div><p class="text-xs font-bold text-blue-800">📌 QR Sebelumnya</p>
+        <p class="text-xs text-blue-600">${esc(d.nama_pengunjung)} – Antrean #${String(d.no_antrean).padStart(3,'0')}</p></div>
+      <button id="btn-last-qr" class="text-xs font-bold bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg flex-shrink-0">Lihat QR</button>
+    </div>`;
+    wrap.before(b);
+    document.getElementById('btn-last-qr').addEventListener('click', () => {
+      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(d.id)}&bgcolor=ffffff&color=1e3a8a&qzone=2`;
+      document.getElementById('qr-img').src = qr;
+      document.getElementById('r-nama').textContent    = d.nama_pengunjung;
+      document.getElementById('r-antrean').textContent = '#'+String(d.no_antrean).padStart(3,'0');
+      document.getElementById('r-wbp').textContent     = d.nama_wbp;
+      document.getElementById('r-kamar').textContent   = d.kamar||'-';
+      document.getElementById('r-tgl').textContent     = d.tgl_kunjungan;
+      document.getElementById('r-hub').textContent     = d.hubungan||'-';
+      S.wbp={nama_wbp:d.nama_wbp,kamar:d.kamar}; S.kel={hubungan:d.hubungan||''}; S.barang=d.barang||[];
+      if (S.barang.length>0) { show('r-barang-wrap'); document.getElementById('r-barang-list').innerHTML=S.barang.map(b=>`<div>• ${esc(b.nama)} (${b.jumlah})</div>`).join(''); }
+      goStep(3);
+    });
+  } catch(e){}
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goStep(n) {
+  [1,2,3].forEach(i => document.getElementById('step'+i).classList.toggle('hidden', i!==n));
+  for(let i=1;i<=3;i++){
+    const d=document.getElementById('sd'+i);
+    if(i<n){d.className='w-7 h-7 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold flex-shrink-0';d.textContent='✓';}
+    else if(i===n){d.className='w-7 h-7 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold flex-shrink-0';d.textContent=i;}
+    else{d.className='w-7 h-7 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-bold flex-shrink-0';d.textContent=i;}
+  }
+  document.getElementById('sl1').style.width = n>=2?'100%':'0%';
+  document.getElementById('sl2').style.width = n>=3?'100%':'0%';
+}
+
+function resetAll() {
+  Object.assign(S,{kel:null,wbp:null,barang:[],nik:'',nama:''});
+  document.getElementById('inp-nik').value=''; document.getElementById('inp-nama').value='';
+  document.getElementById('inp-nik').classList.remove('nik-valid','nik-invalid');
+  ['card-wbp','card-nik-err','err-step1','nik-hint','r-barang-wrap'].forEach(hide);
+  renderBarang();
+  document.getElementById('btn-submit').innerHTML='Daftar Sekarang'; document.getElementById('btn-submit').disabled=false;
+  goStep(1);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function show(id){ document.getElementById(id).classList.remove('hidden'); }
+function hide(id){ document.getElementById(id).classList.add('hidden'); }
+function setErr(id,msg){ document.getElementById(id).textContent='⚠ '+msg; show(id); }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg, type='info', duration=3500){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');
+  const icons={success:'✅',error:'❌',info:'ℹ️',warn:'⚠️'};
+  const colors={success:'bg-green-600',error:'bg-red-600',info:'bg-gray-800',warn:'bg-amber-500'};
+  t.className=`toast ${colors[type]||colors.info} text-white flex items-center gap-2`;
+  t.innerHTML=`<span>${icons[type]||''}</span><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), type==='error'?5000:duration);
+}
+</script>
+<!-- PANDUAN MODAL -->
+<div id="panduan-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;overflow-y:auto;padding:16px;">
+  <div style="background:#fff;border-radius:16px;max-width:480px;margin:0 auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="background:linear-gradient(135deg,#1e40af,#2563eb);border-radius:16px 16px 0 0;padding:20px;color:#fff;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <h2 style="font-size:18px;font-weight:800;margin:0;">📋 Panduan Penggunaan</h2>
+          <p style="font-size:12px;opacity:.8;margin:3px 0 0;">SiKunjung – Lapas Kelas III Saparua</p>
+        </div>
+        <button onclick="hidePanduan()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:22px;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;">×</button>
+      </div>
+    </div>
+    <div style="padding:20px;font-size:13px;color:#374151;">
+      
+      <!-- Langkah 1 -->
+      <div style="background:#eff6ff;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:32px;height:32px;background:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;">1</div>
+          <p style="font-weight:700;color:#1e40af;margin:0;font-size:14px;">Masukkan NIK KTP Anda</p>
+        </div>
+        <ul style="margin:0;padding-left:16px;line-height:1.9;color:#1e40af;">
+          <li>Isi 16 digit NIK sesuai KTP Anda di kolom <strong>NIK Pengunjung</strong></li>
+          <li>Sistem akan <strong>otomatis mencari</strong> data Anda dan WBP yang terhubung</li>
+          <li>NIK harus <strong>sudah terdaftar</strong> sebagai keluarga WBP</li>
+          <li>Belum terdaftar? Hubungi petugas lapas untuk pendaftaran onsite</li>
+        </ul>
+      </div>
+
+      <!-- Langkah 2 -->
+      <div style="background:#fef3c7;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:32px;height:32px;background:#d97706;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;">2</div>
+          <p style="font-weight:700;color:#92400e;margin:0;font-size:14px;">Isi Jam Kunjungan (Opsional)</p>
+        </div>
+        <ul style="margin:0;padding-left:16px;line-height:1.9;color:#92400e;">
+          <li>Pilih <strong>jam perkiraan kedatangan</strong> Anda ke lapas</li>
+          <li>Ini membantu petugas mempersiapkan jadwal kunjungan</li>
+          <li>Biarkan kosong jika belum tahu pasti</li>
+        </ul>
+      </div>
+
+      <!-- Langkah 3 -->
+      <div style="background:#f0fdf4;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:32px;height:32px;background:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;">3</div>
+          <p style="font-weight:700;color:#166534;margin:0;font-size:14px;">Daftarkan Barang Bawaan</p>
+        </div>
+        <ul style="margin:0;padding-left:16px;line-height:1.9;color:#166534;">
+          <li>Tambahkan nama dan jumlah setiap barang yang Anda bawa</li>
+          <li>Ini <strong>membantu petugas</strong> memeriksa barang lebih cepat</li>
+          <li>Boleh dikosongkan jika tidak membawa barang</li>
+          <li>Barang akan diperiksa ulang oleh petugas di pintu masuk</li>
+        </ul>
+      </div>
+
+      <!-- Langkah 4 -->
+      <div style="background:#fce7f3;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:32px;height:32px;background:#9d174d;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex-shrink:0;">4</div>
+          <p style="font-weight:700;color:#9d174d;margin:0;font-size:14px;">Simpan QR Code Anda</p>
+        </div>
+        <ul style="margin:0;padding-left:16px;line-height:1.9;color:#9d174d;">
+          <li>Setelah daftar, <strong>QR Code</strong> akan muncul dengan nomor antrean</li>
+          <li><strong>Screenshot</strong> QR Code untuk ditunjukkan ke petugas</li>
+          <li>QR tersimpan otomatis di HP ini selama 8 jam</li>
+          <li>Tunjukkan QR ke petugas di pintu masuk lapas</li>
+        </ul>
+      </div>
+
+      <!-- Info tambahan -->
+      <div style="background:#f8fafc;border-radius:10px;padding:12px;border:1px solid #e2e8f0;">
+        <p style="font-weight:700;margin:0 0 8px;color:#0f172a;">ℹ️ Informasi Penting</p>
+        <ul style="margin:0;padding-left:16px;line-height:1.9;color:#374151;font-size:12px;">
+          <li>Pendaftaran online <strong>hanya berlaku untuk hari ini</strong></li>
+          <li>Jika WBP sudah bebas/keluar, pendaftaran tidak bisa dilakukan</li>
+          <li>Jam kunjungan sesuai aturan Lapas yang berlaku</li>
+          <li>Jika ada masalah, hubungi petugas di loket onsite</li>
+          <li>Data Anda aman dan hanya diakses oleh petugas berwenang</li>
+        </ul>
+      </div>
+
+    </div>
+    <div style="padding:0 20px 20px;">
+      <button onclick="hidePanduan()" class="w-full btn-primary text-white py-3 rounded-xl font-semibold text-sm" style="background:linear-gradient(135deg,#1e40af,#2563eb);border:none;cursor:pointer;width:100%;padding:12px;border-radius:10px;font-weight:700;font-size:14px;">
+        ✅ Mengerti, Mulai Daftar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPanduan(){ document.getElementById('panduan-modal').style.display='block'; document.body.style.overflow='hidden'; }
+function hidePanduan(){ document.getElementById('panduan-modal').style.display='none'; document.body.style.overflow=''; }
+// Show panduan on first visit
+if(!localStorage.getItem('panduan_shown')){ setTimeout(()=>{ showPanduan(); localStorage.setItem('panduan_shown','1'); },800); }
+</script>
+>>>>>>> d61d304822894d065d01632c9d588ea242f33e16
+</body>
+</html>
