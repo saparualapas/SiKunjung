@@ -799,10 +799,13 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 let allKunj=[], allWbp=[], allKel=[], allRiwayat=[];
 let curFilter='all', curPage='dashboard';
 let qrScanner=null, ktpScanner=null, scanCD=false;
+let ktpStream=null, tesseractWorker=null, tesseractReady=false;
+let allWbpList=[];
 let osWbp=null, osBrg=[];
 let wbpTab='aktif';
 const PAGE_SIZE=15;
 let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1;
+let loginHandled = false; // must be module-scope for auth flow
 
 // ============================================================
 // BOOT — FIX SESSION PERSISTENCE
@@ -828,6 +831,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   },2200);
   document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+  // Restore login lockout state on page load
+  if(loginLockedUntil > Date.now()) checkLoginLock();
 
   // Set default tanggal backup
   const today=new Date().toISOString().split('T')[0];
@@ -842,27 +847,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   const cariTgl=document.getElementById('cari-tgl');
   if(cariTgl) cariTgl.value=today;
 
-  // ✅ FIX: onAuthStateChange fires on every page load if session exists
-  // ✅ FIX: Save current page to sessionStorage for persistence on refresh
+  // ✅ FIX: page persistence on refresh
   const savedPage = sessionStorage.getItem('sikunjung-page') || 'dashboard';
-  let loginHandled = false;
 
   db.auth.onAuthStateChange((event, session)=>{
     if(event==='PASSWORD_RECOVERY'){
-      // ✅ FIX: User clicked password reset link — show reset form, don't go to dashboard
       loginHandled=true;
       showResetPasswordForm();
       return;
     }
-    if((event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED') && session && session.user){
-      if(!loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
+    if(event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED'){
+      if(session && session.user && !loginHandled){
+        loginHandled=true;
+        hideAG();
+        onLogin(session.user, savedPage);
+      }
     } else if(event==='SIGNED_OUT'){
-      loginHandled=false; showAG();
+      loginHandled=false;
+      showAG();
     }
   });
 
+  // Also try getSession immediately (handles hard refresh where onAuthStateChange may be slow)
   db.auth.getSession().then(({data:{session}})=>{
-    if(session && session.user && !loginHandled){ loginHandled=true; hideAG(); onLogin(session.user, savedPage); }
+    if(session && session.user && !loginHandled){
+      loginHandled=true;
+      hideAG();
+      onLogin(session.user, savedPage);
+    }
   });
 });
 
@@ -874,10 +886,15 @@ function hideAG(){document.getElementById('auth-guard').style.display='none';}
 function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 
 function showResetPasswordForm(){
-  // Hide auth guard, show inline reset form
+  // Show auth-guard overlay with reset form visible
   document.getElementById('auth-guard').style.display='flex';
-  ['frm-login','frm-forgot'].forEach(id=>document.getElementById(id).style.display='none');
-  document.getElementById('frm-reset').style.display='flex';
+  // ✅ FIX: use correct IDs matching the HTML
+  var loginF = document.getElementById('login-form');
+  var forgotF = document.getElementById('forgot-form');
+  if(loginF)  loginF.style.display  = 'none';
+  if(forgotF) forgotF.style.display = 'none';
+  var resetF = document.getElementById('frm-reset');
+  if(resetF)  resetF.style.display  = 'flex';
 }
 
 async function doResetPassword(){
@@ -897,8 +914,8 @@ async function doResetPassword(){
     msg.textContent='✅ Password berhasil diubah! Silakan login.';
     msg.style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
     setTimeout(()=>{
-      document.getElementById('frm-reset').style.display='none';
-      document.getElementById('frm-login').style.display='flex';
+      var rf=document.getElementById('frm-reset'); if(rf) rf.style.display='none';
+      var lf=document.getElementById('login-form'); if(lf) lf.style.display='flex'; // ✅ FIX: correct ID
       showToast('Password diubah! Silakan login kembali.','success');
     },2000);
   }
@@ -1656,8 +1673,7 @@ async function onQR(text){
 // KTP OCR ENGINE — Tesseract.js Multi-Pass + Canvas Preprocessing
 // Baca teks KTP secara akurat bahkan blur/gelap
 // ============================================================
-let ktpStream=null, tesseractWorker=null, tesseractReady=false, ktpScanner=null;
-let allWbpList=[];
+// (vars declared in STATE section above)
 
 // Load Tesseract satu kali
 async function initTesseract(){
