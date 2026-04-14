@@ -26,9 +26,56 @@
     .pulse { animation:pulse .4s ease; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.01)} }
     .barang-item { animation: fadeIn 0.3s ease; }
+    /* ── SPLASH SCREEN index ── */
+    #splash-idx{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:#0a0f1e;}
+    #splash-idx .si-bg{position:absolute;inset:0;background:radial-gradient(ellipse 100% 70% at 50% 50%,#1e3a8a 0%,#0f172a 55%,#020617 100%);}
+    #splash-idx .si-wave{position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(to top,rgba(37,99,235,.12),transparent);}
+    #splash-idx .si-content{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;}
+    #splash-idx .si-icon{width:80px;height:80px;background:linear-gradient(135deg,#1d4ed8,#60a5fa);border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;animation:siPop .7s cubic-bezier(.34,1.56,.64,1) forwards;transform:scale(0);box-shadow:0 0 50px rgba(96,165,250,.4);}
+    @keyframes siPop{to{transform:scale(1)}}
+    #splash-idx .si-glow{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.3),transparent 70%);animation:siGlow 2s ease-in-out infinite;}
+    @keyframes siGlow{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.3);opacity:.2}}
+    #splash-idx .si-title{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;animation:siFadeUp .6s ease .3s both;}
+    #splash-idx .si-sub{font-size:13px;color:#93c5fd;font-weight:500;text-align:center;line-height:1.5;animation:siFadeUp .6s ease .5s both;}
+    #splash-idx .si-badge{background:rgba(37,99,235,.3);border:1px solid rgba(96,165,250,.4);color:#bfdbfe;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;animation:siFadeUp .6s ease .65s both;}
+    @keyframes siFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    #splash-idx .si-dots{display:flex;gap:8px;animation:siFadeUp .6s ease .8s both;}
+    #splash-idx .si-dot{width:7px;height:7px;border-radius:50%;}
+    #splash-idx .si-dot:nth-child(1){background:#3b82f6;animation:siDot 1.2s .1s infinite;}
+    #splash-idx .si-dot:nth-child(2){background:#60a5fa;animation:siDot 1.2s .3s infinite;}
+    #splash-idx .si-dot:nth-child(3){background:#93c5fd;animation:siDot 1.2s .5s infinite;}
+    @keyframes siDot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1.3);opacity:1}}
+    #splash-idx .si-bar{width:180px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;animation:siFadeUp .5s ease .9s both;}
+    #splash-idx .si-bar-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#93c5fd);animation:siBar 1.6s ease .2s forwards;width:0;}
+    @keyframes siBar{0%{width:0}70%{width:80%}100%{width:100%}}
+    #splash-idx.si-hide{animation:siHide .45s ease forwards;}
+    @keyframes siHide{to{opacity:0;transform:scale(1.04);pointer-events:none}}
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100">
+
+<!-- ══ SPLASH SCREEN PENGUNJUNG ══ -->
+<div id="splash-idx">
+  <div class="si-bg"></div>
+  <div class="si-wave"></div>
+  <div class="si-content">
+    <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+      <div class="si-glow"></div>
+      <div class="si-icon">🏛️</div>
+    </div>
+    <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div class="si-title">SiKunjung</div>
+      <div class="si-sub">Layanan Kunjungan &amp; Penitipan Barang<br>Lapas Kelas III Saparua</div>
+      <div class="si-badge">PORTAL PENGUNJUNG</div>
+    </div>
+    <div class="si-dots">
+      <div class="si-dot"></div>
+      <div class="si-dot"></div>
+      <div class="si-dot"></div>
+    </div>
+    <div class="si-bar"><div class="si-bar-fill"></div></div>
+  </div>
+</div>
 
   <!-- HEADER -->
   <div class="bg-blue-800 text-white px-4 py-4 shadow-lg">
@@ -224,6 +271,12 @@ const S = { kel: null, wbp: null, barang: [], nik: '', nama: '' };
 // DOM READY
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Sembunyikan splash screen setelah 2 detik
+  setTimeout(() => {
+    const sp = document.getElementById('splash-idx');
+    if (sp) { sp.classList.add('si-hide'); setTimeout(() => sp.style.display='none', 450); }
+  }, 2000);
+
   document.getElementById('inp-nik').addEventListener('input', onNikInput);
   document.getElementById('btn-next1').addEventListener('click', step1Next);
   document.getElementById('btn-back1').addEventListener('click', () => goStep(1));

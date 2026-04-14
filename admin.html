@@ -118,9 +118,76 @@
     .tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
     .tab-btn{padding:6px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s;}
     .tab-btn.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+    /* ── SPLASH SCREEN ── */
+    #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;overflow:hidden;background:#0a0f1e;}
+    #splash .sp-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,#1e3a8a 0%,#0f172a 60%,#020617 100%);}
+    #splash .sp-particles{position:absolute;inset:0;overflow:hidden;}
+    #splash .sp-p{position:absolute;border-radius:50%;animation:spFloat linear infinite;}
+    @keyframes spFloat{0%{transform:translateY(110vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:.6}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+    #splash .sp-content{position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;}
+    #splash .sp-logo-wrap{position:relative;}
+    #splash .sp-logo{width:88px;height:88px;background:linear-gradient(135deg,#1d4ed8,#3b82f6,#60a5fa);border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:44px;animation:spLogoPop .8s cubic-bezier(.34,1.56,.64,1) forwards;box-shadow:0 0 60px rgba(59,130,246,.5),0 0 120px rgba(59,130,246,.2);transform:scale(0);}
+    @keyframes spLogoPop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.15) rotate(5deg)}100%{transform:scale(1) rotate(0deg)}}
+    #splash .sp-ring{position:absolute;inset:-12px;border-radius:40px;border:2px solid rgba(99,179,237,.3);animation:spRing 2s ease-out .5s forwards;opacity:0;}
+    #splash .sp-ring2{position:absolute;inset:-24px;border-radius:52px;border:1px solid rgba(99,179,237,.15);animation:spRing 2s ease-out .8s forwards;opacity:0;}
+    @keyframes spRing{0%{opacity:0;transform:scale(.8)}50%{opacity:1}100%{opacity:0;transform:scale(1.3)}}
+    #splash .sp-title{font-size:32px;font-weight:800;color:#fff;letter-spacing:-1px;animation:spFadeUp .6s ease .4s both;}
+    #splash .sp-sub{font-size:14px;font-weight:500;color:#93c5fd;animation:spFadeUp .6s ease .6s both;text-align:center;}
+    #splash .sp-badge{background:rgba(59,130,246,.25);border:1px solid rgba(59,130,246,.4);color:#93c5fd;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.05em;animation:spFadeUp .6s ease .7s both;}
+    @keyframes spFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    #splash .sp-dots{display:flex;gap:10px;animation:spFadeUp .6s ease .9s both;}
+    #splash .sp-dot{width:8px;height:8px;border-radius:50%;background:#3b82f6;}
+    #splash .sp-dot:nth-child(1){animation:spDot 1.2s .1s infinite;}
+    #splash .sp-dot:nth-child(2){animation:spDot 1.2s .3s infinite;background:#60a5fa;}
+    #splash .sp-dot:nth-child(3){animation:spDot 1.2s .5s infinite;background:#93c5fd;}
+    @keyframes spDot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1.3);opacity:1}}
+    #splash .sp-progress{width:200px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;animation:spFadeUp .6s ease 1s both;}
+    #splash .sp-progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa,#93c5fd);border-radius:2px;animation:spProgress 1.8s ease .3s forwards;width:0%;}
+    @keyframes spProgress{0%{width:0%}60%{width:75%}100%{width:100%}}
+    #splash.sp-hide{animation:spHide .5s ease forwards;}
+    @keyframes spHide{to{opacity:0;transform:scale(1.05);pointer-events:none}}
+    /* ── OCR Camera ── */
+    #ktp-live-wrap{position:relative;border-radius:12px;overflow:hidden;background:#000;}
+    #ktp-live-video{width:100%;height:200px;object-fit:cover;display:block;}
+    #ktp-overlay-frame{position:absolute;inset:0;pointer-events:none;}
+    .ktp-corner-frame{position:absolute;top:14px;left:14px;right:14px;bottom:14px;border:2px solid rgba(99,202,255,.8);border-radius:8px;}
+    .ktp-corner-frame::before,.ktp-corner-frame::after{content:'';position:absolute;width:22px;height:22px;border-color:#63caff;border-style:solid;}
+    .ktp-corner-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+    .ktp-corner-frame::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+    .ktp-scan-line{position:absolute;left:14px;right:14px;height:2px;background:linear-gradient(90deg,transparent,#63caff,transparent);animation:ktpScan 2s ease-in-out infinite;}
+    @keyframes ktpScan{0%,100%{top:18px;opacity:0}10%{opacity:1}50%{top:calc(100% - 20px)}90%{opacity:1}}
+    .ocr-bar-wrap{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin-top:4px;}
+    .ocr-bar-fill{height:100%;background:linear-gradient(90deg,#2563eb,#60a5fa);border-radius:2px;transition:width .3s ease;width:0%;}
+    .ktp-res-ok{background:#f0fdf4;border:1.5px solid #86efac;color:#166534;}
+    .ktp-res-warn{background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;}
+    .ktp-res-err{background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;}
   </style>
 </head>
 <body>
+
+<!-- ══ SPLASH SCREEN ══ -->
+<div id="splash">
+  <div class="sp-bg"></div>
+  <div class="sp-particles" id="sp-particles"></div>
+  <div class="sp-content">
+    <div class="sp-logo-wrap">
+      <div class="sp-logo">🏛️</div>
+      <div class="sp-ring"></div>
+      <div class="sp-ring2"></div>
+    </div>
+    <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div class="sp-title">SiKunjung</div>
+      <div class="sp-sub">Sistem Layanan Kunjungan<br>Lapas Kelas III Saparua</div>
+      <div class="sp-badge">ADMIN PANEL</div>
+    </div>
+    <div class="sp-dots">
+      <div class="sp-dot"></div>
+      <div class="sp-dot"></div>
+      <div class="sp-dot"></div>
+    </div>
+    <div class="sp-progress"><div class="sp-progress-fill"></div></div>
+  </div>
+</div>
 
 <!-- Hidden div for html5-qrcode scanFile -->
 <div id="ktp-reader-hidden" style="display:none;"></div>
@@ -376,44 +443,82 @@
       <div style="max-width:540px;">
         <div class="card" style="padding:20px;">
           <h3 style="font-weight:700;color:#0f172a;margin:0 0 4px;">➕ Pendaftaran Onsite</h3>
-          <p style="color:#64748b;font-size:13px;margin:0 0 18px;">Scan KTP pengunjung atau isi manual</p>
+          <p style="color:#64748b;font-size:13px;margin:0 0 16px;">Scan KTP → NIK & Nama terisi otomatis</p>
 
-          <!-- Scan KTP -->
-          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-bottom:16px;">
-            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 10px;">📷 Scan KTP (Otomatis isi NIK)</p>
-            <!-- Mode 1: Live Camera Scan -->
-            <div id="ktp-live-mode" style="margin-bottom:10px;">
-              <div id="ktp-scan-area" style="display:none;margin-bottom:8px;">
-                <div style="border:3px solid #2563eb;border-radius:10px;overflow:hidden;background:#000;min-height:180px;display:flex;align-items:center;justify-content:center;">
-                  <div id="ktp-reader"></div>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:8px;">
-                  <button type="button" class="btn bsuc bsm" onclick="captureKtpFrame()" id="btn-ktp-capture">📸 Ambil Gambar</button>
-                  <button type="button" class="btn bdan bsm" onclick="stopKtpScan()">■ Stop</button>
+          <!-- ─── KAMERA OCR KTP ─── -->
+          <div style="background:#0f172a;border-radius:12px;padding:14px;margin-bottom:16px;">
+            <p style="font-size:12px;font-weight:700;color:#93c5fd;margin:0 0 10px;">📷 Scan KTP — Baca Teks Otomatis</p>
+
+            <!-- Video live -->
+            <div id="ktp-live-wrap" style="display:none;margin-bottom:10px;">
+              <div style="position:relative;border-radius:10px;overflow:hidden;background:#000;">
+                <video id="ktp-live-video" autoplay playsinline muted style="width:100%;height:200px;object-fit:cover;display:block;"></video>
+                <div style="position:absolute;inset:0;pointer-events:none;">
+                  <div class="ktp-corner-frame">
+                    <div class="ktp-scan-line"></div>
+                  </div>
+                  <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#93c5fd;font-size:10px;padding:3px 10px;border-radius:20px;white-space:nowrap;">Posisikan KTP landscape memenuhi bingkai</div>
                 </div>
               </div>
-              <button id="btn-scan-ktp" type="button" class="btn bp bsm" onclick="startKtpScan()">📹 Scan Langsung</button>
             </div>
-            <!-- Mode 2: Upload photo -->
-            <div style="border-top:1px solid #bfdbfe;padding-top:10px;">
-              <p style="font-size:11px;font-weight:600;color:#1d4ed8;margin:0 0 6px;">— atau foto KTP dari galeri —</p>
-              <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#fff;border:1px solid #bfdbfe;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:#1d4ed8;">
-                🖼️ Pilih Foto KTP
-                <input type="file" id="ktp-file" accept="image/*" capture="environment" onchange="processKtpFile(this)" style="display:none;"/>
-              </label>
-              <canvas id="ktp-canvas" style="display:none;max-width:100%;border-radius:8px;margin-top:8px;"></canvas>
+
+            <!-- Preview foto -->
+            <div id="ktp-preview-wrap" style="display:none;margin-bottom:10px;">
+              <img id="ktp-preview-img" style="width:100%;max-height:180px;object-fit:contain;border-radius:8px;border:2px solid #1d4ed8;" alt="KTP"/>
             </div>
-            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:12px;font-weight:600;"></div>
-            <p style="font-size:10px;color:#64748b;margin:8px 0 0;">💡 Arahkan ke barcode PDF417 (garis-garis) di belakang KTP, atau foto barcode dari jarak dekat.</p>
+
+            <!-- OCR Progress -->
+            <div id="ktp-ocr-progress" style="display:none;margin-bottom:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#93c5fd;margin-bottom:4px;">
+                <span id="ktp-ocr-label">Memproses...</span>
+                <span id="ktp-ocr-pct">0%</span>
+              </div>
+              <div class="ocr-bar-wrap"><div class="ocr-bar-fill" id="ktp-ocr-bar"></div></div>
+            </div>
+
+            <!-- Buttons -->
+            <div id="ktp-btn-awal" style="display:flex;">
+              <button id="btn-buka-kamera-ktp" type="button" onclick="bukaKameraKtp()"
+                style="flex:1;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">
+                📷 Buka Kamera &amp; Scan KTP
+              </button>
+            </div>
+            <div id="ktp-btn-live" style="display:none;gap:8px;">
+              <button type="button" onclick="ambilFotoKtp()"
+                style="flex:1;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">
+                📸 Ambil Foto
+              </button>
+              <button type="button" onclick="tutupKameraKtp()"
+                style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;">
+                ✕
+              </button>
+            </div>
+            <div id="ktp-btn-hasil" style="display:none;margin-top:8px;">
+              <button type="button" onclick="scanUlangKtp()"
+                style="width:100%;background:#f59e0b;color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;">
+                🔄 Scan Ulang
+              </button>
+            </div>
+
+            <!-- Hasil OCR -->
+            <div id="ktp-scan-result" style="display:none;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:600;line-height:1.6;"></div>
           </div>
 
+          <!-- ─── FORM DATA ─── -->
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div><label class="lbl-f">NIK Pengunjung *</label><input id="os-nik" type="text" maxlength="16" inputmode="numeric" placeholder="16 digit NIK" class="inp"/></div>
-            <div><label class="lbl-f">Nama Pengunjung *</label><input id="os-nama" type="text" placeholder="Nama lengkap" class="inp"/></div>
+            <div>
+              <label class="lbl-f">NIK Pengunjung *</label>
+              <input id="os-nik" type="text" maxlength="16" inputmode="numeric" placeholder="Terisi otomatis dari scan KTP" class="inp"/>
+            </div>
+            <div>
+              <label class="lbl-f">Nama Pengunjung *</label>
+              <input id="os-nama" type="text" placeholder="Terisi otomatis dari scan KTP" class="inp"/>
+            </div>
             <div>
               <label class="lbl-f">WBP yang Dikunjungi *</label>
-              <input id="os-wbp-inp" type="text" placeholder="Ketik nama atau NIK WBP..." class="inp" oninput="searchWbpOs(this.value)"/>
-              <div id="os-dd" style="display:none;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-top:4px;"></div>
+              <select id="os-wbp-select" class="inp" style="cursor:pointer;" onchange="pilihWbpDdOs(this)">
+                <option value="">-- Pilih WBP (memuat...) --</option>
+              </select>
               <div id="os-wbp-sel" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px;font-size:12px;margin-top:6px;">
                 <span style="font-weight:700;color:#1d4ed8;">✓ WBP: </span><span id="os-wbp-info" style="color:#1e40af;"></span>
               </div>
@@ -703,6 +808,24 @@ let kunjPage=1, wbpPage=1, kelPage=1, rwPage=1, brgPage=1;
 // BOOT — FIX SESSION PERSISTENCE
 // ============================================================
 document.addEventListener('DOMContentLoaded',()=>{
+  // ── Splash screen partikel
+  const spPart=document.getElementById('sp-particles');
+  if(spPart){
+    for(let i=0;i<18;i++){
+      const p=document.createElement('div');
+      const sz=Math.random()*6+3;
+      p.className='sp-p';
+      p.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;`+
+        `animation-duration:${Math.random()*8+5}s;animation-delay:${Math.random()*4}s;`+
+        `background:${['#3b82f6','#60a5fa','#93c5fd','#1d4ed8'][Math.floor(Math.random()*4)]};opacity:.6;`;
+      spPart.appendChild(p);
+    }
+  }
+  // Sembunyikan splash setelah 2.2 detik
+  setTimeout(()=>{
+    const sp=document.getElementById('splash');
+    if(sp){sp.classList.add('sp-hide');setTimeout(()=>{sp.style.display='none';},500);}
+  },2200);
   document.getElementById('tday-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('l-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
 
@@ -797,7 +920,8 @@ async function doForgotPass(){
   if(!email){msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';msg.textContent='⚠ Masukkan email Anda.';return;}
   const btn=document.getElementById('btn-fp');
   btn.innerHTML='<span class="spin"></span> Mengirim...';btn.disabled=true;
-  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.href+'?reset=1'});
+  const baseUrl=window.location.href.replace(/admin\.html.*$/,'');
+  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:baseUrl+'reset.html'});
   btn.innerHTML='Kirim Link Reset';btn.disabled=false;
   if(error){
     msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
@@ -927,7 +1051,7 @@ async function changePassword(){
 // ============================================================
 function navTo(p,el){
   curPage=p;
-  sessionStorage.setItem('sikunjung-page', p); // ✅ persist page
+  sessionStorage.setItem('sikunjung-page', p);
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const navEl = el || document.querySelector('[data-p="'+p+'"]');
   if(navEl) navEl.classList.add('active');
@@ -936,6 +1060,7 @@ function navTo(p,el){
   const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
   document.getElementById('pg-title').textContent=titles[p]||p;
   closeSB();
+  if(p==='dashboard')loadDash();           // ← FIX UTAMA: sebelumnya tidak ada!
   if(p==='kunjungan'){kunjPage=1;loadKunj();}
   if(p==='barang')loadBarang();
   if(p==='wbp'){wbpPage=1;renderWbp();}
@@ -979,31 +1104,45 @@ function setupRealtime(){
 // DASHBOARD
 // ============================================================
 async function loadDash(){
-  const today=new Date().toISOString().split('T')[0]; // ✅ only today
-  const[{data:k},{data:w}]=await Promise.all([
-    db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean'),
-    db.from('wbp').select('id,status').eq('status','aktif')
-  ]);
-  const kd=k||[],wd=w||[];
-  document.getElementById('s-tot').textContent=kd.length;
-  document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
-  document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
-  document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
-  document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
-  document.getElementById('s-wbp').textContent=wd.length;
-  const nb=document.getElementById('nb-m');
-  const tunggu=kd.filter(x=>x.status==='menunggu').length;
-  if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';
-  const tbody=document.getElementById('dash-tb');
-  const mc=document.getElementById('dash-mc');
-  if(!kd.length){
-    tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
-    mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
-    return;
+  const today=new Date().toISOString().split('T')[0];
+  try{
+    // Query kunjungan hari ini
+    const resK=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('tgl_kunjungan',today).order('no_antrean');
+    if(resK.error) throw new Error(resK.error.message);
+    const kd=resK.data||[];
+
+    // Query WBP — filter status di JS agar aman kalau kolom belum ada
+    const resW=await db.from('wbp').select('id,status');
+    const wd=(resW.data||[]).filter(x=>(x.status||'aktif')==='aktif');
+
+    document.getElementById('s-tot').textContent=kd.length;
+    document.getElementById('s-men').textContent=kd.filter(x=>x.status==='menunggu').length;
+    document.getElementById('s-had').textContent=kd.filter(x=>x.status==='hadir').length;
+    document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
+    document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
+    document.getElementById('s-wbp').textContent=wd.length;
+
+    const nb=document.getElementById('nb-m');
+    const tunggu=kd.filter(x=>x.status==='menunggu').length;
+    if(nb){if(tunggu>0){nb.textContent=tunggu;nb.style.display='';}else nb.style.display='none';}
+
+    const tbody=document.getElementById('dash-tb');
+    const mc=document.getElementById('dash-mc');
+    if(!kd.length){
+      if(tbody)tbody.innerHTML='<tr><td colspan="6" class="empty">Belum ada kunjungan hari ini</td></tr>';
+      if(mc)mc.innerHTML='<p style="text-align:center;color:#94a3b8;padding:24px;font-size:13px;">Belum ada kunjungan hari ini</p>';
+      return;
+    }
+    const slice=kd.slice(0,15);
+    if(tbody)tbody.innerHTML=slice.map(v=>kunjRow(v,false)).join('');
+    if(mc)mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
+  }catch(e){
+    console.error('loadDash error:',e);
+    showToast('Gagal memuat dashboard: '+e.message,'error');
+    ['s-tot','s-men','s-had','s-sel','s-brg','s-wbp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
+    const tbody=document.getElementById('dash-tb');
+    if(tbody)tbody.innerHTML='<tr><td colspan="6" class="empty">⚠ Gagal memuat data. Cek koneksi.</td></tr>';
   }
-  const slice=kd.slice(0,15);
-  tbody.innerHTML=slice.map(v=>kunjRow(v,false)).join('');
-  mc.innerHTML=slice.map(v=>kunjMobCard(v,false)).join('');
 }
 
 function kunjRow(v,showAksi=true){
@@ -1210,8 +1349,10 @@ async function loadWbp(){
   // Ensure 'status' column exists – gracefully handle if not
   const{data}=await db.from('wbp').select('*').order('nama_wbp');
   allWbp=(data||[]).map(w=>({...w,status:w.status||'aktif'}));
+  allWbpList=allWbp; // share with onsite dropdown
   renderWbp();
-  populateWbpSel();
+  populateWbpSel();     // untuk modal keluarga WBP
+  populateWbpSelect();  // untuk onsite dropdown
 }
 
 function setWbpTab(tab){
@@ -1365,6 +1506,15 @@ function populateWbpSel(){
   if(cur)sel.value=cur;
 }
 
+// Dropdown WBP di halaman Onsite
+function populateWbpSelect(){
+  const sel=document.getElementById('os-wbp-select');
+  if(!sel)return;
+  const aktif=(allWbpList||allWbp||[]).filter(w=>(w.status||'aktif')==='aktif').sort((a,b)=>a.nama_wbp.localeCompare(b.nama_wbp));
+  sel.innerHTML='<option value="">-- Pilih WBP yang Dikunjungi --</option>'+
+    aktif.map(w=>`<option value="${w.id}" data-nm="${esc(w.nama_wbp)}" data-km="${esc(w.kamar)}">${esc(w.nama_wbp)} – ${esc(w.kamar)}</option>`).join('');
+}
+
 function openMKel(id=null,wbpId=null){
   document.getElementById('kel-err').style.display='none';
   document.getElementById('kel-eid').value=id||'';
@@ -1503,196 +1653,362 @@ async function onQR(text){
 }
 
 // ============================================================
-// KTP SCANNER
+// KTP OCR ENGINE — Tesseract.js Multi-Pass + Canvas Preprocessing
+// Baca teks KTP secara akurat bahkan blur/gelap
 // ============================================================
-async function startKtpScan(){
-  // ✅ FIX: Reset div before reinitializing to avoid "already started" error
-  const readerDiv=document.getElementById('ktp-reader');
-  if(readerDiv) readerDiv.innerHTML='';
-  if(ktpScanner){try{await ktpScanner.stop();}catch(e){}ktpScanner=null;}
-  ktpScanner=new Html5Qrcode('ktp-reader');
-  document.getElementById('ktp-scan-area').style.display='block';
-  document.getElementById('btn-scan-ktp').style.display='none';
-  document.getElementById('ktp-scan-result').style.display='none';
+let ktpStream=null, tesseractWorker=null, tesseractReady=false, ktpScanner=null;
+let allWbpList=[];
+
+// Load Tesseract satu kali
+async function initTesseract(){
+  if(tesseractReady)return true;
   try{
-    await ktpScanner.start(
-      {facingMode:'environment'},
-      {fps:10,qrbox:{width:260,height:160}},
-      onKtpScan,
-      ()=>{}
-    );
-    showToast('Kamera aktif – arahkan ke barcode belakang KTP','info');
+    // Tambah Tesseract.js CDN secara dinamis
+    if(!window.Tesseract){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload=res; s.onerror=rej;
+        document.head.appendChild(s);
+      });
+    }
+    tesseractWorker=await Tesseract.createWorker('ind+eng',1,{
+      logger:m=>{
+        if(m.status==='recognizing text'){
+          const pct=Math.round((m.progress||0)*100);
+          setOcrProgress(pct, 'Membaca teks... '+pct+'%');
+        }
+      }
+    });
+    await tesseractWorker.setParameters({
+      tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,\'-/',
+      preserve_interword_spaces:'1',
+      tessedit_pageseg_mode:'6',
+    });
+    tesseractReady=true; return true;
+  }catch(e){ console.error('Tesseract init fail:',e); return false; }
+}
+
+function setOcrProgress(pct, label){
+  const bar=document.getElementById('ktp-ocr-bar');
+  const lbl=document.getElementById('ktp-ocr-label');
+  const pctEl=document.getElementById('ktp-ocr-pct');
+  if(bar)bar.style.width=pct+'%';
+  if(lbl&&label)lbl.textContent=label;
+  if(pctEl)pctEl.textContent=pct+'%';
+}
+
+// Preprocessing canvas: grayscale + auto-level + gamma + unsharp + adaptive binarize
+async function preprocessKtpCanvas(src){
+  return new Promise(resolve=>{
+    const SCALE=Math.min(3,3000/src.width);
+    const c=document.createElement('canvas');
+    c.width=Math.round(src.width*SCALE);
+    c.height=Math.round(src.height*SCALE);
+    const ctx=c.getContext('2d');
+    ctx.drawImage(src,0,0,c.width,c.height);
+    const img=ctx.getImageData(0,0,c.width,c.height);
+    const d=img.data, n=c.width*c.height;
+
+    // Histogram untuk auto-level
+    const hist=new Uint32Array(256);
+    for(let i=0;i<d.length;i+=4){
+      hist[Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2])]++;
+    }
+    let lo=0,hi=255,cum=0;
+    for(let v=0;v<256;v++){cum+=hist[v];if(cum>=n*.04){lo=v;break;}}
+    cum=0;
+    for(let v=255;v>=0;v--){cum+=hist[v];if(cum>=n*.04){hi=v;break;}}
+    if(hi<=lo){lo=0;hi=255;}
+
+    // Grayscale + auto-level + gamma 0.55
+    for(let i=0;i<d.length;i+=4){
+      let g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+      g=Math.max(0,Math.min(255,(g-lo)/(hi-lo)*255));
+      g=Math.pow(g/255,.55)*255;
+      d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,g));
+    }
+    ctx.putImageData(img,0,0);
+
+    // Unsharp mask
+    const bc=document.createElement('canvas');bc.width=c.width;bc.height=c.height;
+    const bx=bc.getContext('2d');bx.filter='blur(1px)';bx.drawImage(c,0,0);
+    const sharp=ctx.getImageData(0,0,c.width,c.height);
+    const blurd=bx.getImageData(0,0,c.width,c.height).data;
+    const sd=sharp.data;
+    for(let i=0;i<sd.length;i+=4)for(let k=0;k<3;k++)sd[i+k]=Math.max(0,Math.min(255,sd[i+k]+2*(sd[i+k]-blurd[i+k])));
+    ctx.putImageData(sharp,0,0);
+
+    // Adaptive binarization 24x24 blocks
+    const fin=ctx.getImageData(0,0,c.width,c.height);
+    const fd=fin.data;
+    const B=24;
+    for(let by=0;by<c.height;by+=B)for(let bx2=0;bx2<c.width;bx2+=B){
+      let s=0,cnt=0;
+      for(let y=by;y<Math.min(by+B,c.height);y++)for(let x=bx2;x<Math.min(bx2+B,c.width);x++){s+=fd[(y*c.width+x)*4];cnt++;}
+      const thr=(s/cnt)*.86;
+      for(let y=by;y<Math.min(by+B,c.height);y++)for(let x=bx2;x<Math.min(bx2+B,c.width);x++){
+        const idx=(y*c.width+x)*4;
+        const v=fd[idx]<thr?0:255;
+        fd[idx]=fd[idx+1]=fd[idx+2]=v;
+      }
+    }
+    ctx.putImageData(fin,0,0);
+    resolve(c);
+  });
+}
+
+// Buka kamera
+async function bukaKameraKtp(){
+  try{
+    ktpStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false
+    });
+    const vid=document.getElementById('ktp-live-video');
+    vid.srcObject=ktpStream;
+    document.getElementById('ktp-live-wrap').style.display='';
+    document.getElementById('ktp-btn-awal').style.display='none';
+    document.getElementById('ktp-btn-live').style.display='flex';
+    document.getElementById('ktp-btn-hasil').style.display='none';
+    document.getElementById('ktp-scan-result').style.display='none';
+    document.getElementById('ktp-preview-wrap').style.display='none';
   }catch(e){
-    document.getElementById('ktp-scan-area').style.display='none';
-    document.getElementById('btn-scan-ktp').style.display='';
-    showToast('Kamera tidak bisa dibuka. Pastikan izin kamera diaktifkan di browser.','error');
-    console.error('KTP scan error:',e);
+    showKtpResult('⚠ Kamera tidak bisa dibuka: '+e.message+'. Pastikan izin kamera diaktifkan.','err');
   }
 }
 
-async function stopKtpScan(){
-  if(ktpScanner){await ktpScanner.stop().catch(()=>{});ktpScanner=null;}
-  document.getElementById('ktp-scan-area').style.display='none';
-  document.getElementById('btn-scan-ktp').style.display='';
+function tutupKameraKtp(){
+  if(ktpStream){ktpStream.getTracks().forEach(t=>t.stop());ktpStream=null;}
+  document.getElementById('ktp-live-wrap').style.display='none';
+  document.getElementById('ktp-btn-awal').style.display='flex';
+  document.getElementById('ktp-btn-live').style.display='none';
 }
 
-function validateNIK(nik){
-  if(!/^\d{16}$/.test(nik)) return false;
-  // Validasi kode wilayah (2 digit pertama 11-96)
+async function ambilFotoKtp(){
+  const vid=document.getElementById('ktp-live-video');
+  const canvas=document.createElement('canvas');
+  canvas.width=vid.videoWidth||1280;
+  canvas.height=vid.videoHeight||720;
+  canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
+
+  const prev=document.getElementById('ktp-preview-img');
+  prev.src=canvas.toDataURL('image/jpeg',.95);
+  document.getElementById('ktp-preview-wrap').style.display='';
+  tutupKameraKtp();
+  document.getElementById('ktp-btn-hasil').style.display='';
+  await runOcr(canvas);
+}
+
+function scanUlangKtp(){
+  document.getElementById('ktp-preview-wrap').style.display='none';
+  document.getElementById('ktp-btn-hasil').style.display='none';
+  document.getElementById('ktp-scan-result').style.display='none';
+  bukaKameraKtp();
+}
+
+async function runOcr(srcCanvas){
+  document.getElementById('ktp-ocr-progress').style.display='';
+  document.getElementById('ktp-scan-result').style.display='none';
+  setOcrProgress(5,'Inisialisasi OCR...');
+
+  try{
+    const ok=await initTesseract();
+    if(!ok)throw new Error('Gagal memuat OCR engine');
+
+    setOcrProgress(15,'Preprocessing gambar...');
+
+    // Jalankan 2 preprocessing paralel — processed & raw
+    const [proc, raw]=await Promise.all([
+      preprocessKtpCanvas(srcCanvas),
+      (async()=>{
+        const c=document.createElement('canvas');
+        const sc=Math.min(2,2000/srcCanvas.width);
+        c.width=Math.round(srcCanvas.width*sc);
+        c.height=Math.round(srcCanvas.height*sc);
+        c.getContext('2d').drawImage(srcCanvas,0,0,c.width,c.height);
+        return c;
+      })()
+    ]);
+
+    setOcrProgress(30,'Membaca teks KTP...');
+    const{data:{text:t1}}=await tesseractWorker.recognize(proc);
+    console.log('[OCR processed]',t1);
+    let nik=extractNikOcr(t1), nama=extractNamaOcr(t1);
+
+    // Fallback ke raw
+    if(!nik||!validNik(nik)){
+      setOcrProgress(65,'Percobaan kedua...');
+      const{data:{text:t2}}=await tesseractWorker.recognize(raw);
+      console.log('[OCR raw]',t2);
+      const nik2=extractNikOcr(t2), nama2=extractNamaOcr(t2);
+      if(nik2&&validNik(nik2))nik=nik2;
+      if(!nama&&nama2)nama=nama2;
+    }
+
+    setOcrProgress(100,'Selesai');
+    setTimeout(()=>{ document.getElementById('ktp-ocr-progress').style.display='none'; },800);
+    await prosesHasilOcr(nik,nama);
+  }catch(e){
+    document.getElementById('ktp-ocr-progress').style.display='none';
+    showKtpResult('⚠ Error OCR: '+e.message,'err');
+  }
+}
+
+function extractNikOcr(text){
+  // Pattern 1: eksplisit "NIK : 16digit"
+  const p1=text.match(/NIK\s*[:\.\-]?\s*(\d[\d\s]{13,17}\d)/i);
+  if(p1){const c=p1[1].replace(/\s/g,'');if(c.length===16&&validNik(c))return c;}
+  // Pattern 2: 16 digit berturut
+  const p2=text.match(/\b(\d{16})\b/);
+  if(p2&&validNik(p2[1]))return p2[1];
+  // Pattern 3: digit dengan spasi (OCR misread)
+  const allD=(text.match(/\d/g)||[]).join('');
+  for(let i=0;i<=allD.length-16;i++){
+    const chunk=allD.slice(i,i+16);
+    if(validNik(chunk))return chunk;
+  }
+  return null;
+}
+
+function extractNamaOcr(text){
+  const STOP=['TEMPAT','LAHIR','JENIS','KELAMIN','GOLONGAN','DARAH','ALAMAT','RT','RW',
+    'KELURAHAN','KECAMATAN','KOTA','KABUPATEN','AGAMA','STATUS','PEKERJAAN',
+    'BERLAKU','NIK','PROVINSI','KARTU','TANDA','PENDUDUK','INDONESIA'];
+  const m=text.match(/(?:Nama|Name)\s*[:\-]?\s*([A-Z][A-Za-z .'\-]{2,40})/i);
+  if(m){
+    let n=m[1].trim();
+    for(const s of STOP){const i=n.toUpperCase().indexOf(s);if(i>2)n=n.substring(0,i).trim();}
+    if(n.length>=3)return n;
+  }
+  // Cari baris ALL CAPS setelah NIK
+  let nikSeen=false;
+  for(const line of text.split('\n').map(l=>l.trim()).filter(Boolean)){
+    if(/NIK/i.test(line)){nikSeen=true;continue;}
+    if(nikSeen&&/^[A-Z\s.']{3,40}$/.test(line)){
+      const bad=STOP.some(s=>line.includes(s));
+      if(!bad)return line.trim();
+    }
+  }
+  return null;
+}
+
+function validNik(nik){
+  if(!/^\d{16}$/.test(nik))return false;
   const prov=parseInt(nik.substring(0,2));
-  if(prov<11||prov>96) return false;
-  // Validasi tanggal lahir (digit 7-12)
-  let tgl=parseInt(nik.substring(6,8));
-  if(tgl>40) tgl-=40; // perempuan +40
-  if(tgl<1||tgl>31) return false;
+  if(prov<11||prov>96)return false;
+  let tgl=parseInt(nik.substring(6,8));if(tgl>40)tgl-=40;
+  if(tgl<1||tgl>31)return false;
   const bln=parseInt(nik.substring(8,10));
-  if(bln<1||bln>12) return false;
-  return true;
+  return bln>=1&&bln<=12;
 }
 
-async function parseKtpText(text){
-  let nik='', nama='';
-  const t=(text||'').trim();
-  if(/^\d{16}$/.test(t)){ nik=t; }
-  else if(t.includes('|')){
-    const parts=t.split('|');
-    nik=(parts[0]||'').replace(/\D/g,'');
-    nama=parts[1]||'';
-  } else {
-    const m=t.match(/\b\d{16}\b/); if(m) nik=m[0];
-    const nm=t.match(/[A-Z][A-Z ]{3,}/); if(nm) nama=nm[0].trim();
-  }
-
-  if(!validateNIK(nik)){
-    showKtpResult('⚠ Kode terbaca tapi bukan NIK valid ('+nik+'). Coba foto lebih dekat ke barcode.','err');
+async function prosesHasilOcr(nik,nama){
+  if(!nik||!validNik(nik)){
+    showKtpResult(
+      '⚠ NIK tidak terbaca.<br><strong>Tips:</strong><br>'+
+      '• Pegang KTP <strong>landscape</strong> memenuhi bingkai<br>'+
+      '• Pastikan angka NIK terlihat jelas<br>'+
+      '• Cahaya cukup, hindari bayangan<br>'+
+      '• Bersihkan lensa kamera','err'
+    );
     return;
   }
 
+  // Isi field
   document.getElementById('os-nik').value=nik;
-  if(nama) document.getElementById('os-nama').value=nama;
+  if(nama){
+    const tc=nama.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+    document.getElementById('os-nama').value=tc;
+  }
 
-  // Auto-lookup WBP dari keluarga terdaftar
-  const{data:kelData}=await db.from('keluarga_wbp')
+  // Cek di keluarga_wbp → auto-pilih WBP di dropdown
+  const{data:kel}=await db.from('keluarga_wbp')
     .select('*,wbp(id,nama_wbp,kamar,status)')
     .eq('nik_keluarga',nik).maybeSingle();
 
-  if(kelData&&kelData.wbp){
-    if(kelData.wbp.status==='bebas'){
-      showKtpResult(`⚠ WBP ${esc(kelData.wbp.nama_wbp)} sudah BEBAS — kunjungan tidak dapat dilakukan.`,'err');
+  if(kel&&kel.wbp){
+    if(kel.wbp.status==='bebas'){
+      showKtpResult(`✅ NIK: <strong>${nik}</strong><br>⚠ WBP <strong>${esc(kel.wbp.nama_wbp)}</strong> sudah BEBAS.`,'warn');
       return;
     }
-    if(!nama&&kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
-    selWbpOs(kelData.wbp.id,kelData.wbp.nama_wbp,kelData.wbp.kamar);
-    showKtpResult(`✅ NIK: ${nik} | ${kelData.nama_keluarga} → WBP: ${esc(kelData.wbp.nama_wbp)} (${esc(kelData.wbp.kamar)})`,'ok');
-    showToast('Semua data terisi otomatis dari KTP ✅','success');
-  } else {
-    showKtpResult(`✅ NIK terbaca: ${nik}${nama?' | '+esc(nama):''}. Pilih WBP secara manual.`,'warn');
-    showToast('NIK terbaca. Pilih WBP yang dikunjungi.','info');
+    if(!nama&&kel.nama_keluarga)document.getElementById('os-nama').value=kel.nama_keluarga;
+    // Auto-pilih di dropdown
+    selWbpOs(kel.wbp.id,kel.wbp.nama_wbp,kel.wbp.kamar);
+    showKtpResult(
+      `✅ NIK: <strong>${nik}</strong>${nama?' | '+esc(nama):''}<br>`+
+      `WBP: <strong>${esc(kel.wbp.nama_wbp)}</strong> (${esc(kel.wbp.kamar)}) — Data terisi otomatis!`,'ok'
+    );
+    showToast('✅ KTP terbaca & data terisi otomatis!','success');
+  }else{
+    showKtpResult(
+      `✅ NIK: <strong>${nik}</strong>${nama?'<br>Nama: <strong>'+esc(nama)+'</strong>':''}<br>`+
+      `NIK belum terdaftar sebagai keluarga — pilih WBP dari dropdown.`,'warn'
+    );
+    showToast('NIK terbaca. Pilih WBP dari dropdown.','info');
   }
 }
 
 function showKtpResult(html,type){
   const el=document.getElementById('ktp-scan-result');
   el.innerHTML=html;
-  const css={ok:'background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;',err:'background:#fef2f2;border:1px solid #fecaca;color:#dc2626;',warn:'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'};
-  el.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;'+(css[type]||css.err);
+  el.className='ktp-res-'+type;
+  el.style.cssText='display:block;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:600;line-height:1.6;';
+  if(type==='ok')el.style.cssText+='background:#f0fdf4;border:1.5px solid #86efac;color:#166534;';
+  else if(type==='warn')el.style.cssText+='background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;';
+  else el.style.cssText+='background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;';
 }
 
-async function onKtpScan(text){
-  await stopKtpScan();
-  let nik='', nama='';
-  const t=text.trim();
-  // Parse berbagai format KTP Indonesia
-  if(/^\d{16}$/.test(t)){
-    nik=t;
-  } else if(t.includes('|')){
-    const parts=t.split('|');
-    nik=(parts[0]||'').replace(/\D/g,'');
-    nama=parts[1]||'';
-  } else {
-    const m=t.match(/\b\d{16}\b/);
-    if(m) nik=m[0];
-    const nm=t.match(/[A-Z][A-Z ]{3,}/);
-    if(nm) nama=nm[0].trim();
-  }
+// ── stub agar tidak error dari fungsi lama
+async function startKtpScan(){bukaKameraKtp();}
+async function stopKtpScan(){tutupKameraKtp();}
+async function captureKtpFrame(){ambilFotoKtp();}
+async function processKtpFile(){}
 
-  if(nik.length===16){
-    document.getElementById('os-nik').value=nik;
-    if(nama) document.getElementById('os-nama').value=nama;
-
-    // ✅ Auto-lookup WBP dari tabel keluarga_wbp
-    const{data:kelData}=await db.from('keluarga_wbp')
-      .select('*,wbp(id,nama_wbp,kamar,status)')
-      .eq('nik_keluarga',nik)
-      .maybeSingle();
-
-    if(kelData && kelData.wbp){
-      if(kelData.wbp.status==='bebas'){
-        document.getElementById('ktp-scan-result').innerHTML=`⚠ NIK terdaftar, tapi WBP <strong>${esc(kelData.wbp.nama_wbp)}</strong> sudah BEBAS. Kunjungan tidak bisa dilakukan.`;
-        document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-        return;
-      }
-      if(!nama && kelData.nama_keluarga) document.getElementById('os-nama').value=kelData.nama_keluarga;
-      selWbpOs(kelData.wbp.id,kelData.wbp.nama_wbp,kelData.wbp.kamar);
-      document.getElementById('ktp-scan-result').innerHTML=`✅ NIK: ${nik} | ${kelData.nama_keluarga} → WBP: <strong>${esc(kelData.wbp.nama_wbp)}</strong> (${esc(kelData.wbp.kamar)})`;
-      document.getElementById('ktp-scan-result').style.cssText='display:block;background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-      showToast('Data terisi otomatis dari KTP ✅','success');
-    } else {
-      document.getElementById('ktp-scan-result').innerHTML=`✅ NIK terbaca: <strong>${nik}</strong>${nama?' | '+esc(nama):''}. Pilih WBP secara manual.`;
-      document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-      showToast('NIK terbaca. Pilih WBP yang dikunjungi.','warn');
-    }
-  } else {
-    document.getElementById('ktp-scan-result').innerHTML='⚠ Tidak dapat membaca NIK. Dekatkan kamera ke barcode hitam di belakang KTP.';
-    document.getElementById('ktp-scan-result').style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:9px;font-size:12px;font-weight:600;';
-    showToast('Gagal baca NIK — coba lagi','warn');
-  }
+// ============================================================
+// ONSITE — WBP Dropdown + submit
+// ============================================================
+function populateWbpSelect(){
+  const sel=document.getElementById('os-wbp-select');
+  if(!sel)return;
+  const aktif=allWbpList.filter(w=>(w.status||'aktif')==='aktif').sort((a,b)=>a.nama_wbp.localeCompare(b.nama_wbp));
+  sel.innerHTML='<option value="">-- Pilih WBP yang Dikunjungi --</option>'+
+    aktif.map(w=>`<option value="${w.id}" data-nm="${esc(w.nama_wbp)}" data-km="${esc(w.kamar)}">${esc(w.nama_wbp)} – ${esc(w.kamar)}</option>`).join('');
 }
 
-// ============================================================
-// ONSITE
-// ============================================================
-let wbpOsTimer;
-function searchWbpOs(q){
-  clearTimeout(wbpOsTimer);
-  const dd=document.getElementById('os-dd');
-  if(q.length<2){dd.style.display='none';return;}
-  wbpOsTimer=setTimeout(async()=>{
-    const{data}=await db.from('wbp').select('*').eq('status','aktif').or(`nama_wbp.ilike.%${q}%,nik_wbp.ilike.%${q}%`).limit(6);
-    if(!data||!data.length){dd.style.display='none';return;}
-    dd.innerHTML=data.map(w=>`<div style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''" onclick="selWbpOs('${w.id}','${esc(w.nama_wbp)}','${esc(w.kamar)}')">
-      <p style="font-weight:600;color:#0f172a;margin:0;">${esc(w.nama_wbp)}</p>
-      <p style="font-size:11px;color:#64748b;margin:0;">${esc(w.kamar)}</p>
-    </div>`).join('');
-    dd.style.display='';
-  },300);
+function pilihWbpDdOs(sel){
+  const opt=sel.options[sel.selectedIndex];
+  if(!opt||!opt.value){osWbp=null;document.getElementById('os-wbp-sel').style.display='none';return;}
+  osWbp={id:opt.value,nama_wbp:opt.getAttribute('data-nm'),kamar:opt.getAttribute('data-km')};
+  document.getElementById('os-wbp-info').textContent=`${osWbp.nama_wbp} – ${osWbp.kamar}`;
+  document.getElementById('os-wbp-sel').style.display='';
 }
 
 function selWbpOs(id,nm,km){
   osWbp={id,nama_wbp:nm,kamar:km};
-  document.getElementById('os-wbp-inp').value=nm;
+  const sel=document.getElementById('os-wbp-select');
+  if(sel){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===id){sel.selectedIndex=i;break;}}}
   document.getElementById('os-wbp-info').textContent=`${nm} – ${km}`;
   document.getElementById('os-wbp-sel').style.display='';
-  document.getElementById('os-dd').style.display='none';
 }
+
+// Stub agar tidak error dari fungsi lama
+function searchWbpOs(){}
 
 function addOsBrg(){
   const nEl=document.getElementById('os-brg');
   const qEl=document.getElementById('os-qty');
   const n=(nEl?.value||'').trim();
   const q=parseInt(qEl?.value)||1;
-  if(!n){ showToast('Isi nama barang terlebih dahulu','warn'); return; }
-  osBrg.push({nama:n, jumlah:q});
-  if(nEl) nEl.value='';
-  if(qEl) qEl.value=1;
-  if(nEl) nEl.focus();
+  if(!n){showToast('Isi nama barang terlebih dahulu','warn');return;}
+  osBrg.push({nama:n,jumlah:q});
+  if(nEl)nEl.value='';if(qEl)qEl.value=1;if(nEl)nEl.focus();
   renderOsBrg();
 }
 
 function renderOsBrg(){
   const list=document.getElementById('os-brg-list');
-  if(!list) return;
-  if(!osBrg.length){ list.innerHTML=''; return; }
+  if(!list)return;
+  if(!osBrg.length){list.innerHTML='';return;}
   list.innerHTML=osBrg.map((b,i)=>`
     <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;">
       <span style="font-size:12px;">📦 <strong>${esc(b.nama)}</strong> <span style="color:#1d4ed8;font-weight:700;">×${b.jumlah}</span></span>
@@ -1706,28 +2022,30 @@ async function submitOnsite(){
   document.getElementById('os-err').style.display='none';
   if(nik.length!==16){showFErr2('os-err','NIK harus 16 digit.');return;}
   if(!nm){showFErr2('os-err','Nama wajib diisi.');return;}
-  if(!osWbp){showFErr2('os-err','Pilih WBP yang dikunjungi.');return;}
+  if(!osWbp){showFErr2('os-err','Pilih WBP dari dropdown.');return;}
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
-  // ✅ FIX: barang as proper JSONB array with integer jumlah
-  const barangFinal = osBrg.map(b=>({nama:String(b.nama), jumlah:parseInt(b.jumlah)||1}));
-  const jamVal = document.getElementById('os-jam')?.value || new Date().toTimeString().slice(0,5);
+  const barangFinal=osBrg.map(b=>({nama:String(b.nama),jumlah:parseInt(b.jumlah)||1}));
+  const jamVal=document.getElementById('os-jam')?.value||new Date().toTimeString().slice(0,5);
   const{error}=await db.from('kunjungan').insert({
-    wbp_id:osWbp.id, nama_pengunjung:nm, nik_pengunjung:nik,
-    tgl_kunjungan:today, status:'hadir',
-    daftar_barang: barangFinal,
-    jam_kunjungan: jamVal,
-    metode_daftar:'onsite'
+    wbp_id:osWbp.id,nama_pengunjung:nm,nik_pengunjung:nik,
+    tgl_kunjungan:today,status:'hadir',
+    daftar_barang:barangFinal,jam_kunjungan:jamVal,metode_daftar:'onsite'
   });
   btn.innerHTML='Daftarkan & Tandai Hadir';btn.disabled=false;
   if(error){showFErr2('os-err','Gagal: '+error.message);showToast('Pendaftaran gagal','error');return;}
   showToast('✅ '+nm+' berhasil terdaftar & hadir!','success');
+  // Reset form
   document.getElementById('os-nik').value='';
   document.getElementById('os-nama').value='';
-  document.getElementById('os-wbp-inp').value='';
+  const osSel=document.getElementById('os-wbp-select');if(osSel)osSel.selectedIndex=0;
   document.getElementById('os-wbp-sel').style.display='none';
   document.getElementById('ktp-scan-result').style.display='none';
+  document.getElementById('ktp-preview-wrap').style.display='none';
+  document.getElementById('ktp-btn-awal').style.display='flex';
+  document.getElementById('ktp-btn-live').style.display='none';
+  document.getElementById('ktp-btn-hasil').style.display='none';
   osWbp=null;osBrg=[];renderOsBrg();
   loadDash();
   navTo('kunjungan',document.querySelector('[data-p=kunjungan]'));
