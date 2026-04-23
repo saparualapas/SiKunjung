@@ -97,10 +97,9 @@
     <p class="text-gray-500 text-xs mb-5">Bagian 1–6 sesuai Formulir Kunjungan WBP</p>
     <div class="space-y-4">
 
-      <div>
-        <label class="lbl">1. NIK Pengunjung <span class="text-red-500">*</span></label>
-        <input id="inp-nik" type="text" maxlength="16" inputmode="numeric" placeholder="16 digit NIK sesuai KTP" class="inp input-focus"/>
-        <div id="nik-hint" class="mt-1.5 text-xs hidden"></div>
+      <input id="inp-nik" type="hidden" maxlength="16"/>
+      <div id="nik-hint" class="mt-1 text-xs hidden"></div>
+
       </div>
 
       <div>
@@ -139,7 +138,7 @@
       </div>
 
       <div>
-        <label class="lbl">6. Bukti Identitas <span class="text-red-500">*</span></label>
+        <label class="lbl">Bukti Identitas <span class="text-red-500">*</span></label>
         <p class="text-xs text-gray-400 mb-2">Pilih jenis identitas terlebih dahulu, lalu isi nomornya</p>
         <div class="grid grid-cols-2 gap-2 mb-3">
           <label id="lbl-ktp" onclick="selectBuktiId('KTP')" class="flex items-center gap-2 p-3 rounded-xl cursor-pointer" style="border:2px solid #3b82f6;background:#eff6ff;">
@@ -160,8 +159,17 @@
           </label>
         </div>
         <div id="wrap-no-id">
-          <input id="inp-no-id" type="text" inputmode="numeric" maxlength="16" placeholder="Nomor KTP (16 digit NIK)" class="inp input-focus"/>
+          <input id="inp-no-id" type="text" inputmode="numeric" maxlength="16" placeholder="Nomor KTP (16 digit NIK)" class="inp input-focus" oninput="onNoIdInput(this.value)"/>
           <p id="no-id-hint" class="text-xs text-gray-400 mt-1">Nomor KTP = 16 digit NIK Anda</p>
+        <div id="no-id-nik-hint" class="mt-1 text-xs hidden"></div>
+        </div>
+        <!-- WBP manual selector — muncul jika bukan KTP -->
+        <div id="wrap-wbp-manual" class="hidden mt-3">
+          <p class="text-xs font-semibold text-gray-600 mb-1">Pilih WBP yang Dikunjungi <span class="text-red-500">*</span></p>
+          <p class="text-xs text-gray-400 mb-2">Karena identitas bukan KTP, pilih WBP secara manual</p>
+          <input id="inp-cari-wbp" type="text" placeholder="Ketik nama WBP..." class="inp input-focus" oninput="cariWbpManual(this.value)"/>
+          <div id="dd-wbp-manual" class="hidden mt-1 border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white"></div>
+          <div id="wbp-manual-terpilih" class="hidden mt-2 bg-green-50 border border-green-200 rounded-xl p-3 text-xs font-semibold text-green-700"></div>
         </div>
       </div>
 
@@ -253,7 +261,7 @@
     <p class="text-gray-500 text-xs mb-4">Periksa kembali sebelum mengirim pendaftaran</p>
     <div class="bg-gray-50 rounded-xl p-4 text-xs space-y-2 mb-4">
       <div class="flex justify-between gap-2"><span class="text-gray-500 flex-shrink-0">Nama</span><span id="ck-nama" class="font-semibold text-gray-800 text-right"></span></div>
-      <div class="flex justify-between gap-2"><span class="text-gray-500 flex-shrink-0">NIK</span><span id="ck-nik" class="font-semibold text-gray-800 font-mono"></span></div>
+
       <div class="flex justify-between gap-2"><span class="text-gray-500 flex-shrink-0">Alamat</span><span id="ck-alamat" class="font-semibold text-gray-800 text-right"></span></div>
       <div class="flex justify-between gap-2"><span class="text-gray-500 flex-shrink-0">Umur</span><span id="ck-umur" class="font-semibold text-gray-800"></span></div>
       <div class="flex justify-between gap-2"><span class="text-gray-500 flex-shrink-0">Pekerjaan</span><span id="ck-pekerjaan" class="font-semibold text-gray-800"></span></div>
@@ -343,7 +351,7 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ============================================================
 const S = {
   kel:null, wbp:null, nik:'', nama:'', alamat:'',
-  umur:null, pekerjaan:'', jenis_id:'KTP', no_id:'',
+  umur:null, pekerjaan:'', bukti_identitas:'KTP', no_id:'',
   peserta:[], barang:[]
 };
 let pollingInterval=null;
@@ -355,7 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Splash
   setTimeout(()=>{ const s=document.getElementById('splash-idx'); s.classList.add('si-hide'); setTimeout(()=>s.remove(),500); },1800);
 
-  document.getElementById('inp-nik').addEventListener('input', onNikInput);
+  // inp-nik is hidden — no direct input listener needed
+  // NIK lookup triggered from no_id when bukti_identitas=KTP
   document.getElementById('btn-next1').addEventListener('click', step1Next);
   document.getElementById('btn-back1').addEventListener('click', ()=>goStep(1));
   document.getElementById('btn-next2').addEventListener('click', step2Next);
@@ -434,22 +443,37 @@ async function lookupNIK(nik){
 // ============================================================
 function step1Next(){
   hide('err-step1');
-  const nik=document.getElementById('inp-nik').value.trim();
+  const nik=(document.getElementById('inp-nik')?.value||'').trim();
   const nama=document.getElementById('inp-nama').value.trim();
   const alamat=document.getElementById('inp-alamat').value.trim();
   const umur=parseInt(document.getElementById('inp-umur').value)||0;
-  if(nik.length!==16){setErr('err-step1','Masukkan 16 digit NIK terlebih dahulu.');return;}
-  if(!S.kel){setErr('err-step1','NIK belum terverifikasi. Tunggu atau coba lagi.');return;}
+  const bukti=document.querySelector('input[name="jenis-id"]:checked')?.value||'KTP';
+  const noId=(document.getElementById('inp-no-id')?.value||'').trim();
+
+  // Validasi no identitas sesuai jenis
+  if(!noId){setErr('err-step1','Nomor identitas wajib diisi.');return;}
+  if(bukti==='KTP'){
+    if(noId.length!==16){setErr('err-step1','Nomor KTP harus tepat 16 digit NIK.');return;}
+    if(!S.kel){setErr('err-step1','NIK belum terverifikasi sebagai keluarga WBP. Pastikan NIK sudah terdaftar.');return;}
+  } else if(bukti==='KK'){
+    if(noId.length!==16){setErr('err-step1','Nomor Kartu Keluarga harus 16 digit.');return;}
+    if(!S.wbp){setErr('err-step1','Pilih WBP yang dikunjungi di bawah.');return;}
+  } else {
+    if(!S.wbp){setErr('err-step1','Pilih WBP yang dikunjungi di bawah.');return;}
+  }
   if(!nama){setErr('err-step1','Nama pengunjung wajib diisi.');return;}
   if(!alamat){setErr('err-step1','Alamat wajib diisi.');return;}
   if(!umur||umur<1||umur>120){setErr('err-step1','Umur tidak valid (1–120 tahun).');return;}
-  S.nik=nik; S.nama=nama; S.alamat=alamat; S.umur=umur;
+
+  // Simpan ke state
+  S.nik=bukti==='KTP'?noId:nik;
+  S.nama=nama; S.alamat=alamat; S.umur=umur;
   S.pekerjaan=document.getElementById('inp-pekerjaan').value.trim();
-  S.jenis_id=document.querySelector('input[name="jenis-id"]:checked').value;
-  S.no_id=document.getElementById('inp-no-id').value.trim();
+  S.bukti_identitas=bukti;
+  S.no_id=noId;
   // Auto-tambahkan pengunjung utama sebagai peserta pertama (kalau belum ada)
   if(S.peserta.length===0){
-    S.peserta=[{nama:S.nama, status_keluarga:S.kel.hubungan, umur:S.umur}];
+    S.peserta=[{nama:S.nama, status_keluarga:S.kel?.hubungan||'Pengunjung', umur:S.umur}];
     renderPeserta();
   }
   goStep(2);
@@ -532,11 +556,11 @@ function renderBarang(){
 // ============================================================
 function fillConfirmation(){
   document.getElementById('ck-nama').textContent=S.nama;
-  document.getElementById('ck-nik').textContent=S.nik;
+  // NIK ditampilkan di bagian Identitas
   document.getElementById('ck-alamat').textContent=S.alamat;
   document.getElementById('ck-umur').textContent=S.umur+' tahun';
   document.getElementById('ck-pekerjaan').textContent=S.pekerjaan||'—';
-  document.getElementById('ck-id').textContent=S.jenis_id+(S.no_id?' – No. '+S.no_id:'');
+  document.getElementById('ck-id').textContent=S.bukti_identitas+(S.no_id?' – No. '+S.no_id:'');
   document.getElementById('ck-wbp').textContent=(S.wbp?.nama_wbp||'—')+' – Kamar '+(S.wbp?.kamar||'—');
   document.getElementById('ck-peserta-list').innerHTML=S.peserta.map((p,i)=>
     `<div class="text-gray-700 text-xs">${i+1}. ${esc(p.nama)} <span class="text-gray-400">(${esc(p.status_keluarga||'—')}${p.umur?', '+p.umur+' th':''})</span></div>`
@@ -555,18 +579,21 @@ async function doSubmit(){
   btn.innerHTML='<span class="spinner"></span> Mengirim...'; btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
   try{
+    // nik_pengunjung: pakai no_id jika KTP, fallback ke S.nik (dari lookup WBP)
+    const nikValue = S.bukti_identitas==='KTP' ? (S.no_id||S.nik||'') : (S.nik||S.no_id||'');
     const{data,error}=await db.from('kunjungan').insert({
       wbp_id:S.wbp.id,
       nama_pengunjung:S.nama,
-      nik_pengunjung:S.nik,
+      nik_pengunjung:nikValue,
       alamat_pengunjung:S.alamat,
       umur_pengunjung:S.umur,
       pekerjaan_pengunjung:S.pekerjaan||null,
-      jenis_identitas:S.jenis_id,
+      bukti_identitas:S.bukti_identitas,
       no_identitas:S.no_id||null,
-      peserta_kunjungan:JSON.stringify(S.peserta),
+      peserta_kunjungan:S.peserta,
       tgl_kunjungan:today,
       status:'menunggu',
+      status_approval:'pending',
       daftar_barang:S.barang.map(b=>({nama:String(b.nama),jumlah:parseInt(b.jumlah)||1})),
       metode_daftar:'online'
     }).select().single();
@@ -674,7 +701,7 @@ function goStep(n){
 
 function resetAll(){
   if(pollingInterval){clearInterval(pollingInterval);pollingInterval=null;}
-  Object.assign(S,{kel:null,wbp:null,nik:'',nama:'',alamat:'',umur:null,pekerjaan:'',jenis_id:'KTP',no_id:'',peserta:[],barang:[]});
+  Object.assign(S,{kel:null,wbp:null,nik:'',nama:'',alamat:'',umur:null,pekerjaan:'',bukti_identitas:'KTP',no_id:'',peserta:[],barang:[]});
   ['inp-nik','inp-nama','inp-alamat','inp-umur','inp-pekerjaan','inp-no-id'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('inp-nik').classList.remove('nik-valid','nik-invalid');
   document.getElementById('id-ktp').checked=true;
@@ -706,8 +733,9 @@ function selectBuktiId(v){
   var inp=document.getElementById('inp-no-id');
   if(v==='KTP'){
     inp.maxLength=16;inp.inputMode='numeric';inp.placeholder='Nomor KTP (16 digit NIK)';
-    if(hint)hint.textContent='Nomor KTP = 16 digit NIK Anda';
-    var nik=document.getElementById('inp-nik'); if(nik&&nik.value.length===16)inp.value=nik.value;
+    if(hint)hint.textContent='NIK = 16 digit pada KTP Anda (dipakai untuk verifikasi keluarga WBP)';
+    // Jika sudah pernah isi NIK sebelumnya, restore
+    var nikHidden=document.getElementById('inp-nik'); if(nikHidden&&nikHidden.value.length===16)inp.value=nikHidden.value;
   } else if(v==='SIM'){
     inp.maxLength=14;inp.inputMode='numeric';inp.placeholder='Nomor SIM (12-14 digit)';
     if(hint)hint.textContent='Nomor SIM Indonesia: 12-14 digit (bukan 18 digit)'; inp.value='';
@@ -719,6 +747,12 @@ function selectBuktiId(v){
     if(hint)hint.textContent='Masukkan nomor identitas yang digunakan'; inp.value='';
   }
   S.bukti_identitas=v;
+  // Tampilkan WBP manual selector jika bukan KTP
+  var wbpManual=document.getElementById('wrap-wbp-manual');
+  if(wbpManual){
+    if(v==='KTP'){wbpManual.classList.add('hidden');}
+    else{wbpManual.classList.remove('hidden');}
+  }
 }
 
 function showToast(msg,type='info'){
@@ -803,4 +837,34 @@ function hidePanduan(){ document.getElementById('panduan-modal').style.display='
 if(!localStorage.getItem('panduan_shown')){ setTimeout(()=>{ showPanduan(); localStorage.setItem('panduan_shown','1'); },800); }
 </script>
 </body>
-</html>
+</html>let cariWbpTimer;
+function cariWbpManual(q){
+  clearTimeout(cariWbpTimer);
+  const dd=document.getElementById('dd-wbp-manual');
+  if(!q||q.length<2){if(dd)dd.classList.add('hidden');return;}
+  cariWbpTimer=setTimeout(async()=>{
+    const{data}=await db.from('wbp').select('id,nama_wbp,kamar')
+      .or('nama_wbp.ilike.%'+q+'%,nik_wbp.ilike.%'+q+'%').limit(6);
+    if(!data||!data.length){if(dd)dd.classList.add('hidden');return;}
+    dd.innerHTML=data.map(w=>`
+      <div onclick="pilihWbpManual('${w.id}','${w.nama_wbp.replace(/'/g,"\\'")}','${w.kamar.replace(/'/g,"\\'")}','${(w.nik_wbp||'').replace(/'/g,"\\'")}')
+" class="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-50 last:border-0">
+        <p class="font-semibold text-sm text-gray-800">${w.nama_wbp}</p>
+        <p class="text-xs text-gray-400">${w.kamar}</p>
+      </div>`).join('');
+    dd.classList.remove('hidden');
+  },300);
+}
+
+function pilihWbpManual(id,nama,kamar,nik){
+  S.wbp={id,nama_wbp:nama,kamar};
+  S.nik=nik||''; // WBP NIK as fallback
+  const terpilih=document.getElementById('wbp-manual-terpilih');
+  if(terpilih){terpilih.textContent='✓ WBP: '+nama+' – Kamar: '+kamar;terpilih.classList.remove('hidden');}
+  const dd=document.getElementById('dd-wbp-manual');
+  if(dd)dd.classList.add('hidden');
+  const inp=document.getElementById('inp-cari-wbp');
+  if(inp)inp.value=nama;
+}
+
+

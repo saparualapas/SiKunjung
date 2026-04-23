@@ -462,10 +462,7 @@
           <!-- ─── FORM DATA ─── -->
           <div style="display:flex;flex-direction:column;gap:14px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div style="grid-column:1/-1;">
-                <label class="lbl-f">NIK Pengunjung *</label>
-                <input id="os-nik" type="text" maxlength="16" inputmode="numeric" placeholder="Terisi otomatis dari scan KTP" class="inp"/>
-              </div>
+              <input id="os-nik" type="hidden" maxlength="16"/>
               <div style="grid-column:1/-1;">
                 <label class="lbl-f">Nama Pengunjung *</label>
                 <input id="os-nama" type="text" placeholder="Terisi otomatis dari scan KTP" class="inp"/>
@@ -1277,7 +1274,7 @@ function kunjRow(v,showAksi=true){
   const jamVal = v.jam_kunjungan||'—';
   return `<tr>
     <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
-    <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
+    <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.bukti_identitas||'KTP'}: ${v.no_identitas||v.nik_pengunjung}</span></td>
     <td>${esc(v.wbp?.nama_wbp||'—')}<br><span style="font-size:10px;color:#94a3b8;">${esc(v.wbp?.kamar||'—')}</span></td>
     <td style="font-weight:600;">${jamVal}</td>
     <td style="max-width:180px;">${bHtml}</td>
@@ -1312,30 +1309,27 @@ function kunjMobCard(v,showAksi=true){
 // ============================================================
 async function loadPersetujuan(){
   const tb=document.getElementById('persetujuan-tb');
-  if(tb) tb.innerHTML='<tr><td colspan="8" class="empty"><span class="spin"></span></td></tr>';
+  if(tb) tb.innerHTML='<tr><td colspan="8" class="empty"><span class="spin"></span> Memuat...</td></tr>';
   try{
-    // Coba query dengan status_approval — jika kolom belum ada (migration belum dijalankan)
-    // Supabase akan return error, kita fallback ke status='menunggu'
     const{data,error}=await db.from('kunjungan')
-      .select('*,wbp(nama_wbp,kamar)')
+      .select('id,no_antrean,nama_pengunjung,nik_pengunjung,alamat_pengunjung,umur_pengunjung,pekerjaan_pengunjung,bukti_identitas,no_identitas,peserta_kunjungan,daftar_barang,tgl_kunjungan,created_at,status,status_approval,petugas_p2u,petugas_penggeledahan,petugas_pendaftaran,nip_petugas_pendaftaran,karupam,kasubsie_orientasi,nip_kasubsie,metode_daftar,wbp_id,wbp(nama_wbp,kamar)')
       .eq('status_approval','pending')
       .order('created_at',{ascending:false});
     if(error){
-      // Jika error karena kolom status_approval belum ada, fallback ke status menunggu
-      if(error.message && (error.message.includes('status_approval') || error.code==='42703')){
-        // Kolom belum ada — tampilkan pesan panduan
-        if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">⚠ Kolom <code>status_approval</code> belum ada di database.<br><small>Jalankan <strong>migration.sql</strong> di Supabase SQL Editor terlebih dahulu.</small></td></tr>';
-        showToast('Jalankan migration.sql dulu di Supabase','warn');
+      const msg=error.message||'';
+      if(msg.includes('status_approval')||msg.includes('column')||error.code==='42703'||error.code==='PGRST'){
+        if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">⚠️ Kolom <b>status_approval</b> belum ada.<br><small>Jalankan <b>migration.sql</b> di Supabase SQL Editor terlebih dahulu.</small></td></tr>';
+        showToast('Jalankan migration.sql di Supabase dulu','warn');
       } else {
-        if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">Gagal memuat data: '+esc(error.message)+'</td></tr>';
-        showToast('Gagal: '+error.message,'error');
+        if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">Gagal: '+esc(msg)+'</td></tr>';
+        showToast('Gagal load persetujuan: '+msg,'error');
       }
       return;
     }
     allPending=data||[];
     renderPersetujuan();
   }catch(e){
-    if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">Error: '+esc(e.message)+'</td></tr>';
+    if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">Error: '+esc(e.message||String(e))+'</td></tr>';
     showToast('Error: '+e.message,'error');
   }
 }
@@ -1354,7 +1348,7 @@ function renderPersetujuan(){
     const tgl=new Date(v.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
     return `<tr>
       <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
-      <td><strong>${esc(v.nama_pengunjung)}</strong><br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span><br><span style="font-size:10px;color:#64748b;">${esc(v.alamat_pengunjung||'')}</span></td>
+      <td><strong>${esc(v.nama_pengunjung)}</strong><br><span style="font-size:10px;color:#94a3b8;">${v.bukti_identitas||'KTP'}: ${v.no_identitas||v.nik_pengunjung}</span><br><span style="font-size:10px;color:#64748b;">${esc(v.alamat_pengunjung||'')}</span></td>
       <td>${esc(v.wbp?.nama_wbp||'—')}<br><span style="font-size:10px;color:#94a3b8;">${esc(v.wbp?.kamar||'—')}</span></td>
       <td style="font-size:11px;white-space:nowrap;">${tgl}</td>
       <td>${peserta.length>0?peserta.map(p=>`<div style="font-size:10px;">${esc(p.nama)} <span style="color:#94a3b8;">(${esc(p.status_keluarga||'')})</span></div>`).join(''):'<span style="color:#94a3b8;font-size:10px;">—</span>'}</td>
@@ -1784,7 +1778,7 @@ function renderRiwayat(){
     return `<tr>
       <td style="white-space:nowrap;">${v.tgl_kunjungan}</td>
       <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
-      <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span></td>
+      <td>${esc(v.nama_pengunjung)}<br><span style="font-size:10px;color:#94a3b8;">${v.bukti_identitas||'KTP'}: ${v.no_identitas||v.nik_pengunjung}</span></td>
       <td>${esc(v.wbp?.nama_wbp||'—')}</td>
       <td>${esc(v.wbp?.kamar||'—')}</td>
       <td style="font-weight:600;white-space:nowrap;">${jam}</td>
@@ -2068,7 +2062,7 @@ function openDetail(id){
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
   document.getElementById('m-detail-body').innerHTML=`
     <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:16px;">
-      <div><p style="font-weight:700;font-size:16px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p><p style="color:#64748b;font-size:12px;margin:4px 0 0;">NIK: ${v.nik_pengunjung}</p></div>
+      <div><p style="font-weight:700;font-size:16px;color:#0f172a;margin:0;">${esc(v.nama_pengunjung)}</p><p style="color:#64748b;font-size:12px;margin:4px 0 0;">${v.bukti_identitas||'KTP'}: ${v.no_identitas||v.nik_pengunjung}</p></div>
       <span class="${st}">${v.status.toUpperCase()}</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;margin-bottom:14px;">
@@ -2583,7 +2577,6 @@ function renderOsPeserta(){
 }
 
 async function submitOnsite(){
-  const nik=document.getElementById('os-nik').value.trim();
   const nm=document.getElementById('os-nama').value.trim();
   const alamat=(document.getElementById('os-alamat')?.value||'').trim();
   const umur=parseInt(document.getElementById('os-umur')?.value)||null;
@@ -2593,11 +2586,15 @@ async function submitOnsite(){
   const p2u=(document.getElementById('os-p2u')?.value||'').trim();
   const geleda=(document.getElementById('os-geleda')?.value||'').trim();
   const daftar=(document.getElementById('os-daftar')?.value||'').trim();
-  const nipDaftar='199406232022032005'; // NIP default Petugas Pendaftaran
+  const nipDaftar='199406232022032005';
   const rupam=(document.getElementById('os-rupam')?.value||'').trim();
   const kasubsie=(document.getElementById('os-kasubsie')?.value||'').trim();
   document.getElementById('os-err').style.display='none';
-  if(nik.length!==16){showFErr2('os-err','NIK harus 16 digit.');return;}
+
+  // Validasi no identitas
+  if(!noId){showFErr2('os-err','Nomor identitas wajib diisi.');return;}
+  if(bukti==='KTP'&&noId.length!==16){showFErr2('os-err','Nomor KTP harus 16 digit.');return;}
+  if(bukti==='KK'&&noId.length!==16){showFErr2('os-err','Nomor KK harus 16 digit.');return;}
   if(!nm){showFErr2('os-err','Nama wajib diisi.');return;}
   if(!alamat){showFErr2('os-err','Alamat wajib diisi.');return;}
   if(!umur){showFErr2('os-err','Umur wajib diisi.');return;}
@@ -2605,18 +2602,21 @@ async function submitOnsite(){
   if(!osWbp){showFErr2('os-err','Pilih WBP dari dropdown.');return;}
   if(!p2u){showFErr2('os-err','Nama Petugas P2U wajib diisi.');return;}
   if(!geleda){showFErr2('os-err','Nama Petugas Penggeledahan wajib diisi.');return;}
+
+  // nik_pengunjung: pakai noId jika KTP, kosong jika lainnya
+  const nikValue = bukti==='KTP' ? noId : (noId||'');
+
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
   const barangFinal=osBrg.map(b=>({nama:String(b.nama),jumlah:parseInt(b.jumlah)||1}));
   const jamVal=document.getElementById('os-jam')?.value||new Date().toTimeString().slice(0,5);
   const pesertaFinal=osPeserta.filter(p=>p.nama&&p.status_keluarga);
-  // Tambah pengunjung utama ke peserta jika belum ada
   if(!pesertaFinal.find(p=>p.nama===nm)){
     pesertaFinal.unshift({nama:nm,status_keluarga:'Pengunjung Utama',umur:umur||''});
   }
   const{data,error}=await db.from('kunjungan').insert({
-    wbp_id:osWbp.id,nama_pengunjung:nm,nik_pengunjung:nik,
+    wbp_id:osWbp.id,nama_pengunjung:nm,nik_pengunjung:nikValue,
     tgl_kunjungan:today,status:'hadir',status_approval:'disetujui',
     alamat_pengunjung:alamat,umur_pengunjung:umur,
     pekerjaan_pengunjung:pekerjaan,bukti_identitas:bukti,no_identitas:noId||null,
