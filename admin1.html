@@ -146,19 +146,7 @@
     @keyframes spProgress{0%{width:0%}60%{width:75%}100%{width:100%}}
     #splash.sp-hide{animation:spHide .5s ease forwards;}
     @keyframes spHide{to{opacity:0;transform:scale(1.05);pointer-events:none}}
-    /* ── OCR Camera ── */
-    #ktp-overlay-frame{position:absolute;inset:0;pointer-events:none;}
-    .ktp-corner-frame{position:absolute;top:14px;left:14px;right:14px;bottom:14px;border:2px solid rgba(99,202,255,.8);border-radius:8px;}
-    .ktp-corner-frame::before,.ktp-corner-frame::after{content:'';position:absolute;width:22px;height:22px;border-color:#63caff;border-style:solid;}
-    .ktp-corner-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
-    .ktp-corner-frame::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
-    .ktp-scan-line{position:absolute;left:14px;right:14px;height:2px;background:linear-gradient(90deg,transparent,#63caff,transparent);animation:ktpScan 2s ease-in-out infinite;}
-    @keyframes ktpScan{0%,100%{top:18px;opacity:0}10%{opacity:1}50%{top:calc(100% - 20px)}90%{opacity:1}}
-    .ocr-bar-wrap{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin-top:4px;}
-    .ocr-bar-fill{height:100%;background:linear-gradient(90deg,#2563eb,#60a5fa);border-radius:2px;transition:width .3s ease;width:0%;}
-    .ktp-res-ok{background:#f0fdf4;border:1.5px solid #86efac;color:#166534;}
-    .ktp-res-warn{background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;}
-    .ktp-res-err{background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;}
+
   </style>
 </head>
 <body>
@@ -261,7 +249,6 @@
   <nav>
     <div class="sec-lbl">Utama</div>
     <div class="nav-item active" data-p="dashboard" onclick="navTo('dashboard',this)"><span class="ic">📊</span>Dashboard</div>
-    <div class="nav-item" data-p="persetujuan" onclick="navTo('persetujuan',this)"><span class="ic">✅</span>Persetujuan<span class="nb" id="nb-pending" style="display:none;"></span></div>
     <div class="nav-item" data-p="kunjungan" onclick="navTo('kunjungan',this)"><span class="ic">📋</span>Kunjungan<span class="nb" id="nb-m" style="display:none;"></span></div>
     <div class="nav-item" data-p="riwayat" onclick="navTo('riwayat',this)"><span class="ic">📜</span>Riwayat</div>
     <div class="nav-item" data-p="scan" onclick="navTo('scan',this)"><span class="ic">📷</span>Scan QR</div>
@@ -314,20 +301,6 @@
           <tbody id="dash-tb"><tr><td colspan="6" class="empty"><span class="spin"></span></td></tr></tbody></table>
         </div>
         <div class="mob-card" id="dash-mc"></div>
-      </div>
-    </div>
-
-    <!-- PERSETUJUAN -->
-    <div id="pg-persetujuan" class="page">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-        <p style="font-size:13px;color:#64748b;margin:0;flex:1;">Pendaftaran online yang perlu disetujui petugas. Setelah disetujui, formulir kunjungan resmi dicetak.</p>
-        <button class="btn bg2 bsm" onclick="loadPersetujuan()">↻ Refresh</button>
-      </div>
-      <div class="card"><div class="tbl-wrap mob-tbl">
-        <table><thead><tr><th>No.</th><th>Pengunjung</th><th>WBP</th><th>Tgl. Daftar</th><th>Peserta</th><th>Barang</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="persetujuan-tb"><tr><td colspan="8" class="empty"><span class="spin"></span></td></tr></tbody></table>
-      </div>
-      <div class="mob-card" id="persetujuan-mc" style="padding:8px;"></div>
       </div>
     </div>
 
@@ -456,61 +429,25 @@
       <div style="max-width:540px;">
         <div class="card" style="padding:20px;">
           <h3 style="font-weight:700;color:#0f172a;margin:0 0 4px;">➕ Pendaftaran Onsite</h3>
-          <p style="color:#64748b;font-size:13px;margin:0 0 16px;">Isi data pengunjung, peserta, dan petugas</p>
+          <p style="color:#64748b;font-size:13px;margin:0 0 16px;">Masukkan NIK — nama &amp; WBP terisi otomatis jika sudah terdaftar</p>
 
+          <!-- ─── CARI NIK OTOMATIS ─── -->
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-bottom:16px;">
+            <p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0 0 4px;">🔍 Cari Data Otomatis via NIK</p>
+            <p style="font-size:11px;color:#1e40af;margin:0 0 10px;">Ketik NIK di kolom bawah — nama &amp; WBP akan terisi otomatis jika sudah terdaftar.</p>
+            <div id="nik-lookup-result" style="display:none;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;line-height:1.6;"></div>
+          </div>
 
           <!-- ─── FORM DATA ─── -->
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div style="grid-column:1/-1;">
-                <label class="lbl-f">NIK Pengunjung *</label>
-                <input id="os-nik" type="text" maxlength="16" inputmode="numeric" placeholder="Terisi otomatis dari scan KTP" class="inp"/>
-              </div>
-              <div style="grid-column:1/-1;">
-                <label class="lbl-f">Nama Pengunjung *</label>
-                <input id="os-nama" type="text" placeholder="Terisi otomatis dari scan KTP" class="inp"/>
-              </div>
-              <div style="grid-column:1/-1;">
-                <label class="lbl-f">Alamat Lengkap *</label>
-                <textarea id="os-alamat" rows="2" placeholder="Jalan, RT/RW, Kelurahan, Kecamatan, Kota" class="inp" style="resize:none;"></textarea>
-              </div>
-              <div>
-                <label class="lbl-f">Umur *</label>
-                <input id="os-umur" type="number" min="1" max="120" placeholder="Tahun" class="inp"/>
-              </div>
-              <div>
-                <label class="lbl-f">Pekerjaan *</label>
-                <input id="os-pekerjaan" type="text" placeholder="Swasta/PNS/dll" class="inp"/>
-              </div>
-              <div style="grid-column:1/-1;">
-                <label class="lbl-f">Bukti Identitas *</label>
-                <p style="font-size:11px;color:#64748b;margin:0 0 8px;">Pilih jenis identitas, lalu isi nomornya</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-                  <label id="os-lbl-ktp" onclick="osSelectBukti('KTP')" style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;border:2px solid #3b82f6;background:#eff6ff;">
-                    <input type="radio" name="os-bukti" value="KTP" checked style="accent-color:#3b82f6;">
-                    <div><p style="font-size:12px;font-weight:700;color:#1d4ed8;margin:0;">KTP</p><p style="font-size:10px;color:#60a5fa;margin:0;">Tanda Penduduk</p></div>
-                  </label>
-                  <label id="os-lbl-sim" onclick="osSelectBukti('SIM')" style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;border:2px solid #e2e8f0;background:#fff;">
-                    <input type="radio" name="os-bukti" value="SIM" style="accent-color:#3b82f6;">
-                    <div><p style="font-size:12px;font-weight:700;color:#374151;margin:0;">SIM</p><p style="font-size:10px;color:#94a3b8;margin:0;">Izin Mengemudi</p></div>
-                  </label>
-                  <label id="os-lbl-kk" onclick="osSelectBukti('KK')" style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;border:2px solid #e2e8f0;background:#fff;">
-                    <input type="radio" name="os-bukti" value="KK" style="accent-color:#3b82f6;">
-                    <div><p style="font-size:12px;font-weight:700;color:#374151;margin:0;">KK</p><p style="font-size:10px;color:#94a3b8;margin:0;">Kartu Keluarga</p></div>
-                  </label>
-                  <label id="os-lbl-lain" onclick="osSelectBukti('Lainnya')" style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;border:2px solid #e2e8f0;background:#fff;">
-                    <input type="radio" name="os-bukti" value="Lainnya" style="accent-color:#3b82f6;">
-                    <div><p style="font-size:12px;font-weight:700;color:#374151;margin:0;">Lainnya</p><p style="font-size:10px;color:#94a3b8;margin:0;">Identitas lain</p></div>
-                  </label>
-                </div>
-                <div id="os-no-id-wrap">
-                  <input id="os-no-id" type="text" inputmode="numeric" maxlength="16" placeholder="Nomor KTP (16 digit NIK)" class="inp"/>
-                  <p id="os-no-id-hint" style="font-size:11px;color:#64748b;margin:3px 0 0;">Nomor KTP = 16 digit NIK</p>
-                </div>
-              </div>
+            <div>
+              <label class="lbl-f">NIK Pengunjung *</label>
+              <input id="os-nik" type="text" maxlength="16" inputmode="numeric" placeholder="16 digit NIK sesuai KTP" class="inp" oninput="onOsNikInput(this.value)"/>
             </div>
-
-            <!-- WBP -->
+            <div>
+              <label class="lbl-f">Nama Pengunjung *</label>
+              <input id="os-nama" type="text" placeholder="Nama lengkap sesuai KTP" class="inp"/>
+            </div>
             <div>
               <label class="lbl-f">WBP yang Dikunjungi *</label>
               <select id="os-wbp-select" class="inp" style="cursor:pointer;" onchange="pilihWbpDdOs(this)">
@@ -520,15 +457,6 @@
                 <span style="font-weight:700;color:#1d4ed8;">✓ WBP: </span><span id="os-wbp-info" style="color:#1e40af;"></span>
               </div>
             </div>
-
-            <!-- Peserta Kunjungan Onsite -->
-            <div>
-              <label class="lbl-f">Peserta Kunjungan</label>
-              <div id="os-peserta-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
-              <button type="button" class="btn bg2 bsm" onclick="addOsPeserta()" style="width:100%;">+ Tambah Peserta</button>
-            </div>
-
-            <!-- Barang -->
             <div>
               <label class="lbl-f">Barang Bawaan (opsional)</label>
               <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
@@ -538,31 +466,13 @@
               </div>
               <div id="os-brg-list" style="display:flex;flex-direction:column;gap:6px;"></div>
             </div>
-
-            <!-- Jam -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div>
-                <label class="lbl-f">Jam Kunjungan</label>
-                <input id="os-jam" type="time" class="inp"/>
-                <p style="font-size:11px;color:#64748b;margin:3px 0 0;">Kosong = jam sekarang</p>
-              </div>
+            <div>
+              <label class="lbl-f">Jam Kunjungan (opsional)</label>
+              <input id="os-jam" type="time" class="inp" style="max-width:140px;"/>
+              <p style="font-size:11px;color:#64748b;margin:3px 0 0;">Biarkan kosong untuk pakai jam sekarang</p>
             </div>
-
-            <!-- Petugas -->
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
-              <p style="font-size:12px;font-weight:700;color:#374151;margin:0 0 10px;">👮 Data Petugas (untuk formulir resmi)</p>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div><label class="lbl-f">Petugas P2U *</label><input id="os-p2u" type="text" placeholder="Nama petugas P2U" class="inp"/></div>
-                <div><label class="lbl-f">Petugas Penggeledahan *</label><input id="os-geleda" type="text" placeholder="Nama petugas" class="inp"/></div>
-                <div><label class="lbl-f">Petugas Pendaftaran</label><input id="os-daftar" type="text" value="Amelya Puttileihalat" class="inp"/></div>
-  
-                <div><label class="lbl-f">Ka.RUPAM</label><input id="os-rupam" type="text" placeholder="Nama Ka.RUPAM" class="inp"/></div>
-                <div><label class="lbl-f">Kasubsie Adm. Orientasi</label><input id="os-kasubsie" type="text" value="Rafel P. Wosia" class="inp"/></div>
-              </div>
-            </div>
-
             <div id="os-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
-            <button id="btn-os" class="btn bp" style="justify-content:center;padding:12px;" onclick="submitOnsite()">Daftarkan &amp; Hadir + Cetak Formulir</button>
+            <button id="btn-os" class="btn bp" style="justify-content:center;padding:12px;" onclick="submitOnsite()">Daftarkan &amp; Tandai Hadir</button>
           </div>
         </div>
       </div>
@@ -603,9 +513,7 @@
               <p style="font-size:10px;color:#64748b;margin:0;">WBP + Keluarga<br>Tiap tanggal 1</p>
             </div>
           </div>
-          <div style="background:#fff;border-radius:8px;padding:10px;font-size:11px;color:#0369a1;">
-            <strong>🔒 Backup Backend Supabase:</strong> Supabase menyimpan backup otomatis harian selama 7 hari (Pro plan). Untuk keamanan ekstra, aktifkan Point-in-Time Recovery di <a href="https://supabase.com/dashboard" target="_blank" style="color:#2563eb;">Supabase Dashboard → Settings → Database → Backups</a>.
-          </div>
+
         </div>
         <div id="backup-reminder" style="display:none;"></div>
         <div class="card" style="padding:20px;margin-bottom:14px;">
@@ -807,75 +715,6 @@
   </div>
 </div>
 
-<!-- MODAL: Persetujuan + Isi Petugas -->
-<div id="m-approve" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-approve')">
-  <div class="modal-box" style="max-width:560px;">
-    <div class="mh"><h2 id="m-approve-title">Setujui Kunjungan</h2><button class="mc" onclick="cm('m-approve')">×</button></div>
-    <div class="mb">
-      <div id="m-approve-info" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;"></div>
-      <p style="font-size:12px;font-weight:700;color:#374151;margin:0 0 12px;">Isi Data Petugas (untuk formulir resmi):</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <label class="lbl-f">Petugas P2U</label>
-            <input id="ap-p2u" type="text" placeholder="Nama petugas P2U" class="inp"/>
-          </div>
-          <div>
-            <label class="lbl-f">Petugas Penggeledahan</label>
-            <input id="ap-geleda" type="text" placeholder="Nama petugas" class="inp"/>
-          </div>
-          <div>
-            <label class="lbl-f">Petugas Pendaftaran</label>
-            <input id="ap-daftar" type="text" placeholder="Nama" class="inp" value="Amelya Puttileihalat"/>
-          </div>
-          <div>
-            <label class="lbl-f">NIP Pendaftaran</label>
-            <input id="ap-nip-daftar" type="text" placeholder="NIP" class="inp" value="199406232022032005"/>
-          </div>
-          <div>
-            <label class="lbl-f">Ka.RUPAM</label>
-            <input id="ap-rupam" type="text" placeholder="Nama Ka.RUPAM" class="inp"/>
-          </div>
-          <div>
-            <label class="lbl-f">NIP Ka.RUPAM</label>
-            <input id="ap-nip-rupam" type="text" placeholder="NIP" class="inp"/>
-          </div>
-          <div>
-            <label class="lbl-f">Kasubsie Adm. Orientasi</label>
-            <input id="ap-kasubsie" type="text" placeholder="Nama" class="inp" value="Rafel P. Wosia"/>
-          </div>
-          <div>
-            <label class="lbl-f">NIP Kasubsie</label>
-            <input id="ap-nip-kasubsie" type="text" placeholder="NIP" class="inp" value="196811301991031001"/>
-          </div>
-        </div>
-        <div id="ap-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;"></div>
-      </div>
-    </div>
-    <div class="mf">
-      <button class="btn bg2" onclick="cm('m-approve')">Batal</button>
-      <button class="btn" style="background:#dc2626;color:#fff;" onclick="tolakKunjungan()">✗ Tolak</button>
-      <button id="btn-setujui" class="btn bp" onclick="setujuiKunjungan()">✅ Setujui &amp; Cetak Formulir</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Formulir Kunjungan (preview + print) -->
-<div id="m-formulir" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-formulir')">
-  <div class="modal-box" style="max-width:700px;max-height:95vh;">
-    <div class="mh" style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;">
-      <h2 style="font-size:16px;font-weight:700;color:#0f172a;margin:0;">📄 Formulir Kunjungan Resmi</h2>
-      <div style="display:flex;gap:8px;">
-        <button class="btn bg2 bsm" onclick="cetakFormulir()">🖨️ Cetak</button>
-        <button class="mc" onclick="cm('m-formulir')">×</button>
-      </div>
-    </div>
-    <div class="mb" style="padding:16px 20px;">
-      <div id="formulir-content" style="font-family:Arial,sans-serif;font-size:11px;"></div>
-    </div>
-  </div>
-</div>
-
 <script>
 // ============================================================
 // CONFIG
@@ -889,11 +728,9 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // ============================================================
 // STATE
 // ============================================================
-let allKunj=[], allWbp=[], allKel=[], allRiwayat=[], allPending=[];
-let currentApproveId=null;
+let allKunj=[], allWbp=[], allKel=[], allRiwayat=[];
 let curFilter='all', curPage='dashboard';
 let qrScanner=null, ktpScanner=null, scanCD=false;
-let ktpStream=null, tesseractWorker=null, tesseractReady=false;
 let allWbpList=[];
 let osWbp=null, osBrg=[];
 let wbpTab='aktif';
@@ -1031,8 +868,10 @@ async function doForgotPass(){
   if(!email){msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';msg.textContent='⚠ Masukkan email Anda.';return;}
   const btn=document.getElementById('btn-fp');
   btn.innerHTML='<span class="spin"></span> Mengirim...';btn.disabled=true;
-  const baseUrl=window.location.href.replace(/admin\.html.*$/,'');
-  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:baseUrl+'reset.html'});
+  // Build redirect URL → always points to reset.html on same domain
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+  const redirectUrl = baseUrl + 'reset.html';
+  const{error}=await db.auth.resetPasswordForEmail(email,{redirectTo:redirectUrl});
   btn.innerHTML='Kirim Link Reset';btn.disabled=false;
   if(error){
     msg.style.cssText='display:block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;font-weight:600;';
@@ -1168,7 +1007,7 @@ function navTo(p,el){
   if(navEl) navEl.classList.add('active');
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('pg-'+p).classList.add('active');
-  const titles={dashboard:'Dashboard',persetujuan:'Persetujuan Kunjungan',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
+  const titles={dashboard:'Dashboard',kunjungan:'Kunjungan Hari Ini',riwayat:'Riwayat Kunjungan',scan:'Scan QR',barang:'Barang Bawaan',wbp:'Data WBP',keluarga:'Keluarga WBP',onsite:'Pendaftaran Onsite',cari:'Pencarian',backup:'Backup Data',setelan:'Setelan'};
   document.getElementById('pg-title').textContent=titles[p]||p;
   closeSB();
   if(p==='dashboard')loadDash();           // ← FIX UTAMA: sebelumnya tidak ada!
@@ -1202,8 +1041,6 @@ function setupRealtime(){
     loadDash();
     if(curPage==='kunjungan')loadKunj();
     if(curPage==='barang'){brgPage=1;loadBarang();}
-    if(curPage==='persetujuan')loadPersetujuan();
-    if(curPage==='persetujuan')loadPersetujuan();
     // Auto push to Google Sheets if URL is saved
     if(payload.new) gsPushRealtime(payload.new);
   }).on('postgres_changes',{event:'UPDATE',schema:'public',table:'kunjungan'},()=>{
@@ -1234,10 +1071,6 @@ async function loadDash(){
     document.getElementById('s-sel').textContent=kd.filter(x=>x.status==='selesai').length;
     document.getElementById('s-brg').textContent=kd.filter(x=>Array.isArray(x.daftar_barang)&&x.daftar_barang.length>0).length;
     document.getElementById('s-wbp').textContent=wd.length;
-  // Badge persetujuan pending
-  const pendingCount=(kd||[]).filter(x=>x.status_approval==='pending').length;
-  const nbP=document.getElementById('nb-pending');
-  if(nbP){if(pendingCount>0){nbP.textContent=pendingCount;nbP.style.display='';}else nbP.style.display='none';}
 
     const nb=document.getElementById('nb-m');
     const tunggu=kd.filter(x=>x.status==='menunggu').length;
@@ -1266,12 +1099,10 @@ function kunjRow(v,showAksi=true){
   const b=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
   const bHtml=b.length?b.map(x=>`<span class="gt">📦 ${esc(x.nama)} ×${x.jumlah}</span>`).join(' '):'<span style="color:#94a3b8;font-size:11px;">—</span>';
   const st=v.status==='menunggu'?'sm':v.status==='hadir'?'sh':'ss';
-  const isApproved=v.status_approval==='disetujui';
   const aksi=showAksi?`<td style="white-space:nowrap;">
     ${v.status==='menunggu'?`<button class="btn bsuc bsm" onclick="upStatus('${v.id}','hadir')">✅</button>`:''}
     ${v.status==='hadir'?`<button class="btn bsm" style="background:#7c3aed;color:#fff;" onclick="upStatus('${v.id}','selesai')">🏁</button>`:''}
     <button class="btn bg2 bsm" onclick="openDetail('${v.id}')">📋</button>
-    ${isApproved?`<button class="btn bsm" style="background:#0369a1;color:#fff;" onclick="lihatFormulirDariKunj('${v.id}')">📄</button>`:''}
     <button class="btn bsm" style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;" onclick="hapusBooking('${v.id}','${esc(v.nama_pengunjung)}')">🗑️</button>
   </td>`:'';
   const jamVal = v.jam_kunjungan||'—';
@@ -1305,400 +1136,6 @@ function kunjMobCard(v,showAksi=true){
       <button class="btn bsm" style="color:#dc2626;background:#fef2f2;border:1px solid #fecaca;" onclick="hapusBooking('${v.id}','${esc(v.nama_pengunjung)}')">🗑️ Hapus</button>
     </div>`:''}
   </div>`;
-}
-
-// ============================================================
-// PERSETUJUAN KUNJUNGAN
-// ============================================================
-async function loadPersetujuan(){
-  const tb=document.getElementById('persetujuan-tb');
-  if(tb) tb.innerHTML='<tr><td colspan="8" class="empty"><span class="spin"></span></td></tr>';
-  try{
-    // Coba query dengan status_approval — jika kolom belum ada (migration belum dijalankan)
-    // Supabase akan return error, kita fallback ke status='menunggu'
-    const{data,error}=await db.from('kunjungan')
-      .select('*,wbp(nama_wbp,kamar)')
-      .eq('status_approval','pending')
-      .order('created_at',{ascending:false});
-    if(error){
-      // Jika error karena kolom status_approval belum ada, fallback ke status menunggu
-      if(error.message && (error.message.includes('status_approval') || error.code==='42703')){
-        // Kolom belum ada — tampilkan pesan panduan
-        if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">⚠ Kolom <code>status_approval</code> belum ada di database.<br><small>Jalankan <strong>migration.sql</strong> di Supabase SQL Editor terlebih dahulu.</small></td></tr>';
-        showToast('Jalankan migration.sql dulu di Supabase','warn');
-      } else {
-        if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">Gagal memuat data: '+esc(error.message)+'</td></tr>';
-        showToast('Gagal: '+error.message,'error');
-      }
-      return;
-    }
-    allPending=data||[];
-    renderPersetujuan();
-  }catch(e){
-    if(tb) tb.innerHTML='<tr><td colspan="8" class="empty">Error: '+esc(e.message)+'</td></tr>';
-    showToast('Error: '+e.message,'error');
-  }
-}
-
-function renderPersetujuan(){
-  const tbody=document.getElementById('persetujuan-tb');
-  const mc=document.getElementById('persetujuan-mc');
-  if(!allPending.length){
-    tbody.innerHTML='<tr><td colspan="8" class="empty">Tidak ada pendaftaran yang menunggu persetujuan ✅</td></tr>';
-    if(mc) mc.innerHTML='';
-    return;
-  }
-  tbody.innerHTML=allPending.map(v=>{
-    const peserta=Array.isArray(v.peserta_kunjungan)?v.peserta_kunjungan:[];
-    const barang=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
-    const tgl=new Date(v.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    return `<tr>
-      <td><strong>#${String(v.no_antrean).padStart(3,'0')}</strong></td>
-      <td><strong>${esc(v.nama_pengunjung)}</strong><br><span style="font-size:10px;color:#94a3b8;">${v.nik_pengunjung}</span><br><span style="font-size:10px;color:#64748b;">${esc(v.alamat_pengunjung||'')}</span></td>
-      <td>${esc(v.wbp?.nama_wbp||'—')}<br><span style="font-size:10px;color:#94a3b8;">${esc(v.wbp?.kamar||'—')}</span></td>
-      <td style="font-size:11px;white-space:nowrap;">${tgl}</td>
-      <td>${peserta.length>0?peserta.map(p=>`<div style="font-size:10px;">${esc(p.nama)} <span style="color:#94a3b8;">(${esc(p.status_keluarga||'')})</span></div>`).join(''):'<span style="color:#94a3b8;font-size:10px;">—</span>'}</td>
-      <td>${barang.length>0?barang.map(b=>`<span class="gt">📦 ${esc(b.nama)}</span>`).join(' '):'<span style="color:#94a3b8;font-size:10px;">—</span>'}</td>
-      <td><span class="sm">Menunggu</span></td>
-      <td style="white-space:nowrap;">
-        <button class="btn bp bsm" onclick="bukaApproval('${v.id}')">✅ Proses</button>
-        <button class="btn bg2 bsm" onclick="lihatFormulir('${v.id}')">👁️ Lihat</button>
-      </td>
-    </tr>`;
-  }).join('');
-  if(mc){
-    mc.innerHTML=allPending.map(v=>{
-      const peserta=Array.isArray(v.peserta_kunjungan)?v.peserta_kunjungan:[];
-      return `<div class="mc2">
-        <div class="mc2-row"><strong>#${String(v.no_antrean).padStart(3,'0')} ${esc(v.nama_pengunjung)}</strong><span class="sm">Menunggu</span></div>
-        <div style="font-size:11px;color:#64748b;">WBP: ${esc(v.wbp?.nama_wbp||'—')} (${esc(v.wbp?.kamar||'—')})</div>
-        <div style="font-size:11px;color:#64748b;">${peserta.length} peserta</div>
-        <div style="display:flex;gap:6px;margin-top:8px;">
-          <button class="btn bp bsm" onclick="bukaApproval('${v.id}')">✅ Proses</button>
-          <button class="btn bg2 bsm" onclick="lihatFormulir('${v.id}')">👁️ Lihat</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-}
-
-function bukaApproval(id){
-  const v=allPending.find(x=>x.id===id);
-  if(!v) return;
-  currentApproveId=id;
-  const peserta=Array.isArray(v.peserta_kunjungan)?v.peserta_kunjungan:[];
-  const barang=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
-  document.getElementById('m-approve-title').textContent='Persetujuan Kunjungan — #'+String(v.no_antrean).padStart(3,'0');
-  document.getElementById('m-approve-info').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div><p style="color:#64748b;margin:0 0 2px;">Pengunjung</p><p style="font-weight:700;margin:0;">${esc(v.nama_pengunjung)}</p></div>
-      <div><p style="color:#64748b;margin:0 0 2px;">NIK</p><p style="font-weight:700;margin:0;">${v.nik_pengunjung}</p></div>
-      <div><p style="color:#64748b;margin:0 0 2px;">Alamat</p><p style="font-weight:700;margin:0;">${esc(v.alamat_pengunjung||'—')}</p></div>
-      <div><p style="color:#64748b;margin:0 0 2px;">Umur / Pekerjaan</p><p style="font-weight:700;margin:0;">${v.umur_pengunjung||'—'} th / ${esc(v.pekerjaan_pengunjung||'—')}</p></div>
-      <div><p style="color:#64748b;margin:0 0 2px;">WBP Dikunjungi</p><p style="font-weight:700;margin:0;">${esc(v.wbp?.nama_wbp||'—')} (${esc(v.wbp?.kamar||'—')})</p></div>
-      <div><p style="color:#64748b;margin:0 0 2px;">Tgl. Kunjungan</p><p style="font-weight:700;margin:0;">${v.tgl_kunjungan}</p></div>
-    </div>
-    <div style="margin-top:8px;"><p style="color:#64748b;margin:0 0 2px;">Peserta (${peserta.length})</p>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;">${peserta.map((p,i)=>`<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;">${i+1}. ${esc(p.nama)} (${esc(p.status_keluarga||'')}${p.umur?', '+p.umur+' th':''})</span>`).join('')}</div>
-    </div>
-    ${barang.length?`<div style="margin-top:8px;"><p style="color:#64748b;margin:0 0 2px;">Barang (${barang.length})</p>${barang.map(b=>`<span class="gt" style="margin-right:4px;">📦 ${esc(b.nama)} ×${b.jumlah}</span>`).join('')}</div>`:''}`;
-  // Pre-fill petugas dari data yang sudah tersimpan
-  document.getElementById('ap-p2u').value=v.petugas_p2u||'';
-  document.getElementById('ap-geleda').value=v.petugas_penggeledahan||'';
-  document.getElementById('ap-daftar').value=v.petugas_pendaftaran||'Amelya Puttileihalat';
-  document.getElementById('ap-nip-daftar').value=v.nip_petugas_pendaftaran||'199406232022032005';
-  document.getElementById('ap-rupam').value=v.karupam||'';
-  document.getElementById('ap-nip-rupam').value='';
-  document.getElementById('ap-kasubsie').value=v.kasubsie_orientasi||'Rafel P. Wosia';
-  document.getElementById('ap-nip-kasubsie').value=v.nip_kasubsie||'196811301991031001';
-  document.getElementById('ap-err').style.display='none';
-  om('m-approve');
-}
-
-async function setujuiKunjungan(){
-  if(!currentApproveId) return;
-  const p2u=document.getElementById('ap-p2u').value.trim();
-  const geleda=document.getElementById('ap-geleda').value.trim();
-  const daftar=document.getElementById('ap-daftar').value.trim();
-  const nipDaftar=document.getElementById('ap-nip-daftar').value.trim();
-  const rupam=document.getElementById('ap-rupam').value.trim();
-  const nipRupam=document.getElementById('ap-nip-rupam').value.trim();
-  const kasubsie=document.getElementById('ap-kasubsie').value.trim();
-  const nipKasubsie=document.getElementById('ap-nip-kasubsie').value.trim();
-  if(!p2u){showFErr2('ap-err','Nama Petugas P2U wajib diisi.');return;}
-  if(!geleda){showFErr2('ap-err','Nama Petugas Penggeledahan wajib diisi.');return;}
-  const btn=document.getElementById('btn-setujui');
-  btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
-  const{error}=await db.from('kunjungan').update({
-    status_approval:'disetujui',
-    status:'hadir',
-    petugas_p2u:p2u,
-    petugas_penggeledahan:geleda,
-    petugas_pendaftaran:daftar,
-    nip_petugas_pendaftaran:nipDaftar,
-    karupam:rupam||null,
-    kasubsie_orientasi:kasubsie,
-    nip_kasubsie:nipKasubsie,
-  }).eq('id',currentApproveId);
-  btn.innerHTML='✅ Setujui & Cetak Formulir';btn.disabled=false;
-  if(error){showFErr2('ap-err','Gagal: '+error.message);return;}
-  cm('m-approve');
-  showToast('Kunjungan disetujui! Formulir siap dicetak.','success');
-  // Reload data
-  await loadPersetujuan();
-  loadDash();
-  // Auto buka formulir
-  const updated=allPending.find(x=>x.id===currentApproveId)||await fetchKunjunganById(currentApproveId);
-  if(updated) tampilkanFormulir(updated);
-  currentApproveId=null;
-}
-
-async function tolakKunjungan(){
-  if(!currentApproveId) return;
-  const{error}=await db.from('kunjungan').update({status_approval:'ditolak',status:'selesai'}).eq('id',currentApproveId);
-  if(error){showToast('Gagal: '+error.message,'error');return;}
-  cm('m-approve');
-  showToast('Kunjungan ditolak.','info');
-  loadPersetujuan();loadDash();
-  currentApproveId=null;
-}
-
-async function fetchKunjunganById(id){
-  const{data}=await db.from('kunjungan').select('*,wbp(nama_wbp,kamar)').eq('id',id).maybeSingle();
-  return data;
-}
-
-async function lihatFormulir(id){
-  const v=allPending.find(x=>x.id===id)||await fetchKunjunganById(id);
-  if(v) tampilkanFormulir(v);
-}
-
-function tampilkanFormulir(v){
-  const peserta=Array.isArray(v.peserta_kunjungan)?v.peserta_kunjungan:[];
-  const barang=Array.isArray(v.daftar_barang)?v.daftar_barang:[];
-  const hari=new Date(v.tgl_kunjungan+'T00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const bukti=v.bukti_identitas||'KTP';
-
-  // Buat 10 slot peserta
-  const pesertaRows=[];
-  for(let i=0;i<10;i++){
-    const p=peserta[i]||null;
-    pesertaRows.push(`<tr>
-      <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${i+1}</td>
-      <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${p?esc(p.nama):''}</td>
-      <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${p?esc(p.status_keluarga||''):''}</td>
-      <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${p&&p.umur?p.umur:''}</td>
-    </tr>`);
-  }
-
-  const html=`
-  <div style="font-family:Arial,sans-serif;font-size:11px;color:#000;line-height:1.4;max-width:600px;margin:0 auto;">
-    <!-- HEADER -->
-    <div style="text-align:center;margin-bottom:8px;">
-      <p style="font-size:10px;font-weight:bold;margin:0;">KEMENTERIAN IMIGRASI DAN PEMASYARAKATAN REPUBLIK INDONESIA</p>
-      <p style="font-size:10px;font-weight:bold;margin:0;">DIREKTORAT JENDERAL PEMASYARAKATAN</p>
-      <p style="font-size:10px;font-weight:bold;margin:0;">KANTOR WILAYAH MALUKU</p>
-      <p style="font-size:13px;font-weight:bold;margin:4px 0 2px;text-transform:uppercase;">LEMBAGA PEMASYARAKATAN KELAS III SAPARUA</p>
-      <p style="font-size:9px;margin:0;">Jl. Lapangan Pattimura Saparua, Kab. Maluku Tengah, Maluku</p>
-      <p style="font-size:9px;margin:0;">Laman : lapassaparua.kemenimipas.go.id &nbsp; Pos-el : lapassaparua@gmail.com</p>
-      <div style="border-top:2px solid #000;margin:6px 0 4px;"></div>
-      <p style="font-size:12px;font-weight:bold;margin:0;text-decoration:underline;">FORMULIR KUNJUNGAN WARGA BINAAN</p>
-    </div>
-
-    <!-- DATA PENGUNJUNG -->
-    <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
-      <tr>
-        <td style="width:35%;padding:3px 4px;vertical-align:top;font-size:10px;">1. Hari/tanggal</td>
-        <td style="width:3%;padding:3px 0;font-size:10px;">:</td>
-        <td style="padding:3px 4px;font-size:10px;border-bottom:1px solid #000;font-weight:bold;">${hari}</td>
-      </tr>
-      <tr>
-        <td style="padding:3px 4px;font-size:10px;">2. Nama</td>
-        <td style="padding:3px 0;font-size:10px;">:</td>
-        <td style="padding:3px 4px;font-size:10px;border-bottom:1px solid #000;font-weight:bold;">${esc(v.nama_pengunjung)}</td>
-      </tr>
-      <tr>
-        <td style="padding:3px 4px;font-size:10px;">3. Alamat</td>
-        <td style="padding:3px 0;font-size:10px;">:</td>
-        <td style="padding:3px 4px;font-size:10px;border-bottom:1px solid #000;">${esc(v.alamat_pengunjung||'')}</td>
-      </tr>
-      <tr>
-        <td style="padding:3px 4px;font-size:10px;">4. Umur</td>
-        <td style="padding:3px 0;font-size:10px;">:</td>
-        <td style="padding:3px 4px;font-size:10px;border-bottom:1px solid #000;">${v.umur_pengunjung||''} ${v.umur_pengunjung?'tahun':''}</td>
-      </tr>
-      <tr>
-        <td style="padding:3px 4px;font-size:10px;">5. Pekerjaan</td>
-        <td style="padding:3px 0;font-size:10px;">:</td>
-        <td style="padding:3px 4px;font-size:10px;border-bottom:1px solid #000;">${esc(v.pekerjaan_pengunjung||'')}</td>
-      </tr>
-      <tr>
-        <td style="padding:3px 4px;vertical-align:top;font-size:10px;">6. Bukti Identitas</td>
-        <td style="padding:3px 0;font-size:10px;">:</td>
-        <td style="padding:3px 4px;font-size:10px;">
-          <span style="margin-right:10px;">${bukti==='KTP'?'[✓]':'[ ]'} KTP</span>
-          <span style="margin-right:10px;">${bukti==='SIM'?'[✓]':'[ ]'} SIM</span>
-          <span style="margin-right:10px;">${bukti==='KK'?'[✓]':'[ ]'} KK</span>
-          <span>${bukti==='Lainnya'?'[✓]':'[ ]'} Lainnya</span>
-          ${v.no_identitas?`<br><span style="font-size:10px;">No: ${esc(v.no_identitas)}</span>`:''}
-        </td>
-      </tr>
-    </table>
-
-    <!-- PESERTA KUNJUNGAN -->
-    <p style="font-size:10px;font-weight:bold;margin:6px 0 3px;">7. Peserta Kunjungan :</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
-      <thead>
-        <tr style="background:#f0f0f0;">
-          <th style="border:1px solid #000;padding:3px 6px;font-size:9px;width:6%;">No</th>
-          <th style="border:1px solid #000;padding:3px 6px;font-size:9px;width:44%;">Nama Lengkap</th>
-          <th style="border:1px solid #000;padding:3px 6px;font-size:9px;width:30%;">Status dalam Keluarga</th>
-          <th style="border:1px solid #000;padding:3px 6px;font-size:9px;width:20%;">Umur</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${pesertaRows.join('')}
-      </tbody>
-    </table>
-
-    <!-- WBP DIKUNJUNGI -->
-    <p style="font-size:10px;font-weight:bold;margin:4px 0 3px;">8. Warga Binaan Yang Dikunjungi :</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
-      <tr>
-        <td style="border:1px solid #000;padding:4px 8px;font-size:10px;width:50%;font-weight:bold;">${esc(v.wbp?.nama_wbp||'')}</td>
-        <td style="border:1px solid #000;padding:4px 8px;font-size:10px;width:50%;">Kamar: ${esc(v.wbp?.kamar||'')}</td>
-      </tr>
-    </table>
-
-    <!-- BARANG BAWAAN -->
-    ${barang.length>0?`<p style="font-size:10px;font-weight:bold;margin:4px 0 3px;">Barang Bawaan :</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
-      <thead><tr style="background:#f0f0f0;">
-        <th style="border:1px solid #000;padding:3px 6px;font-size:9px;width:6%;">No</th>
-        <th style="border:1px solid #000;padding:3px 6px;font-size:9px;">Nama Barang</th>
-        <th style="border:1px solid #000;padding:3px 6px;font-size:9px;width:20%;">Jumlah</th>
-      </tr></thead>
-      <tbody>${barang.map((b,i)=>`<tr>
-        <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${i+1}</td>
-        <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${esc(b.nama)}</td>
-        <td style="border:1px solid #000;padding:3px 6px;font-size:10px;">${b.jumlah}</td>
-      </tr>`).join('')}</tbody>
-    </table>`:''}
-
-    <!-- TANDA TANGAN PETUGAS -->
-    <table style="width:100%;border-collapse:collapse;margin-top:8px;">
-      <tr>
-        <td style="border:1px solid #000;padding:6px 8px;width:33%;text-align:center;vertical-align:top;font-size:10px;">
-          <div style="font-weight:bold;margin-bottom:28px;">Petugas P2U</div>
-          <div>(${esc(v.petugas_p2u||'_______________________')})</div>
-          <div style="font-size:9px;">NIP.</div>
-        </td>
-        <td style="border:1px solid #000;padding:6px 8px;width:33%;text-align:center;vertical-align:top;font-size:10px;">
-          <div style="font-weight:bold;margin-bottom:28px;">Petugas Penggeledahan</div>
-          <div>(${esc(v.petugas_penggeledahan||'_______________________')})</div>
-          <div style="font-size:9px;">NIP.</div>
-        </td>
-        <td style="border:1px solid #000;padding:6px 8px;width:33%;text-align:center;vertical-align:top;font-size:10px;">
-          <div style="font-weight:bold;margin-bottom:28px;">Petugas Pendaftaran</div>
-          <div>(${esc(v.petugas_pendaftaran||'_______________________')})</div>
-          <div style="font-size:9px;">NIP. ${esc(v.nip_petugas_pendaftaran||'')}</div>
-        </td>
-      </tr>
-      <tr>
-        <td style="border:1px solid #000;padding:6px 8px;text-align:center;vertical-align:top;font-size:10px;">
-          <div style="font-weight:bold;margin-bottom:28px;">Ka.RUPAM</div>
-          <div>(${esc(v.karupam||'___________________________')})</div>
-          <div style="font-size:9px;">NIP.</div>
-        </td>
-        <td colspan="2" style="border:1px solid #000;padding:6px 8px;text-align:center;vertical-align:top;font-size:10px;">
-          <div style="font-weight:bold;margin-bottom:28px;">KASUBSIE ADMISI ORIENTASI</div>
-          <div>(${esc(v.kasubsie_orientasi||'_______________________')})</div>
-          <div style="font-size:9px;">NIP. ${esc(v.nip_kasubsie||'')}</div>
-        </td>
-      </tr>
-    </table>
-
-    <div style="text-align:center;margin-top:6px;font-size:9px;color:#666;">
-      No. Antrean: #${String(v.no_antrean).padStart(3,'0')} &nbsp;|&nbsp; 
-      ${v.status_approval==='disetujui'?'✅ DISETUJUI':'⏳ MENUNGGU PERSETUJUAN'}
-    </div>
-  </div>`;
-
-  document.getElementById('formulir-content').innerHTML=html;
-  om('m-formulir');
-}
-
-function cetakFormulir(){
-  const content=document.getElementById('formulir-content').innerHTML;
-  const win=window.open('','_blank','width=700,height=900');
-  win.document.write(`<!DOCTYPE html><html><head><title>Formulir Kunjungan</title>
-    <style>
-      *{font-family:Arial,sans-serif;margin:0;padding:0;box-sizing:border-box;}
-      body{padding:20px;}
-      @media print{body{padding:10px;}@page{size:A4;margin:15mm;}}
-    </style></head><body>${content}
-    <script>window.onload=function(){window.print();setTimeout(()=>window.close(),1000);}<\/script>
-    
-<!-- ══ MODAL: Approve + Isi Petugas + Print Formulir ══ -->
-<div id="m-approve" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-approve')">
-  <div class="modal-box" style="max-width:600px;">
-    <div class="mh"><h2 id="m-approve-title">Setujui & Isi Petugas</h2><button class="mc" onclick="cm('m-approve')">×</button></div>
-    <div class="mb">
-      <!-- Ringkasan kunjungan -->
-      <div id="approve-summary" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;"></div>
-
-      <!-- Isi petugas -->
-      <p style="font-size:12px;font-weight:700;color:#0f172a;margin:0 0 12px;">Isi Data Petugas (Bagian Formulir)</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div><label class="lbl-f">Petugas P2U</label><input id="ap-p2u" type="text" class="inp" placeholder="Nama petugas P2U"/></div>
-        <div><label class="lbl-f">Petugas Penggeledahan</label><input id="ap-geledah" type="text" class="inp" placeholder="Nama petugas penggeledahan"/></div>
-        <div><label class="lbl-f">Petugas Pendaftaran</label><input id="ap-daftar" type="text" class="inp" placeholder="Nama petugas pendaftaran"/></div>
-        <div><label class="lbl-f">Ka.RUPAM</label><input id="ap-karupam" type="text" class="inp" placeholder="Nama Ka.RUPAM"/></div>
-        <div style="grid-column:1/-1;"><label class="lbl-f">Kasubsie Admisi & Orientasi</label><input id="ap-kasubsie" type="text" class="inp" placeholder="Nama Kasubsie Admisi & Orientasi"/></div>
-      </div>
-      <div id="approve-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;margin-top:10px;"></div>
-    </div>
-    <div class="mf" style="flex-wrap:wrap;gap:8px;">
-      <button class="btn bg2" onclick="cm('m-approve')" style="flex-shrink:0;">Batal</button>
-      <button id="btn-approve-save" class="btn bp" onclick="doApprove(false)" style="flex-shrink:0;">✅ Setujui & Simpan</button>
-      <button id="btn-approve-print" class="btn bsuc" onclick="doApprove(true)" style="flex-shrink:0;">✅ Setujui & Cetak Formulir</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: Print Formulir (tampilan pratinjau) ══ -->
-<div id="m-formulir" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-formulir')">
-  <div class="modal-box" style="max-width:760px;max-height:95vh;">
-    <div class="mh">
-      <h2>📄 Formulir Kunjungan WBP</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="printFormulir()" class="btn bp bsm">🖨️ Cetak</button>
-        <button class="mc" onclick="cm('m-formulir')">×</button>
-      </div>
-    </div>
-    <div class="mb" style="padding:0;">
-      <div id="formulir-content" style="background:#fff;font-family:Arial,sans-serif;font-size:11px;padding:12px 16px;"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Print styles -->
-<style>
-@media print {
-  body > *:not(#print-area) { display:none!important; }
-  #print-area { display:block!important; }
-}
-#print-area { display:none; }
-.formulir-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
-.formulir-table td,.formulir-table th { border:1px solid #000; padding:4px 6px; font-size:10px; vertical-align:top; }
-.formulir-header { text-align:center; font-size:11px; line-height:1.4; margin-bottom:8px; }
-.formulir-header h2 { font-size:13px; font-weight:bold; margin:4px 0; text-transform:uppercase; }
-.formulir-ttd { border:1px solid #000; text-align:center; padding:6px; font-size:10px; min-height:60px; }
-</style>
-<div id="print-area"></div>
-
-</body></html>`);
-  win.document.close();
 }
 
 // ============================================================
@@ -2089,13 +1526,6 @@ function openDetail(id){
   om('m-detail');
 }
 
-async function lihatFormulirDariKunj(id){
-  // Cari di allKunj dulu, kalau tidak ada fetch dari DB
-  let v=allKunj.find(x=>x.id===id);
-  if(!v) v=await fetchKunjunganById(id);
-  if(v) tampilkanFormulir(v);
-}
-
 // ✅ Hapus booking yang tidak datang
 function hapusBooking(id, nama){
   document.getElementById('cfm-title').textContent='Hapus Kunjungan';
@@ -2173,317 +1603,80 @@ async function onQR(text){
 }
 
 // ============================================================
-// KTP OCR ENGINE — Tesseract.js Multi-Pass + Canvas Preprocessing
-// Baca teks KTP secara akurat bahkan blur/gelap
-// ============================================================
-// (vars declared in STATE section above)
+// ─── NIK Auto-lookup (Onsite) ─────────────────────────────────
+// Ketik NIK → cari di keluarga_wbp → auto-isi nama & WBP
+let nikLookupTimer = null;
 
-// Load Tesseract satu kali
-async function initTesseract(){
-  if(tesseractReady)return true;
-  try{
-    // Tambah Tesseract.js CDN secara dinamis
-    if(!window.Tesseract){
-      await new Promise((res,rej)=>{
-        const s=document.createElement('script');
-        s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-        s.onload=res; s.onerror=rej;
-        document.head.appendChild(s);
-      });
+function onOsNikInput(val){
+  // Strip non-digit
+  const cleaned = val.replace(/\D/g,'');
+  const nikEl = document.getElementById('os-nik');
+  if(nikEl && cleaned !== val) nikEl.value = cleaned;
+
+  const hint = document.getElementById('nik-lookup-result');
+  if(!hint) return;
+
+  if(cleaned.length < 16){
+    hint.style.display = cleaned.length > 0 ? '' : 'none';
+    if(cleaned.length > 0){
+      hint.innerHTML = cleaned.length+'/16 digit';
+      hint.style.cssText = 'display:block;border-radius:8px;padding:8px 12px;font-size:12px;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;';
     }
-    tesseractWorker=await Tesseract.createWorker('ind+eng',1,{
-      logger:m=>{
-        if(m.status==='recognizing text'){
-          const pct=Math.round((m.progress||0)*100);
-          setOcrProgress(pct, 'Membaca teks... '+pct+'%');
-        }
-      }
-    });
-    await tesseractWorker.setParameters({
-      tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,\'-/',
-      preserve_interword_spaces:'1',
-      tessedit_pageseg_mode:'6',
-    });
-    tesseractReady=true; return true;
-  }catch(e){ console.error('Tesseract init fail:',e); return false; }
-}
-
-function setOcrProgress(pct, label){
-  const bar=document.getElementById('ktp-ocr-bar');
-  const lbl=document.getElementById('ktp-ocr-label');
-  const pctEl=document.getElementById('ktp-ocr-pct');
-  if(bar)bar.style.width=pct+'%';
-  if(lbl&&label)lbl.textContent=label;
-  if(pctEl)pctEl.textContent=pct+'%';
-}
-
-// Preprocessing canvas: grayscale + auto-level + gamma + unsharp + adaptive binarize
-async function preprocessKtpCanvas(src){
-  return new Promise(resolve=>{
-    const SCALE=Math.min(3,3000/src.width);
-    const c=document.createElement('canvas');
-    c.width=Math.round(src.width*SCALE);
-    c.height=Math.round(src.height*SCALE);
-    const ctx=c.getContext('2d');
-    ctx.drawImage(src,0,0,c.width,c.height);
-    const img=ctx.getImageData(0,0,c.width,c.height);
-    const d=img.data, n=c.width*c.height;
-
-    // Histogram untuk auto-level
-    const hist=new Uint32Array(256);
-    for(let i=0;i<d.length;i+=4){
-      hist[Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2])]++;
-    }
-    let lo=0,hi=255,cum=0;
-    for(let v=0;v<256;v++){cum+=hist[v];if(cum>=n*.04){lo=v;break;}}
-    cum=0;
-    for(let v=255;v>=0;v--){cum+=hist[v];if(cum>=n*.04){hi=v;break;}}
-    if(hi<=lo){lo=0;hi=255;}
-
-    // Grayscale + auto-level + gamma 0.55
-    for(let i=0;i<d.length;i+=4){
-      let g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
-      g=Math.max(0,Math.min(255,(g-lo)/(hi-lo)*255));
-      g=Math.pow(g/255,.55)*255;
-      d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,g));
-    }
-    ctx.putImageData(img,0,0);
-
-    // Unsharp mask
-    const bc=document.createElement('canvas');bc.width=c.width;bc.height=c.height;
-    const bx=bc.getContext('2d');bx.filter='blur(1px)';bx.drawImage(c,0,0);
-    const sharp=ctx.getImageData(0,0,c.width,c.height);
-    const blurd=bx.getImageData(0,0,c.width,c.height).data;
-    const sd=sharp.data;
-    for(let i=0;i<sd.length;i+=4)for(let k=0;k<3;k++)sd[i+k]=Math.max(0,Math.min(255,sd[i+k]+2*(sd[i+k]-blurd[i+k])));
-    ctx.putImageData(sharp,0,0);
-
-    // Adaptive binarization 24x24 blocks
-    const fin=ctx.getImageData(0,0,c.width,c.height);
-    const fd=fin.data;
-    const B=24;
-    for(let by=0;by<c.height;by+=B)for(let bx2=0;bx2<c.width;bx2+=B){
-      let s=0,cnt=0;
-      for(let y=by;y<Math.min(by+B,c.height);y++)for(let x=bx2;x<Math.min(bx2+B,c.width);x++){s+=fd[(y*c.width+x)*4];cnt++;}
-      const thr=(s/cnt)*.86;
-      for(let y=by;y<Math.min(by+B,c.height);y++)for(let x=bx2;x<Math.min(bx2+B,c.width);x++){
-        const idx=(y*c.width+x)*4;
-        const v=fd[idx]<thr?0:255;
-        fd[idx]=fd[idx+1]=fd[idx+2]=v;
-      }
-    }
-    ctx.putImageData(fin,0,0);
-    resolve(c);
-  });
-}
-
-// Buka kamera
-async function bukaKameraKtp(){
-  try{
-    ktpStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false
-    });
-    const vid=document.getElementById('ktp-live-video');
-    vid.srcObject=ktpStream;
-    document.getElementById('ktp-live-wrap').style.display='';
-    document.getElementById('ktp-btn-awal').style.display='none';
-    document.getElementById('ktp-btn-live').style.display='flex';
-    document.getElementById('ktp-btn-hasil').style.display='none';
-    document.getElementById('ktp-scan-result').style.display='none';
-    document.getElementById('ktp-preview-wrap').style.display='none';
-  }catch(e){
-    showKtpResult('⚠ Kamera tidak bisa dibuka: '+e.message+'. Pastikan izin kamera diaktifkan.','err');
-  }
-}
-
-function tutupKameraKtp(){
-  if(ktpStream){ktpStream.getTracks().forEach(t=>t.stop());ktpStream=null;}
-  document.getElementById('ktp-live-wrap').style.display='none';
-  document.getElementById('ktp-btn-awal').style.display='flex';
-  document.getElementById('ktp-btn-live').style.display='none';
-}
-
-async function ambilFotoKtp(){
-  const vid=document.getElementById('ktp-live-video');
-  const canvas=document.createElement('canvas');
-  canvas.width=vid.videoWidth||1280;
-  canvas.height=vid.videoHeight||720;
-  canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
-
-  const prev=document.getElementById('ktp-preview-img');
-  prev.src=canvas.toDataURL('image/jpeg',.95);
-  document.getElementById('ktp-preview-wrap').style.display='';
-  tutupKameraKtp();
-  document.getElementById('ktp-btn-hasil').style.display='';
-  await runOcr(canvas);
-}
-
-function scanUlangKtp(){
-  document.getElementById('ktp-preview-wrap').style.display='none';
-  document.getElementById('ktp-btn-hasil').style.display='none';
-  document.getElementById('ktp-scan-result').style.display='none';
-  bukaKameraKtp();
-}
-
-async function runOcr(srcCanvas){
-  document.getElementById('ktp-ocr-progress').style.display='';
-  document.getElementById('ktp-scan-result').style.display='none';
-  setOcrProgress(5,'Inisialisasi OCR...');
-
-  try{
-    const ok=await initTesseract();
-    if(!ok)throw new Error('Gagal memuat OCR engine');
-
-    setOcrProgress(15,'Preprocessing gambar...');
-
-    // Jalankan 2 preprocessing paralel — processed & raw
-    const [proc, raw]=await Promise.all([
-      preprocessKtpCanvas(srcCanvas),
-      (async()=>{
-        const c=document.createElement('canvas');
-        const sc=Math.min(2,2000/srcCanvas.width);
-        c.width=Math.round(srcCanvas.width*sc);
-        c.height=Math.round(srcCanvas.height*sc);
-        c.getContext('2d').drawImage(srcCanvas,0,0,c.width,c.height);
-        return c;
-      })()
-    ]);
-
-    setOcrProgress(30,'Membaca teks KTP...');
-    const{data:{text:t1}}=await tesseractWorker.recognize(proc);
-    console.log('[OCR processed]',t1);
-    let nik=extractNikOcr(t1), nama=extractNamaOcr(t1);
-
-    // Fallback ke raw
-    if(!nik||!validNik(nik)){
-      setOcrProgress(65,'Percobaan kedua...');
-      const{data:{text:t2}}=await tesseractWorker.recognize(raw);
-      console.log('[OCR raw]',t2);
-      const nik2=extractNikOcr(t2), nama2=extractNamaOcr(t2);
-      if(nik2&&validNik(nik2))nik=nik2;
-      if(!nama&&nama2)nama=nama2;
-    }
-
-    setOcrProgress(100,'Selesai');
-    setTimeout(()=>{ document.getElementById('ktp-ocr-progress').style.display='none'; },800);
-    await prosesHasilOcr(nik,nama);
-  }catch(e){
-    document.getElementById('ktp-ocr-progress').style.display='none';
-    showKtpResult('⚠ Error OCR: '+e.message,'err');
-  }
-}
-
-function extractNikOcr(text){
-  // Pattern 1: eksplisit "NIK : 16digit"
-  const p1=text.match(/NIK\s*[:\.\-]?\s*(\d[\d\s]{13,17}\d)/i);
-  if(p1){const c=p1[1].replace(/\s/g,'');if(c.length===16&&validNik(c))return c;}
-  // Pattern 2: 16 digit berturut
-  const p2=text.match(/\b(\d{16})\b/);
-  if(p2&&validNik(p2[1]))return p2[1];
-  // Pattern 3: digit dengan spasi (OCR misread)
-  const allD=(text.match(/\d/g)||[]).join('');
-  for(let i=0;i<=allD.length-16;i++){
-    const chunk=allD.slice(i,i+16);
-    if(validNik(chunk))return chunk;
-  }
-  return null;
-}
-
-function extractNamaOcr(text){
-  const STOP=['TEMPAT','LAHIR','JENIS','KELAMIN','GOLONGAN','DARAH','ALAMAT','RT','RW',
-    'KELURAHAN','KECAMATAN','KOTA','KABUPATEN','AGAMA','STATUS','PEKERJAAN',
-    'BERLAKU','NIK','PROVINSI','KARTU','TANDA','PENDUDUK','INDONESIA'];
-  const m=text.match(/(?:Nama|Name)\s*[:\-]?\s*([A-Z][A-Za-z .'\-]{2,40})/i);
-  if(m){
-    let n=m[1].trim();
-    for(const s of STOP){const i=n.toUpperCase().indexOf(s);if(i>2)n=n.substring(0,i).trim();}
-    if(n.length>=3)return n;
-  }
-  // Cari baris ALL CAPS setelah NIK
-  let nikSeen=false;
-  for(const line of text.split('\n').map(l=>l.trim()).filter(Boolean)){
-    if(/NIK/i.test(line)){nikSeen=true;continue;}
-    if(nikSeen&&/^[A-Z\s.']{3,40}$/.test(line)){
-      const bad=STOP.some(s=>line.includes(s));
-      if(!bad)return line.trim();
-    }
-  }
-  return null;
-}
-
-function validNik(nik){
-  if(!/^\d{16}$/.test(nik))return false;
-  const prov=parseInt(nik.substring(0,2));
-  if(prov<11||prov>96)return false;
-  let tgl=parseInt(nik.substring(6,8));if(tgl>40)tgl-=40;
-  if(tgl<1||tgl>31)return false;
-  const bln=parseInt(nik.substring(8,10));
-  return bln>=1&&bln<=12;
-}
-
-async function prosesHasilOcr(nik,nama){
-  if(!nik||!validNik(nik)){
-    showKtpResult(
-      '⚠ NIK tidak terbaca.<br><strong>Tips:</strong><br>'+
-      '• Pegang KTP <strong>landscape</strong> memenuhi bingkai<br>'+
-      '• Pastikan angka NIK terlihat jelas<br>'+
-      '• Cahaya cukup, hindari bayangan<br>'+
-      '• Bersihkan lensa kamera','err'
-    );
     return;
   }
 
-  // Isi field
-  document.getElementById('os-nik').value=nik;
-  if(nama){
-    const tc=nama.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ');
-    document.getElementById('os-nama').value=tc;
-  }
+  // 16 digits — lookup
+  hint.innerHTML = '<span class="spin" style="border-color:#dbeafe;border-top-color:#3b82f6;"></span> Mencari data...';
+  hint.style.cssText = 'display:block;border-radius:8px;padding:8px 12px;font-size:12px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;';
 
-  // Cek di keluarga_wbp → auto-pilih WBP di dropdown
-  const{data:kel}=await db.from('keluarga_wbp')
-    .select('*,wbp(id,nama_wbp,kamar,status)')
-    .eq('nik_keluarga',nik).maybeSingle();
+  clearTimeout(nikLookupTimer);
+  nikLookupTimer = setTimeout(()=>lookupNikOnsite(cleaned), 500);
+}
 
-  if(kel&&kel.wbp){
-    if(kel.wbp.status==='bebas'){
-      showKtpResult(`✅ NIK: <strong>${nik}</strong><br>⚠ WBP <strong>${esc(kel.wbp.nama_wbp)}</strong> sudah BEBAS.`,'warn');
-      return;
+async function lookupNikOnsite(nik){
+  const hint = document.getElementById('nik-lookup-result');
+  try{
+    const{data:kel}=await db.from('keluarga_wbp')
+      .select('*, wbp(id,nama_wbp,kamar,status)')
+      .eq('nik_keluarga', nik)
+      .maybeSingle();
+
+    if(kel && kel.wbp){
+      if(kel.wbp.status==='bebas'){
+        hint.innerHTML='⚠ NIK terdaftar, tapi WBP <strong>'+esc(kel.wbp.nama_wbp)+'</strong> sudah BEBAS.<br>Kunjungan tidak dapat dilakukan.';
+        hint.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;';
+        return;
+      }
+      // ✅ Ditemukan — isi nama & pilih WBP otomatis
+      const namaEl = document.getElementById('os-nama');
+      if(namaEl) namaEl.value = kel.nama_keluarga;
+      selWbpOs(kel.wbp.id, kel.wbp.nama_wbp, kel.wbp.kamar);
+      hint.innerHTML='✅ NIK terdaftar!<br>'+
+        '<strong>Nama:</strong> '+esc(kel.nama_keluarga)+' ('+esc(kel.hubungan)+')<br>'+
+        '<strong>WBP:</strong> '+esc(kel.wbp.nama_wbp)+' — Kamar '+esc(kel.wbp.kamar);
+      hint.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;background:#f0fdf4;border:1.5px solid #86efac;color:#166534;';
+    }else{
+      // NIK tidak ada di DB — biarkan isi manual, kasih info
+      hint.innerHTML='ℹ NIK belum terdaftar sebagai keluarga WBP.<br>Isi nama manual & pilih WBP dari dropdown.';
+      hint.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;';
     }
-    if(!nama&&kel.nama_keluarga)document.getElementById('os-nama').value=kel.nama_keluarga;
-    // Auto-pilih di dropdown
-    selWbpOs(kel.wbp.id,kel.wbp.nama_wbp,kel.wbp.kamar);
-    showKtpResult(
-      `✅ NIK: <strong>${nik}</strong>${nama?' | '+esc(nama):''}<br>`+
-      `WBP: <strong>${esc(kel.wbp.nama_wbp)}</strong> (${esc(kel.wbp.kamar)}) — Data terisi otomatis!`,'ok'
-    );
-    showToast('✅ KTP terbaca & data terisi otomatis!','success');
-  }else{
-    showKtpResult(
-      `✅ NIK: <strong>${nik}</strong>${nama?'<br>Nama: <strong>'+esc(nama)+'</strong>':''}<br>`+
-      `NIK belum terdaftar sebagai keluarga — pilih WBP dari dropdown.`,'warn'
-    );
-    showToast('NIK terbaca. Pilih WBP dari dropdown.','info');
+  }catch(err){
+    hint.innerHTML='⚠ Gagal mencari data: '+err.message;
+    hint.style.cssText='display:block;border-radius:8px;padding:9px 12px;font-size:12px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;';
   }
 }
 
-function showKtpResult(html,type){
-  const el=document.getElementById('ktp-scan-result');
-  el.innerHTML=html;
-  el.className='ktp-res-'+type;
-  el.style.cssText='display:block;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;font-weight:600;line-height:1.6;';
-  if(type==='ok')el.style.cssText+='background:#f0fdf4;border:1.5px solid #86efac;color:#166534;';
-  else if(type==='warn')el.style.cssText+='background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;';
-  else el.style.cssText+='background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;';
-}
-
-// ── stub agar tidak error dari fungsi lama
-async function startKtpScan(){bukaKameraKtp();}
-async function stopKtpScan(){tutupKameraKtp();}
-async function captureKtpFrame(){ambilFotoKtp();}
+// Stubs — kamera/OCR sudah dihapus, cegah error jika dipanggil dari kode lama
+function bukaKameraKtp(){}
+function tutupKameraKtp(){ if(typeof ktpStream!=='undefined' && ktpStream){ ktpStream.getTracks().forEach(t=>t.stop()); } }
+function ambilFotoKtp(){}
+function scanUlangKtp(){}
+function showKtpResult(){}
+async function startKtpScan(){}
+async function stopKtpScan(){}
+async function captureKtpFrame(){}
 async function processKtpFile(){}
 
-// ============================================================
 // ONSITE — WBP Dropdown + submit
 // ============================================================
 function populateWbpSelect(){
@@ -2535,107 +1728,29 @@ function renderOsBrg(){
     </div>`).join('');
 }
 
-// Bukti identitas card selector — admin onsite
-function osSelectBukti(v){
-  var map={KTP:'os-lbl-ktp',SIM:'os-lbl-sim',KK:'os-lbl-kk',Lainnya:'os-lbl-lain'};
-  var radMap={KTP:'input[value="KTP"][name="os-bukti"]',SIM:'input[value="SIM"][name="os-bukti"]',KK:'input[value="KK"][name="os-bukti"]',Lainnya:'input[value="Lainnya"][name="os-bukti"]'};
-  var rd=document.querySelector('input[name="os-bukti"][value="'+v+'"]');
-  if(rd) rd.checked=true;
-  Object.keys(map).forEach(function(k){
-    var el=document.getElementById(map[k]); if(!el)return;
-    if(k===v){el.style.borderColor='#3b82f6';el.style.background='#eff6ff';}
-    else{el.style.borderColor='#e2e8f0';el.style.background='#fff';}
-  });
-  var inp=document.getElementById('os-no-id');
-  var hint=document.getElementById('os-no-id-hint');
-  if(!inp)return;
-  if(v==='KTP'){inp.maxLength=16;inp.inputMode='numeric';inp.placeholder='Nomor KTP (16 digit NIK)';if(hint)hint.textContent='Nomor KTP = 16 digit NIK';}
-  else if(v==='SIM'){inp.maxLength=14;inp.inputMode='numeric';inp.placeholder='Nomor SIM (12-14 digit)';if(hint)hint.textContent='SIM Indonesia: 12-14 digit (bukan 18 digit)';inp.value='';}
-  else if(v==='KK'){inp.maxLength=16;inp.inputMode='numeric';inp.placeholder='Nomor KK (16 digit)';if(hint)hint.textContent='Nomor Kartu Keluarga = 16 digit';inp.value='';}
-  else{inp.maxLength=30;inp.inputMode='text';inp.placeholder='Nomor identitas lainnya';if(hint)hint.textContent='';inp.value='';}
-}
-
-// Peserta onsite state
-let osPeserta=[];
-function addOsPeserta(){
-  if(osPeserta.length>=10){showToast('Maksimal 10 peserta','warn');return;}
-  osPeserta.push({nama:'',status_keluarga:'',umur:''});
-  renderOsPeserta();
-}
-function renderOsPeserta(){
-  const list=document.getElementById('os-peserta-list');
-  if(!list)return;
-  list.innerHTML=osPeserta.map((p,i)=>`
-    <div style="background:#f8fafc;border-radius:8px;padding:8px;border:1px solid #e2e8f0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-size:11px;font-weight:700;color:#1d4ed8;">Peserta ${i+1}</span>
-        <button type="button" onclick="osPeserta.splice(${i},1);renderOsPeserta();" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px;font-weight:700;">×</button>
-      </div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;">
-        <input type="text" placeholder="Nama *" value="${esc(p.nama)}" class="inp" style="font-size:12px;padding:6px 8px;" oninput="osPeserta[${i}].nama=this.value"/>
-        <select class="inp" style="font-size:12px;padding:6px 8px;" onchange="osPeserta[${i}].status_keluarga=this.value">
-          <option value="">Status *</option>
-          ${['Istri','Suami','Anak','Ayah','Ibu','Kakak','Adik','Lainnya'].map(s=>`<option value="${s}" ${p.status_keluarga===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-        <input type="number" placeholder="Umur" value="${p.umur||''}" class="inp" style="font-size:12px;padding:6px 8px;" oninput="osPeserta[${i}].umur=parseInt(this.value)||''"/>
-      </div>
-    </div>`).join('');
-}
-
 async function submitOnsite(){
   const nik=document.getElementById('os-nik').value.trim();
   const nm=document.getElementById('os-nama').value.trim();
-  const alamat=(document.getElementById('os-alamat')?.value||'').trim();
-  const umur=parseInt(document.getElementById('os-umur')?.value)||null;
-  const pekerjaan=(document.getElementById('os-pekerjaan')?.value||'').trim();
-  const bukti=document.querySelector('input[name="os-bukti"]:checked')?.value||'KTP';
-  const noId=(document.getElementById('os-no-id')?.value||'').trim();
-  const p2u=(document.getElementById('os-p2u')?.value||'').trim();
-  const geleda=(document.getElementById('os-geleda')?.value||'').trim();
-  const daftar=(document.getElementById('os-daftar')?.value||'').trim();
-  const nipDaftar='199406232022032005'; // NIP default Petugas Pendaftaran
-  const rupam=(document.getElementById('os-rupam')?.value||'').trim();
-  const kasubsie=(document.getElementById('os-kasubsie')?.value||'').trim();
   document.getElementById('os-err').style.display='none';
   if(nik.length!==16){showFErr2('os-err','NIK harus 16 digit.');return;}
   if(!nm){showFErr2('os-err','Nama wajib diisi.');return;}
-  if(!alamat){showFErr2('os-err','Alamat wajib diisi.');return;}
-  if(!umur){showFErr2('os-err','Umur wajib diisi.');return;}
-  if(!pekerjaan){showFErr2('os-err','Pekerjaan wajib diisi.');return;}
   if(!osWbp){showFErr2('os-err','Pilih WBP dari dropdown.');return;}
-  if(!p2u){showFErr2('os-err','Nama Petugas P2U wajib diisi.');return;}
-  if(!geleda){showFErr2('os-err','Nama Petugas Penggeledahan wajib diisi.');return;}
   const btn=document.getElementById('btn-os');
   btn.innerHTML='<span class="spin"></span> Mendaftarkan...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
   const barangFinal=osBrg.map(b=>({nama:String(b.nama),jumlah:parseInt(b.jumlah)||1}));
   const jamVal=document.getElementById('os-jam')?.value||new Date().toTimeString().slice(0,5);
-  const pesertaFinal=osPeserta.filter(p=>p.nama&&p.status_keluarga);
-  // Tambah pengunjung utama ke peserta jika belum ada
-  if(!pesertaFinal.find(p=>p.nama===nm)){
-    pesertaFinal.unshift({nama:nm,status_keluarga:'Pengunjung Utama',umur:umur||''});
-  }
-  const{data,error}=await db.from('kunjungan').insert({
+  const{error}=await db.from('kunjungan').insert({
     wbp_id:osWbp.id,nama_pengunjung:nm,nik_pengunjung:nik,
-    tgl_kunjungan:today,status:'hadir',status_approval:'disetujui',
-    alamat_pengunjung:alamat,umur_pengunjung:umur,
-    pekerjaan_pengunjung:pekerjaan,bukti_identitas:bukti,no_identitas:noId||null,
-    peserta_kunjungan:pesertaFinal,
-    daftar_barang:barangFinal,jam_kunjungan:jamVal,metode_daftar:'onsite',
-    petugas_p2u:p2u,petugas_penggeledahan:geleda,
-    petugas_pendaftaran:daftar,nip_petugas_pendaftaran:nipDaftar,
-    karupam:rupam||null,kasubsie_orientasi:kasubsie,nip_kasubsie:'196811301991031001',
-  }).select('*,wbp(nama_wbp,kamar)').single();
-  btn.innerHTML='Daftarkan & Hadir + Cetak Formulir';btn.disabled=false;
+    tgl_kunjungan:today,status:'hadir',
+    daftar_barang:barangFinal,jam_kunjungan:jamVal,metode_daftar:'onsite'
+  });
+  btn.innerHTML='Daftarkan & Tandai Hadir';btn.disabled=false;
   if(error){showFErr2('os-err','Gagal: '+error.message);showToast('Pendaftaran gagal','error');return;}
-  showToast('✅ '+nm+' berhasil terdaftar & hadir! Membuka formulir...','success');
+  showToast('✅ '+nm+' berhasil terdaftar & hadir!','success');
   // Reset form
   document.getElementById('os-nik').value='';
   document.getElementById('os-nama').value='';
-  if(document.getElementById('os-alamat'))document.getElementById('os-alamat').value='';
-  if(document.getElementById('os-umur'))document.getElementById('os-umur').value='';
-  if(document.getElementById('os-pekerjaan'))document.getElementById('os-pekerjaan').value='';
-  if(document.getElementById('os-no-id'))document.getElementById('os-no-id').value='';
   const osSel=document.getElementById('os-wbp-select');if(osSel)osSel.selectedIndex=0;
   document.getElementById('os-wbp-sel').style.display='none';
   document.getElementById('ktp-scan-result').style.display='none';
@@ -2643,10 +1758,9 @@ async function submitOnsite(){
   document.getElementById('ktp-btn-awal').style.display='flex';
   document.getElementById('ktp-btn-live').style.display='none';
   document.getElementById('ktp-btn-hasil').style.display='none';
-  osWbp=null;osBrg=[];osPeserta=[];renderOsBrg();renderOsPeserta();
+  osWbp=null;osBrg=[];renderOsBrg();
   loadDash();
-  // Auto tampilkan dan cetak formulir
-  if(data) tampilkanFormulir(data);
+  navTo('kunjungan',document.querySelector('[data-p=kunjungan]'));
 }
 
 // ============================================================
@@ -2887,64 +2001,5 @@ function showToast(msg,type='info'){
   setTimeout(()=>t.remove(),type==='error'?5500:3500);
 }
 </script>
-
-<!-- ══ MODAL: Approve + Isi Petugas + Print Formulir ══ -->
-<div id="m-approve" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-approve')">
-  <div class="modal-box" style="max-width:600px;">
-    <div class="mh"><h2 id="m-approve-title">Setujui & Isi Petugas</h2><button class="mc" onclick="cm('m-approve')">×</button></div>
-    <div class="mb">
-      <!-- Ringkasan kunjungan -->
-      <div id="approve-summary" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;"></div>
-
-      <!-- Isi petugas -->
-      <p style="font-size:12px;font-weight:700;color:#0f172a;margin:0 0 12px;">Isi Data Petugas (Bagian Formulir)</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div><label class="lbl-f">Petugas P2U</label><input id="ap-p2u" type="text" class="inp" placeholder="Nama petugas P2U"/></div>
-        <div><label class="lbl-f">Petugas Penggeledahan</label><input id="ap-geledah" type="text" class="inp" placeholder="Nama petugas penggeledahan"/></div>
-        <div><label class="lbl-f">Petugas Pendaftaran</label><input id="ap-daftar" type="text" class="inp" placeholder="Nama petugas pendaftaran"/></div>
-        <div><label class="lbl-f">Ka.RUPAM</label><input id="ap-karupam" type="text" class="inp" placeholder="Nama Ka.RUPAM"/></div>
-        <div style="grid-column:1/-1;"><label class="lbl-f">Kasubsie Admisi & Orientasi</label><input id="ap-kasubsie" type="text" class="inp" placeholder="Nama Kasubsie Admisi & Orientasi"/></div>
-      </div>
-      <div id="approve-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;font-weight:600;margin-top:10px;"></div>
-    </div>
-    <div class="mf" style="flex-wrap:wrap;gap:8px;">
-      <button class="btn bg2" onclick="cm('m-approve')" style="flex-shrink:0;">Batal</button>
-      <button id="btn-approve-save" class="btn bp" onclick="doApprove(false)" style="flex-shrink:0;">✅ Setujui & Simpan</button>
-      <button id="btn-approve-print" class="btn bsuc" onclick="doApprove(true)" style="flex-shrink:0;">✅ Setujui & Cetak Formulir</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: Print Formulir (tampilan pratinjau) ══ -->
-<div id="m-formulir" class="modal-bg" style="display:none;" onclick="if(event.target===this)cm('m-formulir')">
-  <div class="modal-box" style="max-width:760px;max-height:95vh;">
-    <div class="mh">
-      <h2>📄 Formulir Kunjungan WBP</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="printFormulir()" class="btn bp bsm">🖨️ Cetak</button>
-        <button class="mc" onclick="cm('m-formulir')">×</button>
-      </div>
-    </div>
-    <div class="mb" style="padding:0;">
-      <div id="formulir-content" style="background:#fff;font-family:Arial,sans-serif;font-size:11px;padding:12px 16px;"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Print styles -->
-<style>
-@media print {
-  body > *:not(#print-area) { display:none!important; }
-  #print-area { display:block!important; }
-}
-#print-area { display:none; }
-.formulir-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
-.formulir-table td,.formulir-table th { border:1px solid #000; padding:4px 6px; font-size:10px; vertical-align:top; }
-.formulir-header { text-align:center; font-size:11px; line-height:1.4; margin-bottom:8px; }
-.formulir-header h2 { font-size:13px; font-weight:bold; margin:4px 0; text-transform:uppercase; }
-.formulir-ttd { border:1px solid #000; text-align:center; padding:6px; font-size:10px; min-height:60px; }
-</style>
-<div id="print-area"></div>
-
 </body>
 </html>
